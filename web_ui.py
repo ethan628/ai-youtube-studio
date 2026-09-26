@@ -265,6 +265,20 @@ class VideoStudioHandler(SimpleHTTPRequestHandler):
             self.send_header("Content-Type", "application/json")
             self.end_headers()
             self.wfile.write(b'{"status": "ok"}')
+        if parsed.path in ("/api/list_videos", "/list_videos"):
+            mp4_files = sorted(glob.glob(os.path.join(OUTPUT_DIR, "*.mp4")), key=os.path.getmtime, reverse=True)
+            v_list = []
+            for f in mp4_files:
+                bname = os.path.basename(f)
+                size_mb = os.path.getsize(f) / (1024 * 1024)
+                is_shorts = "shorts" in bname.lower() or "9x16" in bname.lower()
+                v_list.append({
+                    "filename": bname,
+                    "size_mb": round(size_mb, 2),
+                    "is_shorts": is_shorts,
+                    "mtime": os.path.getmtime(f)
+                })
+            self.send_json_response({"success": True, "videos": v_list})
             return
 
         if parsed.path.startswith("/videos/"):
@@ -380,16 +394,34 @@ class VideoStudioHandler(SimpleHTTPRequestHandler):
             self.send_json_response({"success": True, "path": save_path, "filename": os.path.basename(save_path)})
             return
 
+        if self.path in ("/api/delete_video", "/delete_video"):
+            filename = data.get("filename", "")
+            if not filename:
+                self.send_json_response({"success": False, "error": "未提供影片檔名"}, status=400)
+                return
+            safe_name = os.path.basename(filename)
+            target = os.path.join(OUTPUT_DIR, safe_name)
+            if os.path.exists(target) and os.path.isfile(target):
+                try:
+                    os.remove(target)
+                    self.send_json_response({"success": True, "filename": safe_name})
+                except Exception as e:
+                    self.send_json_response({"success": False, "error": f"刪除失敗: {e}"}, status=500)
+            else:
+                self.send_json_response({"success": False, "error": "檔案不存在"}, status=404)
+            return
+
         if self.path in ("/api/generate_custom", "/generate_custom"):
             from create_video import generate_custom_video
             topic = data.get("topic", "2026 最新 AI 實戰工作流")
             duration = float(data.get("duration", 3.0))
             aspect = data.get("aspect", "16x9")
             voice = data.get("voice", "zh-TW-YunJheNeural")
+            scenes = data.get("scenes", None)
             is_vertical = (aspect == "shorts")
 
             try:
-                out_path = generate_custom_video(topic=topic, duration_minutes=duration, is_vertical=is_vertical, voice=voice)
+                out_path = generate_custom_video(topic=topic, duration_minutes=duration, is_vertical=is_vertical, voice=voice, custom_scenes=scenes)
                 self.send_json_response({"success": True, "file": out_path})
             except Exception as e:
                 self.send_json_response({"success": False, "error": str(e)}, status=500)

@@ -140,23 +140,37 @@ def generate_video_from_template(template_id: str = "1", is_vertical: bool = Fal
     print("=" * 60)
     return output_path
 
-def generate_custom_video(topic: str, duration_minutes: float = 3.0, is_vertical: bool = False, voice: str = "zh-TW-YunJheNeural"):
+def generate_custom_video(topic: str, duration_minutes: float = 3.0, is_vertical: bool = False, voice: str = "zh-TW-YunJheNeural", custom_scenes: list = None):
     """
-    透過內建 AI 根據主題與指定分鐘數自動編寫腳本，並合成完整影片
+    支援自訂輸入腳本分鏡，或透過內建 AI 根據主題與指定分鐘數自動編寫腳本，並合成完整影片
     """
-    from src.script_generator import generate_script_by_ai
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     
-    print("=" * 60)
-    print(f"🤖 正在啟動內建 AI 為您編寫【{topic}】({duration_minutes} 分鐘) 專屬影片腳本...")
-    script_data = generate_script_by_ai(topic=topic, duration_minutes=duration_minutes)
-    scenes = script_data["scenes"]
-    print(f"✅ AI 腳本編寫完成！共編排了 {len(scenes)} 個高質感分鏡與自然旁白。")
+    if custom_scenes and len(custom_scenes) > 0:
+        print("=" * 60)
+        print(f"✍️ 使用自訂輸入腳本：【{topic}】，共 {len(custom_scenes)} 個場景分鏡。")
+        scenes = []
+        for i, s in enumerate(custom_scenes):
+            scenes.append({
+                "badge": s.get("badge", f"場景 0{i+1}"),
+                "title": s.get("title", f"場景 {i+1}"),
+                "subtitle": s.get("subtitle", ""),
+                "bullets": s.get("bullets", []),
+                "code": s.get("code", ""),
+                "narration": s.get("narration", s.get("title", ""))
+            })
+    else:
+        from src.script_generator import generate_script_by_ai
+        print("=" * 60)
+        print(f"🤖 正在啟動內建 AI 為您編寫【{topic}】({duration_minutes} 分鐘) 專屬影片腳本...")
+        script_data = generate_script_by_ai(topic=topic, duration_minutes=duration_minutes)
+        scenes = script_data["scenes"]
+        print(f"✅ AI 腳本編寫完成！共編排了 {len(scenes)} 個高質感分鏡與自然旁白。")
     print("=" * 60)
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     aspect_tag = "shorts" if is_vertical else "16x9"
-    safe_topic = "".join([c for c in topic if c.isalnum() or c in ("_", "-")])[:20]
+    safe_topic = "".join([c for c in topic if c.isalnum() or c in ("_", "-")])[:20] or "自訂腳本"
     filename = f"AI生成_{safe_topic}_{int(duration_minutes)}分_{aspect_tag}_{timestamp}.mp4"
     output_path = os.path.join(OUTPUT_DIR, filename)
 
@@ -169,7 +183,7 @@ def generate_custom_video(topic: str, duration_minutes: float = 3.0, is_vertical
     )
 
     print("=" * 60)
-    print(f"🎉 AI 自訂影片生成成功！已存入統一資料夾：\n{os.path.abspath(output_path)}")
+    print(f"🎉 影片生成成功！已存入統一資料夾：\n{os.path.abspath(output_path)}")
     print("=" * 60)
     return output_path
 
@@ -178,6 +192,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="一鍵免費生成 YouTube 影片工具 (支援 AI 自動寫腳本 & 聲音模仿)")
     parser.add_argument("--template", type=str, default=None, help="選擇預設模板 (1 或 2)")
     parser.add_argument("--topic", type=str, default=None, help="自訂主題，讓內建 AI 為您全自動寫腳本")
+    parser.add_argument("--script-file", type=str, default=None, help="指定自訂腳本 JSON 檔案路徑")
     parser.add_argument("--duration", type=float, default=3.0, help="設定影片長度 (分鐘數，例如 1 代表 1 分鐘 Shorts，3 代表 3 分鐘長片)")
     parser.add_argument("--shorts", action="store_true", help="生成直式 9:16 短影音 (YouTube Shorts)")
     parser.add_argument("--voice", type=str, default="zh-TW-YunJheNeural", help="TTS配音角色 (男聲 YunJhe、女聲 HsiaoChen、或 clone:my_voice 模仿自己聲音)")
@@ -190,8 +205,14 @@ if __name__ == "__main__":
     elif args.voice in ("clone", "my_voice"):
         voice_choice = "clone"
 
-    if args.topic:
-        generate_custom_video(args.topic, duration_minutes=args.duration, is_vertical=args.shorts, voice=voice_choice)
+    custom_scenes = None
+    if args.script_file and os.path.exists(args.script_file):
+        with open(args.script_file, "r", encoding="utf-8") as sf:
+            custom_scenes = json.load(sf)
+
+    if args.topic or custom_scenes:
+        topic_name = args.topic if args.topic else "自訂輸入腳本"
+        generate_custom_video(topic_name, duration_minutes=args.duration, is_vertical=args.shorts, voice=voice_choice, custom_scenes=custom_scenes)
     else:
         tpl_id = args.template if args.template else "1"
         generate_video_from_template(tpl_id, is_vertical=args.shorts, voice=voice_choice)

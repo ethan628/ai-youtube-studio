@@ -162,6 +162,26 @@
     .script-narration-box { background: rgba(245, 158, 11, 0.08); border-left: 4px solid var(--amber); border-radius: 8px; padding: 16px; margin-top: 14px; }
     .script-narration-text { font-size: 15px; line-height: 1.8; color: #fef08a; font-weight: 500; margin-top: 8px; letter-spacing: 0.3px; }
 
+    /* Delete button */
+    .btn-delete { background: #e11d48; color: #fff; border: 1px solid #be123c; padding: 4px 10px; font-size: 11px; border-radius: 6px; cursor: pointer; transition: all 0.2s; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
+    .btn-delete:hover { background: #f43f5e; box-shadow: 0 0 10px rgba(244, 63, 94, 0.4); transform: translateY(-1px); }
+
+    /* Script mode switcher */
+    .script-mode-switcher { display: flex; gap: 10px; margin-bottom: 16px; background: rgba(0,0,0,0.3); padding: 4px; border-radius: 10px; border: 1px solid var(--card-border); }
+    .script-mode-btn { flex: 1; text-align: center; cursor: pointer; padding: 10px 14px; border-radius: 8px; font-weight: bold; font-size: 13px; transition: all 0.2s; border: none; background: transparent; color: var(--text-dim); }
+    .script-mode-btn:hover { color: #fff; }
+    .script-mode-btn.active { background: var(--cyan); color: #000; box-shadow: 0 0 14px var(--cyan-glow); }
+
+    /* Scene Inline Edit Form */
+    .edit-form-box { background: #070b14; border: 1px solid var(--cyan); border-radius: 10px; padding: 16px; margin-top: 12px; }
+    .edit-form-grid { display: grid; grid-template-columns: 140px 1fr; gap: 12px; margin-bottom: 12px; }
+    .edit-form-row { margin-bottom: 12px; }
+    .edit-form-row label { display: block; font-size: 12px; color: var(--cyan); font-weight: bold; margin-bottom: 5px; }
+    .edit-input { width: 100%; background: #0b1120; border: 1px solid #334155; color: #fff; padding: 8px 12px; border-radius: 6px; font-size: 13px; }
+    .edit-input:focus { border-color: var(--cyan); outline: none; }
+    .edit-textarea { width: 100%; background: #0b1120; border: 1px solid #334155; color: #fef08a; padding: 10px 12px; border-radius: 6px; font-size: 14px; line-height: 1.6; resize: vertical; }
+    .edit-textarea:focus { border-color: var(--amber); outline: none; }
+
     /* Toast */
     #toast { position: fixed; bottom: 24px; right: 24px; background: #10b981; color: #000; font-weight: bold; font-size: 13px; padding: 12px 20px; border-radius: 10px; box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4); opacity: 0; pointer-events: none; transition: opacity 0.3s; z-index: 9999; }
   </style>
@@ -199,39 +219,77 @@
       <div class="grid-2">
         <!-- 左側：參數選擇 -->
         <div class="card">
-          <div class="card-title"><span class="icon">✨</span> 1. 設定影片主題與目標分鐘數</div>
-          
-          <!-- 主題輸入 -->
-          <div class="form-group">
-            <label>影片主題 / 關鍵字（AI 將依此寫出專業分鏡腳本）：</label>
-            <div style="display:flex; gap:8px;">
-              <input type="text" id="topicInput" class="text-input" value="2026最新：三大AI工具自動化實戰教學" placeholder="輸入你想做的影片主題">
-              <button class="btn btn-magic" style="white-space:nowrap;" onclick="generateAiScriptUI()">
-                ✨ AI寫腳本
-              </button>
+          <div class="card-title"><span class="icon">✨</span> 1. 設定腳本來源與目標時長</div>
+
+          <!-- 模式切換：AI自動寫 vs 自己輸入腳本 -->
+          <div class="script-mode-switcher">
+            <button class="script-mode-btn active" id="btnModeAi" onclick="setScriptMode('ai')">
+              🤖 讓 AI 智慧寫腳本
+            </button>
+            <button class="script-mode-btn" id="btnModeCustom" onclick="setScriptMode('custom')">
+              ✍️ 自己輸入腳本 / 貼文案
+            </button>
+          </div>
+
+          <!-- AI 寫腳本面板 -->
+          <div id="panelModeAi">
+            <!-- 主題輸入 -->
+            <div class="form-group">
+              <label>影片主題 / 關鍵字（AI 將依此寫出專業分鏡腳本）：</label>
+              <div style="display:flex; gap:8px;">
+                <input type="text" id="topicInput" class="text-input" value="2026最新：三大AI工具自動化實戰教學" placeholder="輸入你想做的影片主題">
+                <button class="btn btn-magic" style="white-space:nowrap;" onclick="generateAiScriptUI()">
+                  ✨ AI寫腳本
+                </button>
+              </div>
+            </div>
+
+            <!-- 分鐘數設定 -->
+            <div class="form-group">
+              <label>影片目標時長（精確分鐘數）：</label>
+              <div class="duration-pills">
+                <button class="dur-pill" onclick="setDuration(1)">📱 1 分鐘 (Shorts)</button>
+                <button class="dur-pill" onclick="setDuration(2)">⚡ 2 分鐘 (精華)</button>
+                <button class="dur-pill active" onclick="setDuration(3)">🎯 3 分鐘 (推薦)</button>
+                <button class="dur-pill" onclick="setDuration(5)">🚀 5 分鐘 (深度)</button>
+                <button class="dur-pill" onclick="setDuration(10)">📚 10 分鐘 (完整課)</button>
+              </div>
+              
+              <div class="slider-row">
+                <input type="range" id="durationSlider" min="0.5" max="15" step="0.5" value="3" oninput="onDurationSlider(this.value)">
+                <span class="duration-val-badge" id="durValDisplay">3.0 分鐘</span>
+              </div>
+
+              <div class="calc-meta-bar">
+                <div>預估總字數：<span id="calcWords">約 675 字</span></div>
+                <div>自動編排分鏡：<span id="calcScenes">7 個場景</span></div>
+                <div>均速：<span>每分鐘 225 字</span></div>
+              </div>
             </div>
           </div>
 
-          <!-- 分鐘數設定 -->
-          <div class="form-group">
-            <label>影片目標時長（精確分鐘數）：</label>
-            <div class="duration-pills">
-              <button class="dur-pill" onclick="setDuration(1)">📱 1 分鐘 (Shorts)</button>
-              <button class="dur-pill" onclick="setDuration(2)">⚡ 2 分鐘 (精華)</button>
-              <button class="dur-pill active" onclick="setDuration(3)">🎯 3 分鐘 (推薦)</button>
-              <button class="dur-pill" onclick="setDuration(5)">🚀 5 分鐘 (深度)</button>
-              <button class="dur-pill" onclick="setDuration(10)">📚 10 分鐘 (完整課)</button>
-            </div>
-            
-            <div class="slider-row">
-              <input type="range" id="durationSlider" min="0.5" max="15" step="0.5" value="3" oninput="onDurationSlider(this.value)">
-              <span class="duration-val-badge" id="durValDisplay">3.0 分鐘</span>
+          <!-- 自己輸入腳本面板 -->
+          <div id="panelModeCustom" style="display:none;">
+            <div class="form-group">
+              <label>自訂主題名稱：</label>
+              <input type="text" id="customTopicInput" class="text-input" value="我的自訂教學影片" placeholder="例如：手把手教你自訂自動化工作流">
             </div>
 
-            <div class="calc-meta-bar">
-              <div>預估總字數：<span id="calcWords">約 675 字</span></div>
-              <div>自動編排分鏡：<span id="calcScenes">7 個場景</span></div>
-              <div>均速：<span>每分鐘 225 字</span></div>
+            <div class="form-group">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                <label style="margin-bottom:0;">貼上你的講稿或分鏡（每段空一行即為一個分鏡）：</label>
+                <button class="btn btn-secondary" style="padding:2px 8px; font-size:11px;" onclick="loadExampleCustomScript()">💡 載入範例</button>
+              </div>
+              <textarea id="customScriptTextarea" class="edit-textarea" rows="7" placeholder="可以直接貼上一整篇文案，段落與段落之間空一行即可自動切分為多個分鏡！&#10;&#10;例如：&#10;哈囉大家好！今天我要跟大家分享自己打造的影片工作流。&#10;&#10;第一步，我們打開終端機，執行自動化腳本，系統會瞬間備妥所需模組。&#10;&#10;最後一步，成果直接輸出！喜歡的話記得按讚訂閱分享！"></textarea>
+            </div>
+
+            <div style="display:flex; gap:10px; margin-bottom:16px;">
+              <button class="btn btn-magic" style="flex:1; justify-content:center; padding:10px;" onclick="applyCustomScript()">
+                📥 解析並套用自訂腳本
+              </button>
+              <button class="btn btn-secondary" style="padding:10px 14px; font-size:12px;" onclick="switchTab('script')">
+                📜 開啟逐幕線上編輯
+              </button>
             </div>
           </div>
 
@@ -410,6 +468,19 @@
       <div id="scriptCardsContainer" style="display:flex; flex-direction:column; gap:16px;">
         <!-- JS 動態生成每幕詳細腳本卡片 -->
       </div>
+
+      <!-- 分鏡底部操作按鈕 -->
+      <div style="margin-top: 24px; display:flex; justify-content:center; gap:14px; flex-wrap:wrap;">
+        <button class="btn btn-primary" style="padding:12px 24px; font-size:14px;" onclick="addNewScene()">
+          ➕ 新增一個分鏡場景 (Add Scene)
+        </button>
+        <button class="btn btn-secondary" style="padding:12px 20px; font-size:14px;" onclick="switchTab('studio'); setScriptMode('custom');">
+          ✍️ 大量貼上自訂講稿
+        </button>
+        <button class="btn btn-magic" style="padding:12px 24px; font-size:14px;" onclick="switchTab('studio')">
+          🎬 確定腳本，前往生成影片
+        </button>
+      </div>
     </div>
 
     <!-- TAB 2: 網頁直接錄製聲音 -->
@@ -529,7 +600,10 @@
             <span class="icon">📁</span>
             <span>已生成影片庫（存放於 output_videos 資料夾）</span>
           </div>
-          <span class="badge badge-cyan" id="galleryCountBadge">共 5 部成品</span>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span class="badge badge-cyan" id="galleryCountBadge">共 5 部成品</span>
+            <button class="btn btn-secondary" style="padding:4px 10px; font-size:11px;" onclick="refreshVideoGallery()">🔄 重新整理</button>
+          </div>
         </div>
 
         <div class="video-grid" id="galleryVideoGrid">
@@ -539,7 +613,10 @@
             <div class="video-title">AI生成_2026最新三大AI工具自動化實戰教學_11分_16x9_20260926_160430.mp4</div>
             <div class="video-meta">
               <span>🖥️ 16:9 · 1080p · 7.6 MB</span>
-              <button class="btn btn-secondary" style="padding:4px 10px; font-size:11px;" onclick="copyText('output_videos/AI生成_2026最新三大AI工具自動化實戰教學_11分_16x9_20260926_160430.mp4')">複製路徑</button>
+              <div style="display:flex; gap:6px;">
+                <button class="btn btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="copyText('output_videos/AI生成_2026最新三大AI工具自動化實戰教學_11分_16x9_20260926_160430.mp4')">複製路徑</button>
+                <button class="btn-delete" onclick="deleteVideo('AI生成_2026最新三大AI工具自動化實戰教學_11分_16x9_20260926_160430.mp4')">🗑️ 刪除</button>
+              </div>
             </div>
           </div>
 
@@ -549,7 +626,10 @@
             <div class="video-title">AI生成_一鍵測試_0分_16x9_20260926_160340.mp4</div>
             <div class="video-meta">
               <span>🖥️ 16:9 · 1080p · 865 KB</span>
-              <button class="btn btn-secondary" style="padding:4px 10px; font-size:11px;" onclick="copyText('output_videos/AI生成_一鍵測試_0分_16x9_20260926_160340.mp4')">複製路徑</button>
+              <div style="display:flex; gap:6px;">
+                <button class="btn btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="copyText('output_videos/AI生成_一鍵測試_0分_16x9_20260926_160340.mp4')">複製路徑</button>
+                <button class="btn-delete" onclick="deleteVideo('AI生成_一鍵測試_0分_16x9_20260926_160340.mp4')">🗑️ 刪除</button>
+              </div>
             </div>
           </div>
 
@@ -559,27 +639,36 @@
             <div class="video-title">雙AI協同_EP5_個人知識庫_16x9_20260926_003803.mp4</div>
             <div class="video-meta">
               <span>🖥️ 16:9 · 1080p · 1.3 MB</span>
-              <button class="btn btn-secondary" style="padding:4px 10px; font-size:11px;" onclick="copyText('output_videos/雙AI協同_EP5_個人知識庫_16x9_20260926_003803.mp4')">複製路徑</button>
+              <div style="display:flex; gap:6px;">
+                <button class="btn btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="copyText('output_videos/雙AI協同_EP5_個人知識庫_16x9_20260926_003803.mp4')">複製路徑</button>
+                <button class="btn-delete" onclick="deleteVideo('雙AI協同_EP5_個人知識庫_16x9_20260926_003803.mp4')">🗑️ 刪除</button>
+              </div>
             </div>
           </div>
 
-          <!-- 影片 2 -->
+          <!-- 影片 4 -->
           <div class="video-card">
             <video controls preload="metadata" src="output_videos/2026最強工作流_網頁資料抓取_shorts_20260926_002912.mp4"></video>
             <div class="video-title">2026最強工作流_網頁資料抓取_shorts_20260926_002912.mp4</div>
             <div class="video-meta">
               <span>📱 9:16 Shorts · 833 KB</span>
-              <button class="btn btn-secondary" style="padding:4px 10px; font-size:11px;" onclick="copyText('output_videos/2026最強工作流_網頁資料抓取_shorts_20260926_002912.mp4')">複製路徑</button>
+              <div style="display:flex; gap:6px;">
+                <button class="btn btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="copyText('output_videos/2026最強工作流_網頁資料抓取_shorts_20260926_002912.mp4')">複製路徑</button>
+                <button class="btn-delete" onclick="deleteVideo('2026最強工作流_網頁資料抓取_shorts_20260926_002912.mp4')">🗑️ 刪除</button>
+              </div>
             </div>
           </div>
 
-          <!-- 影片 3 -->
+          <!-- 影片 5 -->
           <div class="video-card">
             <video controls preload="metadata" src="output_videos/雙AI協同_EP5_個人知識庫_16x9_20260926_002816.mp4"></video>
             <div class="video-title">雙AI協同_EP5_個人知識庫_16x9_20260926_002816.mp4</div>
             <div class="video-meta">
               <span>🖥️ 16:9 · 1080p · 1.3 MB</span>
-              <button class="btn btn-secondary" style="padding:4px 10px; font-size:11px;" onclick="copyText('output_videos/雙AI協同_EP5_個人知識庫_16x9_20260926_002816.mp4')">複製路徑</button>
+              <div style="display:flex; gap:6px;">
+                <button class="btn btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="copyText('output_videos/雙AI協同_EP5_個人知識庫_16x9_20260926_002816.mp4')">複製路徑</button>
+                <button class="btn-delete" onclick="deleteVideo('雙AI協同_EP5_個人知識庫_16x9_20260926_002816.mp4')">🗑️ 刪除</button>
+              </div>
             </div>
           </div>
         </div>
@@ -779,6 +868,9 @@
       if (tabId === 'script') {
         renderFullScriptView();
       }
+      if (tabId === 'gallery') {
+        refreshVideoGallery();
+      }
     }
 
     function setDuration(dur) {
@@ -891,7 +983,9 @@
       }
     }
 
-    // 📜 完整分鏡腳本檢視器邏輯 (看腳本)
+    let editingSceneIndex = -1;
+
+    // 📜 完整分鏡腳本檢視器邏輯 (看腳本 & 線上編輯)
     function renderFullScriptView() {
       if (!generatedScenes || generatedScenes.length === 0) {
         generatedScenes = buildScriptScenes(currentTopic, currentDuration);
@@ -916,47 +1010,363 @@
       generatedScenes.forEach((s, idx) => {
         const sceneChars = s.narration ? s.narration.length : 0;
         const sceneSec = Math.round(sceneChars / 3.75);
+        const isEditing = (idx === editingSceneIndex);
 
         const card = document.createElement('div');
         card.className = 'script-card';
+
+        if (isEditing) {
+          card.innerHTML = `
+            <div class="edit-form-box">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
+                <strong style="color:var(--cyan); font-size:14px;">✏️ 正在編輯【分鏡 ${idx + 1} / ${generatedScenes.length}】</strong>
+                <div style="display:flex; gap:8px;">
+                  <button class="btn btn-primary" style="padding:4px 12px; font-size:12px;" onclick="saveScene(${idx})">💾 儲存修改</button>
+                  <button class="btn btn-secondary" style="padding:4px 10px; font-size:12px;" onclick="cancelEditScene()">取消</button>
+                </div>
+              </div>
+              <div class="edit-form-grid">
+                <div>
+                  <label>分鏡標籤 (Badge)：</label>
+                  <input type="text" id="edit_badge_${idx}" class="edit-input" value="${s.badge}">
+                </div>
+                <div>
+                  <label>分鏡標題 (Title)：</label>
+                  <input type="text" id="edit_title_${idx}" class="edit-input" value="${s.title}">
+                </div>
+              </div>
+              <div class="edit-form-row">
+                <label>核心副標題 (Subtitle)：</label>
+                <input type="text" id="edit_sub_${idx}" class="edit-input" value="${s.subtitle}">
+              </div>
+              <div class="edit-form-row">
+                <label>畫面條列重點（每行一點）：</label>
+                <textarea id="edit_bullets_${idx}" class="edit-input" rows="3">${s.bullets.join('\n')}</textarea>
+              </div>
+              <div class="edit-form-row">
+                <label>終端機指令區 (Code Block)：</label>
+                <textarea id="edit_code_${idx}" class="edit-input" rows="2" style="font-family:monospace; color:#4ade80;">${s.code}</textarea>
+              </div>
+              <div class="edit-form-row">
+                <label style="color:var(--amber);">🗣️ 口播旁白與字幕（每分鐘約 225 字）：</label>
+                <textarea id="edit_narr_${idx}" class="edit-textarea" rows="4">${s.narration}</textarea>
+              </div>
+              <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:8px;">
+                <button class="btn btn-primary" onclick="saveScene(${idx})">💾 儲存本幕修改</button>
+                <button class="btn btn-secondary" onclick="cancelEditScene()">取消</button>
+              </div>
+            </div>
+          `;
+        } else {
+          card.innerHTML = `
+            <div class="script-card-header">
+              <div class="script-card-title">
+                <span class="badge badge-cyan" style="font-size:12px;">分鏡 ${idx + 1} / ${generatedScenes.length}</span>
+                <span class="mockup-badge" style="margin-bottom:0; font-size:12px;">${s.badge}</span>
+                <span style="font-size:16px;">${s.title}</span>
+              </div>
+              <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                <span style="font-size:12px; color:var(--text-muted);">約 ${sceneChars} 字 · 預估 ${sceneSec} 秒</span>
+                <button class="btn btn-secondary" style="padding:4px 10px; font-size:11px;" onclick="editScene(${idx})">
+                  ✏️ 編輯
+                </button>
+                <button class="btn btn-secondary" style="padding:4px 10px; font-size:11px;" onclick="copySingleNarration(${idx})">
+                  📋 複製旁白
+                </button>
+                <button class="btn-delete" onclick="deleteScene(${idx})">
+                  🗑️ 刪除
+                </button>
+              </div>
+            </div>
+
+            <div style="font-size:13px; color:var(--text-dim); margin-bottom:12px;">
+              <strong style="color:var(--purple);">📌 本幕核心：</strong> ${s.subtitle}
+            </div>
+
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:12px; margin-bottom:14px;">
+              <div style="background:var(--content-bg); border:1px solid var(--card-border); border-radius:8px; padding:12px;">
+                <div style="font-size:12px; font-weight:bold; color:var(--cyan); margin-bottom:6px;">🖥️ 畫面條列重點：</div>
+                <ul style="list-style:none; padding-left:0; margin:0; font-size:12px; color:#cbd5e1; line-height:1.7;">
+                  ${s.bullets.map(b => `<li style="display:flex; gap:6px; align-items:center;"><span style="color:var(--cyan);">●</span> ${b}</li>`).join('')}
+                </ul>
+              </div>
+              <div style="background:#02040a; border:1px solid rgba(0,240,255,0.25); border-radius:8px; padding:12px; font-family:monospace; font-size:11px; color:#4ade80; white-space:pre-wrap; overflow-x:auto;">
+                <div style="color:#64748b; margin-bottom:4px; font-size:10px;">// 畫面終端機指令區</div>
+                ${s.code}
+              </div>
+            </div>
+
+            <div class="script-narration-box">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                <span style="font-size:12px; font-weight:bold; color:var(--amber);">🗣️ 口播旁白逐字稿 (配音與字幕內容)：</span>
+                <span style="font-size:11px; color:#fde68a;">${sceneChars} 字</span>
+              </div>
+              <div class="script-narration-text">${s.narration}</div>
+            </div>
+          `;
+        }
+        container.appendChild(card);
+      });
+    }
+
+    function editScene(idx) {
+      editingSceneIndex = idx;
+      renderFullScriptView();
+    }
+
+    function cancelEditScene() {
+      editingSceneIndex = -1;
+      renderFullScriptView();
+    }
+
+    function saveScene(idx) {
+      const title = document.getElementById(`edit_title_${idx}`).value.trim() || `場景 ${idx + 1}`;
+      const badge = document.getElementById(`edit_badge_${idx}`).value.trim() || `⚡ 場景 0${idx + 1}`;
+      const subtitle = document.getElementById(`edit_sub_${idx}`).value.trim();
+      const bullets = document.getElementById(`edit_bullets_${idx}`).value.split('\n').map(l => l.trim()).filter(Boolean);
+      const code = document.getElementById(`edit_code_${idx}`).value.trim();
+      const narration = document.getElementById(`edit_narr_${idx}`).value.trim() || title;
+
+      generatedScenes[idx] = { badge, title, subtitle, bullets, code, narration };
+      editingSceneIndex = -1;
+      recalculateScriptTotals();
+      renderFullScriptView();
+      renderScenePreview();
+      showToast(`✅ 分鏡 ${idx + 1} 修改已儲存！`);
+    }
+
+    function addNewScene() {
+      const nextIdx = generatedScenes.length + 1;
+      generatedScenes.push({
+        badge: `⚡ 場景 0${nextIdx}`,
+        title: `自訂分鏡 ${nextIdx}`,
+        subtitle: "自訂本幕重點論述",
+        bullets: ["要點 1：自訂重點", "要點 2：實戰操作步驟"],
+        code: `$ custom-step --idx ${nextIdx}\n>>> Success`,
+        narration: "請在此輸入本幕口播旁白內容。"
+      });
+      editingSceneIndex = generatedScenes.length - 1;
+      recalculateScriptTotals();
+      renderFullScriptView();
+      showToast(`已新增分鏡 ${nextIdx}，請直接編輯！`);
+    }
+
+    function deleteScene(idx) {
+      if (generatedScenes.length <= 1) {
+        showToast("至少需要保留 1 個分鏡場景！");
+        return;
+      }
+      if (!confirm(`確定要刪除第 ${idx + 1} 幕分鏡嗎？`)) return;
+      generatedScenes.splice(idx, 1);
+      if (editingSceneIndex === idx) editingSceneIndex = -1;
+      else if (editingSceneIndex > idx) editingSceneIndex--;
+      recalculateScriptTotals();
+      renderFullScriptView();
+      renderScenePreview();
+      showToast(`已刪除第 ${idx + 1} 幕！`);
+    }
+
+    function recalculateScriptTotals() {
+      const totalChars = generatedScenes.reduce((acc, s) => acc + (s.narration ? s.narration.length : 0), 0);
+      const estSeconds = Math.round(totalChars / 3.75);
+      currentDuration = Math.max(0.5, Math.round((estSeconds / 60) * 10) / 10);
+      
+      const slider = document.getElementById('durationSlider');
+      if (slider) slider.value = currentDuration;
+      const disp = document.getElementById('durValDisplay');
+      if (disp) disp.innerText = `${currentDuration.toFixed(1)} 分鐘`;
+      const calcWords = document.getElementById('calcWords');
+      if (calcWords) calcWords.innerText = `約 ${totalChars} 字`;
+      const calcScenes = document.getElementById('calcScenes');
+      if (calcScenes) calcScenes.innerText = `${generatedScenes.length} 個場景`;
+
+      const scriptCountDisp = document.getElementById('scriptSceneCountDisplay');
+      if (scriptCountDisp) scriptCountDisp.innerText = `${generatedScenes.length} 分鏡 (${currentDuration.toFixed(1)} 分鐘)`;
+
+      updateCmd();
+    }
+
+    function setScriptMode(mode) {
+      const btnAi = document.getElementById('btnModeAi');
+      const btnCustom = document.getElementById('btnModeCustom');
+      const panelAi = document.getElementById('panelModeAi');
+      const panelCustom = document.getElementById('panelModeCustom');
+
+      if (mode === 'ai') {
+        btnAi.classList.add('active');
+        btnCustom.classList.remove('active');
+        panelAi.style.display = 'block';
+        panelCustom.style.display = 'none';
+      } else {
+        btnCustom.classList.add('active');
+        btnAi.classList.remove('active');
+        panelAi.style.display = 'none';
+        panelCustom.style.display = 'block';
+        document.getElementById('customTopicInput').value = currentTopic;
+      }
+    }
+
+    function loadExampleCustomScript() {
+      document.getElementById('customTopicInput').value = "5分鐘學會 Python 自動化實戰";
+      document.getElementById('customScriptTextarea').value = 
+`哈囉大家好，歡迎來到今天的影片！如果你每天都要重複做無聊的手動資料處理，那今天的內容一定能幫你省下大把時間。
+
+第一步，我們先來準備 Python 的執行環境。完全不需要安裝繁重的軟體，只要跟著我的指令，一鍵就能把所需套件安裝完成。
+
+第二步，我們來寫核心邏輯。透過不到十行代碼，系統就能自動抓取資料並生成漂漂亮亮的分析報表。
+
+第三步，成果展示！大家看畫面，原本手動需要半小時的工作，現在只要三秒鐘就自動跑完了！
+
+以上就是今天的教學，如果你喜歡今天的影片，請記得按讚、訂閱並開啟小鈴鐺，我們下期再見！`;
+      showToast("💡 已載入範例講稿！點擊「解析並套用」即可！");
+    }
+
+    function applyCustomScript() {
+      const topic = document.getElementById('customTopicInput').value.trim() || "自訂教學影片";
+      const rawText = document.getElementById('customScriptTextarea').value.trim();
+      if (!rawText) {
+        alert("請先輸入或貼上講稿文案！");
+        return;
+      }
+
+      currentTopic = topic;
+      document.getElementById('topicInput').value = topic;
+      const parsedScenes = parseCustomScriptText(rawText);
+      if (parsedScenes.length === 0) {
+        alert("無法解析文案，請確認內容格式！");
+        return;
+      }
+
+      generatedScenes = parsedScenes;
+      recalculateScriptTotals();
+      renderFullScriptView();
+      renderScenePreview();
+      switchTab('script');
+      showToast(`🎉 成功解析為 ${generatedScenes.length} 個分鏡場景！已為您切換至「看腳本」！`);
+    }
+
+    function parseCustomScriptText(rawText) {
+      let rawBlocks = [];
+      if (rawText.includes('---')) {
+        rawBlocks = rawText.split('---').map(b => b.trim()).filter(b => b.length > 0);
+      } else if (rawText.includes('\n\n')) {
+        rawBlocks = rawText.split(/\n\s*\n/).map(b => b.trim()).filter(b => b.length > 0);
+      } else {
+        rawBlocks = rawText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+      }
+
+      const scenes = [];
+      rawBlocks.forEach((block, idx) => {
+        const blockLines = block.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+        let title = "";
+        let narration = "";
+        let bullets = [];
+        let code = `$ run-scene --step ${idx + 1}\n>>> Status: 200 OK`;
+        let badge = `⚡ 分鏡 0${idx + 1}`;
+
+        if (blockLines.length === 1) {
+          narration = blockLines[0];
+          title = narration.slice(0, 22) + (narration.length > 22 ? '...' : '');
+          bullets = [narration.slice(0, 18), "深入解析關鍵技術", "實務應用落地"];
+        } else {
+          const firstLine = blockLines[0].replace(/^[【\[]?(場景\s*\d+|第\s*\d+\s*幕)?[】\]]?\s*/, '');
+          title = firstLine.slice(0, 26);
+          const rest = blockLines.slice(1);
+          
+          const bulletLines = rest.filter(l => l.startsWith('-') || l.startsWith('•') || l.startsWith('*'));
+          const narrLines = rest.filter(l => !l.startsWith('-') && !l.startsWith('•') && !l.startsWith('*'));
+
+          narration = narrLines.join(' ') || title;
+          if (bulletLines.length > 0) {
+            bullets = bulletLines.map(l => l.replace(/^[-•*]\s*/, ''));
+          } else {
+            bullets = [title, "核心重點詳解", "即學即用步驟"];
+          }
+        }
+
+        if (idx === 0) badge = "🔥 開場破題";
+        else if (idx === rawBlocks.length - 1) badge = "🔔 結尾行動";
+
+        scenes.push({
+          badge,
+          title: title || `場景 ${idx + 1}`,
+          subtitle: narration.slice(0, 36) + (narration.length > 36 ? '...' : ''),
+          bullets: bullets.slice(0, 3),
+          code,
+          narration
+        });
+      });
+
+      return scenes;
+    }
+
+    // 🗑️ 刪除影片功能
+    async function deleteVideo(filename) {
+      if (!confirm(`確定要刪除影片「${filename}」嗎？此操作將永久從磁碟刪除該檔案！`)) {
+        return;
+      }
+      const apiUrl = window.location.origin.includes("8501") ? "/api/delete_video" : "http://127.0.0.1:8501/api/delete_video";
+      try {
+        const res = await fetch(apiUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ filename })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast(`🗑️ 已成功刪除 ${filename}！`);
+          refreshVideoGallery();
+        } else {
+          alert("刪除失敗：" + (data.error || "未知錯誤"));
+        }
+      } catch (err) {
+        alert("💡 提示：若在 GitHub Pages 上瀏覽，請使用本機伺服器 (http://127.0.0.1:8501) 才能直接刪除本機磁碟檔案！");
+      }
+    }
+
+    // 🔄 重新整理影片庫清單
+    async function refreshVideoGallery() {
+      const apiUrl = window.location.origin.includes("8501") ? "/api/list_videos" : "http://127.0.0.1:8501/api/list_videos";
+      try {
+        const res = await fetch(apiUrl);
+        const data = await res.json();
+        if (data.success && data.videos) {
+          renderVideoGrid(data.videos);
+        }
+      } catch (e) {
+        console.log("無法連線後端抓取影片清單，維持目前顯示");
+      }
+    }
+
+    function renderVideoGrid(videos) {
+      const container = document.getElementById('galleryVideoGrid');
+      if (!container) return;
+      const badge = document.getElementById('galleryCountBadge');
+      if (badge) badge.innerText = `共 ${videos.length} 部成品`;
+      const tabBtn = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.innerText.includes('影片成品播放庫'));
+      if (tabBtn) tabBtn.innerText = `📁 影片成品播放庫 (${videos.length})`;
+
+      container.innerHTML = '';
+      if (videos.length === 0) {
+        container.innerHTML = '<div style="color:var(--text-dim); text-align:center; grid-column: 1/-1; padding:40px;">目前尚無已生成影片，請至控制台點擊立即生成！</div>';
+        return;
+      }
+
+      videos.forEach(v => {
+        const bname = v.filename;
+        const isShorts = v.is_shorts;
+        const size = v.size_mb ? `${v.size_mb} MB` : '';
+        const card = document.createElement('div');
+        card.className = 'video-card';
         card.innerHTML = `
-          <div class="script-card-header">
-            <div class="script-card-title">
-              <span class="badge badge-cyan" style="font-size:12px;">分鏡 ${idx + 1} / ${generatedScenes.length}</span>
-              <span class="mockup-badge" style="margin-bottom:0; font-size:12px;">${s.badge}</span>
-              <span style="font-size:16px;">${s.title}</span>
+          <video controls preload="metadata" src="output_videos/${bname}"></video>
+          <div class="video-title">${bname}</div>
+          <div class="video-meta">
+            <span>${isShorts ? '📱 9:16 Shorts' : '🖥️ 16:9 · 1080p'} ${size ? '· ' + size : ''}</span>
+            <div style="display:flex; gap:6px;">
+              <button class="btn btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="copyText('output_videos/${bname}')">複製路徑</button>
+              <button class="btn-delete" onclick="deleteVideo('${bname}')">🗑️ 刪除</button>
             </div>
-            <div style="display:flex; align-items:center; gap:10px;">
-              <span style="font-size:12px; color:var(--text-muted);">約 ${sceneChars} 字 · 預估 ${sceneSec} 秒</span>
-              <button class="btn btn-secondary" style="padding:4px 10px; font-size:11px;" onclick="copySingleNarration(${idx})">
-                📋 複製此段旁白
-              </button>
-            </div>
-          </div>
-
-          <div style="font-size:13px; color:var(--text-dim); margin-bottom:12px;">
-            <strong style="color:var(--purple);">📌 本幕核心：</strong> ${s.subtitle}
-          </div>
-
-          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:12px; margin-bottom:14px;">
-            <div style="background:var(--content-bg); border:1px solid var(--card-border); border-radius:8px; padding:12px;">
-              <div style="font-size:12px; font-weight:bold; color:var(--cyan); margin-bottom:6px;">🖥️ 畫面條列重點：</div>
-              <ul style="list-style:none; padding-left:0; margin:0; font-size:12px; color:#cbd5e1; line-height:1.7;">
-                ${s.bullets.map(b => `<li style="display:flex; gap:6px; align-items:center;"><span style="color:var(--cyan);">●</span> ${b}</li>`).join('')}
-              </ul>
-            </div>
-            <div style="background:#02040a; border:1px solid rgba(0,240,255,0.25); border-radius:8px; padding:12px; font-family:monospace; font-size:11px; color:#4ade80; white-space:pre-wrap; overflow-x:auto;">
-              <div style="color:#64748b; margin-bottom:4px; font-size:10px;">// 畫面終端機指令區</div>
-              ${s.code}
-            </div>
-          </div>
-
-          <div class="script-narration-box">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-              <span style="font-size:12px; font-weight:bold; color:var(--amber);">🗣️ 口播旁白逐字稿 (配音與字幕內容)：</span>
-              <span style="font-size:11px; color:#fde68a;">${sceneChars} 字</span>
-            </div>
-            <div class="script-narration-text">${s.narration}</div>
           </div>
         `;
         container.appendChild(card);
@@ -1035,7 +1445,7 @@
         const res = await fetch(apiUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ topic, duration, aspect, voice })
+          body: JSON.stringify({ topic, duration, aspect, voice, scenes: generatedScenes })
         });
 
         const data = await res.json();
@@ -1076,7 +1486,10 @@
         <div class="video-title" style="color:var(--cyan);">✨ 最新生成：${bname}</div>
         <div class="video-meta">
           <span>${isShorts ? '📱 9:16 Shorts' : '🖥️ 16:9 · 1080p'} · 剛剛生成</span>
-          <button class="btn btn-secondary" style="padding:4px 10px; font-size:11px;" onclick="copyText('output_videos/${bname}')">複製路徑</button>
+          <div style="display:flex; gap:6px;">
+            <button class="btn btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="copyText('output_videos/${bname}')">複製路徑</button>
+            <button class="btn-delete" onclick="deleteVideo('${bname}')">🗑️ 刪除</button>
+          </div>
         </div>
       `;
       container.insertBefore(card, container.firstChild);
@@ -1208,6 +1621,7 @@
 
     // 初始化
     generateAiScriptUI(false);
+    refreshVideoGallery();
   </script>
 </body>
 </html>
