@@ -1,17 +1,33 @@
 import os
 from PIL import Image, ImageDraw, ImageFont
 
-# Windows default fonts
-FONT_BOLD_PATH = "C:\\Windows\\Fonts\\msjhbd.ttc"
-FONT_REGULAR_PATH = "C:\\Windows\\Fonts\\msjh.ttc"
+# Cross-platform font candidates (Linux Noto Sans CJK, Windows 微軟正黑體, macOS PingFang)
+CANDIDATE_FONTS_BOLD = [
+    "/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc",
+    "/usr/share/fonts/truetype/noto/NotoSansCJK-Bold.ttc",
+    "/usr/share/fonts/truetype/droid/DroidSansFallbackFull.ttf",
+    "C:\\Windows\\Fonts\\msjhbd.ttc",
+    "C:\\Windows\\Fonts\\msjh.ttc",
+    "/System/Library/Fonts/PingFang.ttc",
+]
+
+CANDIDATE_FONTS_REGULAR = [
+    "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
+    "/usr/share/fonts/opentype/noto/NotoSansCJK-Medium.ttc",
+    "/usr/share/fonts/truetype/droid/DroidSansFallbackFull.ttf",
+    "C:\\Windows\\Fonts\\msjh.ttc",
+    "/System/Library/Fonts/PingFang.ttc",
+]
 
 def get_font(size: int, bold: bool = True):
-    try:
-        path = FONT_BOLD_PATH if bold else FONT_REGULAR_PATH
+    candidates = CANDIDATE_FONTS_BOLD if bold else CANDIDATE_FONTS_REGULAR
+    for path in candidates:
         if os.path.exists(path):
-            return ImageFont.truetype(path, size)
-    except Exception:
-        pass
+            try:
+                return ImageFont.truetype(path, size)
+            except Exception:
+                continue
+    # Fallback to default
     return ImageFont.load_default()
 
 def draw_gradient_background(draw, width, height, top_color=(10, 15, 29), bottom_color=(5, 8, 16)):

@@ -281,6 +281,41 @@ class VideoStudioHandler(SimpleHTTPRequestHandler):
             self.send_json_response({"success": True, "videos": v_list})
             return
 
+        if parsed.path in ("/api/youtube_queue", "/youtube_queue"):
+            from src.youtube_manager import sync_and_get_queue
+            from src.youtube_uploader import check_youtube_api_readiness
+            queue = sync_and_get_queue()
+            api_status = check_youtube_api_readiness()
+            self.send_json_response({"success": True, "queue": queue, "api_status": api_status})
+            return
+
+        if parsed.path in ("/api/list_recordings", "/list_recordings"):
+            rec_files = sorted(glob.glob(os.path.join("output_recordings", "*.mp4")), key=os.path.getmtime, reverse=True)
+            r_list = []
+            for f in rec_files:
+                bname = os.path.basename(f)
+                size_mb = os.path.getsize(f) / (1024 * 1024)
+                r_list.append({
+                    "filename": bname,
+                    "size_mb": round(size_mb, 2),
+                    "mtime": os.path.getmtime(f)
+                })
+            self.send_json_response({"success": True, "recordings": r_list})
+            return
+
+        if parsed.path.startswith("/recordings/"):
+            filename = urllib.parse.unquote(parsed.path[12:])
+            filepath = os.path.join("output_recordings", filename)
+            if os.path.exists(filepath):
+                self.send_response(200)
+                self.send_header("Content-Type", "video/mp4")
+                self.send_header("Content-Length", str(os.path.getsize(filepath)))
+                self.end_headers()
+                with open(filepath, "rb") as f:
+                    while chunk := f.read(65536):
+                        self.wfile.write(chunk)
+                return
+
         if parsed.path.startswith("/videos/"):
             filename = urllib.parse.unquote(parsed.path[8:])
             filepath = os.path.join(OUTPUT_DIR, filename)
@@ -411,6 +446,122 @@ class VideoStudioHandler(SimpleHTTPRequestHandler):
                 self.send_json_response({"success": False, "error": "檔案不存在"}, status=404)
             return
 
+        if self.path in ("/api/create_shorts_teaser", "/create_shorts_teaser"):
+            from src.shorts_teaser import make_shorts_teaser
+            filename = data.get("filename", "")
+            if not filename:
+                self.send_json_response({"success": False, "error": "未提供原始影片檔名"}, status=400)
+                return
+            duration = float(data.get("duration", 30.0))
+            title = data.get("title", None)
+            cta = data.get("cta", None)
+
+            safe_name = os.path.basename(filename)
+            input_path = os.path.join(OUTPUT_DIR, safe_name)
+            if not os.path.exists(input_path):
+                alt_path = os.path.join("output_recordings", safe_name)
+                if os.path.exists(alt_path):
+                    input_path = alt_path
+                else:
+                    self.send_json_response({"success": False, "error": f"找不到原始影片: {safe_name}"}, status=404)
+                    return
+
+            try:
+                out_path = make_shorts_teaser(
+                    input_video_path=input_path,
+                    duration=duration,
+                    teaser_title=title if title and title.strip() else None,
+                    cta_text=cta if cta and cta.strip() else None
+                )
+                self.send_json_response({
+                    "success": True,
+                    "file": out_path,
+                    "filename": os.path.basename(out_path)
+                })
+            except Exception as e:
+                import traceback
+                traceback.print_exc()
+                self.send_json_response({"success": False, "error": str(e)}, status=500)
+            return
+
+        if self.path in ("/api/youtube_approve", "/youtube_approve"):
+            from src.youtube_manager import approve_video_for_upload
+            filename = data.get("filename", "")
+            title = data.get("title", None)
+            description = data.get("description", None)
+            privacy_status = data.get("privacy_status", None)
+            meta = {}
+            if title: meta["title"] = title
+            if description: meta["description"] = description
+            if privacy_status: meta["privacy_status"] = privacy_status
+            res = approve_video_for_upload(filename, meta if meta else None)
+            self.send_json_response(res)
+            return
+
+        if self.path in ("/api/youtube_reject", "/youtube_reject"):
+            from src.youtube_manager import reject_video
+            filename = data.get("filename", "")
+            reason = data.get("reason", "主人退回修改")
+            res = reject_video(filename, reason)
+            self.send_json_response(res)
+            return
+
+        if self.path in ("/api/youtube_upload", "/youtube_upload"):
+            from src.youtube_uploader import upload_approved_video
+            filename = data.get("filename", "")
+            res = upload_approved_video(filename)
+            self.send_json_response(res)
+            return
+
+        if self.path in ("/api/run_autopilot_recording", "/run_autopilot_recording"):
+            from src.auto_pilot_recorder import run_autopilot_recording
+            mode = data.get("mode", "terminal")
+            title = data.get("title", "AI 電腦無人操作自動錄影")
+            duration = float(data.get("duration", 8.0))
+            prompt = data.get("prompt", None)
+            commands = data.get("commands", None)
+            narration = data.get("narration", None)
+            aspect = data.get("aspect", "16x9")
+            is_vertical = (aspect == "shorts")
+
+            try:
+                out_path = run_autopilot_recording(
+                    mode=mode,
+                    title=title,
+                    duration=duration,
+                    prompt=prompt,
+                    commands=commands,
+                    narration=narration,
+                    is_vertical=is_vertical
+                )
+                self.send_json_response({
+                    "success": True,
+                    "file": out_path,
+                    "filename": os.path.basename(out_path)
+                })
+            except Exception as e:
+                import traceback
+                traceback.print_exc()
+                self.send_json_response({"success": False, "error": str(e)}, status=500)
+            return
+
+        if self.path in ("/api/delete_recording", "/delete_recording"):
+            filename = data.get("filename", "")
+            if not filename:
+                self.send_json_response({"success": False, "error": "未提供錄影檔名"}, status=400)
+                return
+            safe_name = os.path.basename(filename)
+            target = os.path.join("output_recordings", safe_name)
+            if os.path.exists(target) and os.path.isfile(target):
+                try:
+                    os.remove(target)
+                    self.send_json_response({"success": True, "filename": safe_name})
+                except Exception as e:
+                    self.send_json_response({"success": False, "error": f"刪除失敗: {e}"}, status=500)
+            else:
+                self.send_json_response({"success": False, "error": "檔案不存在"}, status=404)
+            return
+
         if self.path in ("/api/generate_custom", "/generate_custom"):
             from create_video import generate_custom_video
             topic = data.get("topic", "2026 最新 AI 實戰工作流")
@@ -424,6 +575,8 @@ class VideoStudioHandler(SimpleHTTPRequestHandler):
                 out_path = generate_custom_video(topic=topic, duration_minutes=duration, is_vertical=is_vertical, voice=voice, custom_scenes=scenes)
                 self.send_json_response({"success": True, "file": out_path})
             except Exception as e:
+                import traceback
+                traceback.print_exc()
                 self.send_json_response({"success": False, "error": str(e)}, status=500)
             return
 

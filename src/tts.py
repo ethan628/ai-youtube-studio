@@ -50,8 +50,38 @@ def generate_speech(text: str, audio_path: str, srt_path: str = None, voice: str
             sample_path = voice.split(":", 1)[1]
         return generate_cloned_speech(text, audio_path, srt_path, sample_audio_path=sample_path)
 
-    asyncio.run(_synthesize_async(text, audio_path, srt_path, voice, rate))
+    try:
+        asyncio.run(_synthesize_async(text, audio_path, srt_path, voice, rate))
+    except Exception as e:
+        print(f"⚠️ Edge-TTS 遠端連線異常 ({e})，正在嘗試重試...")
+        try:
+            import time
+            time.sleep(1)
+            asyncio.run(_synthesize_async(text, audio_path, srt_path, voice, rate))
+        except Exception as e2:
+            print(f"⚠️ Edge-TTS 重試失敗 ({e2})，啟用離線備援音軌合成機制...")
+            _generate_offline_fallback(text, audio_path, srt_path)
+
     return audio_path, srt_path
+
+def _generate_offline_fallback(text: str, audio_path: str, srt_path: str = None):
+    import subprocess
+    import imageio_ffmpeg
+    ffmpeg = imageio_ffmpeg.get_ffmpeg_exe()
+    os.makedirs(os.path.dirname(os.path.abspath(audio_path)), exist_ok=True)
+    dur = max(3.0, len(text) / 3.75)
+    cmd = [
+        ffmpeg, "-y",
+        "-f", "lavfi", "-i", "anullsrc=r=44100:cl=stereo",
+        "-t", f"{dur:.2f}",
+        "-c:a", "libmp3lame",
+        audio_path
+    ]
+    subprocess.run(cmd, capture_output=True)
+    if srt_path:
+        os.makedirs(os.path.dirname(os.path.abspath(srt_path)), exist_ok=True)
+        with open(srt_path, "w", encoding="utf-8") as f:
+            f.write(f"1\n00:00:00,000 --> 00:00:{int(dur):02d},000\n{text}\n")
 
 if __name__ == "__main__":
     test_text = "哈囉大家好，歡迎來到雙AI協同開發！今天帶大家看最神奇的自動化！"

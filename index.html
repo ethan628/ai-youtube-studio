@@ -208,8 +208,10 @@
       <button class="tab-btn active" onclick="switchTab('studio')">🚀 一鍵 AI 生片控制台</button>
       <button class="tab-btn" onclick="switchTab('script')">📜 完整分鏡腳本 (看腳本)</button>
       <button class="tab-btn" onclick="switchTab('preview')">👁️ 分鏡畫面即時預覽</button>
+      <button class="tab-btn" onclick="switchTab('autopilot')">🤖 無人電腦操作錄影</button>
       <button class="tab-btn" onclick="switchTab('record')">🎙️ 網頁直接錄製聲音 (Voice Studio)</button>
       <button class="tab-btn" onclick="switchTab('gallery')">📁 影片成品播放庫 (5)</button>
+      <button class="tab-btn" onclick="switchTab('youtube')">📺 YouTube 審核發布中心 <span class="badge badge-amber" id="ytPendingBadge" style="display:none; font-size:10px; margin-left:4px;">0</span></button>
       <button class="tab-btn" onclick="switchTab('podcast')">📻 Google NotebookLM 轉影片</button>
       <button class="tab-btn" onclick="switchTab('guide')">🛠️ 執行指南</button>
     </div>
@@ -246,17 +248,23 @@
 
             <!-- 分鐘數設定 -->
             <div class="form-group">
-              <label>影片目標時長（精確分鐘數）：</label>
+              <label>影片目標時長（精確分鐘數，支援 0.5 ~ 60 分鐘）：</label>
               <div class="duration-pills">
-                <button class="dur-pill" onclick="setDuration(1)">📱 1 分鐘 (Shorts)</button>
-                <button class="dur-pill" onclick="setDuration(2)">⚡ 2 分鐘 (精華)</button>
-                <button class="dur-pill active" onclick="setDuration(3)">🎯 3 分鐘 (推薦)</button>
-                <button class="dur-pill" onclick="setDuration(5)">🚀 5 分鐘 (深度)</button>
-                <button class="dur-pill" onclick="setDuration(10)">📚 10 分鐘 (完整課)</button>
+                <button class="dur-pill" onclick="setDuration(1)">📱 1 分鐘</button>
+                <button class="dur-pill" onclick="setDuration(3)">🎯 3 分鐘 (推薦)</button>
+                <button class="dur-pill" onclick="setDuration(5)">🚀 5 分鐘</button>
+                <button class="dur-pill" onclick="setDuration(10)">📚 10 分鐘</button>
+                <button class="dur-pill" onclick="setDuration(13)">🔥 13 分鐘 (實戰)</button>
+                <button class="dur-pill" onclick="setDuration(30)">💎 30 分鐘 (深度講堂)</button>
+                <button class="dur-pill" onclick="setDuration(60)">👑 60 分鐘 (完整長課)</button>
               </div>
               
-              <div class="slider-row">
-                <input type="range" id="durationSlider" min="0.5" max="15" step="0.5" value="3" oninput="onDurationSlider(this.value)">
+              <div class="slider-row" style="display:flex; align-items:center; gap:12px;">
+                <input type="range" id="durationSlider" min="0.5" max="60" step="0.5" value="3" oninput="onDurationSlider(this.value)" style="flex:1;">
+                <div style="display:flex; align-items:center; gap:6px;">
+                  <input type="number" id="durationNumberInput" min="0.5" max="60" step="0.5" value="3" oninput="onDurationNumberInput(this.value)" style="width:72px; background:rgba(15,23,42,0.9); border:1px solid var(--border); border-radius:6px; color:#38bdf8; font-size:15px; font-weight:bold; padding:6px 8px; text-align:center;">
+                  <span style="font-size:13px; color:var(--text-dim);">分鐘</span>
+                </div>
                 <span class="duration-val-badge" id="durValDisplay">3.0 分鐘</span>
               </div>
 
@@ -613,7 +621,8 @@
             <div class="video-title">AI生成_2026最新三大AI工具自動化實戰教學_11分_16x9_20260926_160430.mp4</div>
             <div class="video-meta">
               <span>🖥️ 16:9 · 1080p · 7.6 MB</span>
-              <div style="display:flex; gap:6px;">
+              <div style="display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end;">
+                <button class="btn btn-secondary" style="padding:4px 8px; font-size:11px; color:#c084fc; border-color:#a855f7;" onclick="openTeaserModal('AI生成_2026最新三大AI工具自動化實戰教學_11分_16x9_20260926_160430.mp4')">⚡ 轉 Shorts 預告</button>
                 <button class="btn btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="copyText('output_videos/AI生成_2026最新三大AI工具自動化實戰教學_11分_16x9_20260926_160430.mp4')">複製路徑</button>
                 <button class="btn-delete" onclick="deleteVideo('AI生成_2026最新三大AI工具自動化實戰教學_11分_16x9_20260926_160430.mp4')">🗑️ 刪除</button>
               </div>
@@ -626,7 +635,8 @@
             <div class="video-title">AI生成_一鍵測試_0分_16x9_20260926_160340.mp4</div>
             <div class="video-meta">
               <span>🖥️ 16:9 · 1080p · 865 KB</span>
-              <div style="display:flex; gap:6px;">
+              <div style="display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end;">
+                <button class="btn btn-secondary" style="padding:4px 8px; font-size:11px; color:#c084fc; border-color:#a855f7;" onclick="openTeaserModal('AI生成_一鍵測試_0分_16x9_20260926_160340.mp4')">⚡ 轉 Shorts 預告</button>
                 <button class="btn btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="copyText('output_videos/AI生成_一鍵測試_0分_16x9_20260926_160340.mp4')">複製路徑</button>
                 <button class="btn-delete" onclick="deleteVideo('AI生成_一鍵測試_0分_16x9_20260926_160340.mp4')">🗑️ 刪除</button>
               </div>
@@ -639,7 +649,8 @@
             <div class="video-title">雙AI協同_EP5_個人知識庫_16x9_20260926_003803.mp4</div>
             <div class="video-meta">
               <span>🖥️ 16:9 · 1080p · 1.3 MB</span>
-              <div style="display:flex; gap:6px;">
+              <div style="display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end;">
+                <button class="btn btn-secondary" style="padding:4px 8px; font-size:11px; color:#c084fc; border-color:#a855f7;" onclick="openTeaserModal('雙AI協同_EP5_個人知識庫_16x9_20260926_003803.mp4')">⚡ 轉 Shorts 預告</button>
                 <button class="btn btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="copyText('output_videos/雙AI協同_EP5_個人知識庫_16x9_20260926_003803.mp4')">複製路徑</button>
                 <button class="btn-delete" onclick="deleteVideo('雙AI協同_EP5_個人知識庫_16x9_20260926_003803.mp4')">🗑️ 刪除</button>
               </div>
@@ -652,7 +663,8 @@
             <div class="video-title">2026最強工作流_網頁資料抓取_shorts_20260926_002912.mp4</div>
             <div class="video-meta">
               <span>📱 9:16 Shorts · 833 KB</span>
-              <div style="display:flex; gap:6px;">
+              <div style="display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end;">
+                <span class="badge badge-purple" style="padding:4px 6px;">✨ 直式影片</span>
                 <button class="btn btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="copyText('output_videos/2026最強工作流_網頁資料抓取_shorts_20260926_002912.mp4')">複製路徑</button>
                 <button class="btn-delete" onclick="deleteVideo('2026最強工作流_網頁資料抓取_shorts_20260926_002912.mp4')">🗑️ 刪除</button>
               </div>
@@ -665,7 +677,8 @@
             <div class="video-title">雙AI協同_EP5_個人知識庫_16x9_20260926_002816.mp4</div>
             <div class="video-meta">
               <span>🖥️ 16:9 · 1080p · 1.3 MB</span>
-              <div style="display:flex; gap:6px;">
+              <div style="display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end;">
+                <button class="btn btn-secondary" style="padding:4px 8px; font-size:11px; color:#c084fc; border-color:#a855f7;" onclick="openTeaserModal('雙AI協同_EP5_個人知識庫_16x9_20260926_002816.mp4')">⚡ 轉 Shorts 預告</button>
                 <button class="btn btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="copyText('output_videos/雙AI協同_EP5_個人知識庫_16x9_20260926_002816.mp4')">複製路徑</button>
                 <button class="btn-delete" onclick="deleteVideo('雙AI協同_EP5_個人知識庫_16x9_20260926_002816.mp4')">🗑️ 刪除</button>
               </div>
@@ -716,6 +729,193 @@
       </div>
     </div>
 
+    <!-- TAB: 無人電腦操作與自動錄影 -->
+    <div id="tab-autopilot" class="tab-panel">
+      <div class="grid-2">
+        <!-- 左側：無人操作設定 -->
+        <div class="card">
+          <div class="card-title">
+            <span class="icon">🤖</span> 無人電腦自動操作與錄製設定
+          </div>
+          <div style="font-size:13px; color:var(--text-dim); margin-bottom:16px; line-height:1.6;">
+            完全無需真人手動介入！系統會自動模擬滑鼠平滑移動、真實鍵盤敲擊、指令執行日誌或網頁 AI 串流互動，全自動導出 1080p 超高清無人操作錄影片段。
+          </div>
+
+          <!-- 🧠 腳本智能解析與自動匹配模式 -->
+          <div style="background:rgba(30,41,59,0.7); border:1px solid rgba(56,189,248,0.4); border-radius:12px; padding:14px; margin-bottom:18px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <span style="font-weight:bold; color:var(--cyan); font-size:13px; display:flex; align-items:center; gap:6px;">
+                <span>✨</span> 給腳本自動判斷最適合模式 (Smart Auto-Detector)
+              </span>
+              <button class="btn btn-secondary" style="padding:2px 8px; font-size:11px;" onclick="loadCurrentSceneToDetector()">
+                🪄 從目前影片腳本帶入
+              </button>
+            </div>
+            <textarea id="smartScriptInput" class="edit-textarea" rows="2" style="font-size:12px;" placeholder="在此貼上你的分鏡文案、口播旁白或想示範的步驟，系統立即自動分析推薦最適合的模式！" oninput="onSmartScriptInput(this.value)"></textarea>
+
+            <!-- 智慧判斷結果提示卡 -->
+            <div id="smartDetectionBadge" style="display:none; margin-top:10px; padding:10px 12px; border-radius:8px; background:rgba(15,23,42,0.9); border:1px solid var(--cyan); font-size:12px;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span id="detectedModeTag" style="font-weight:bold; color:#38bdf8;">🎯 推薦模式：💻 終端機全自動操作</span>
+                <span id="detectedConfidence" class="badge badge-cyan">98% 匹配</span>
+              </div>
+              <div id="detectedReason" style="color:var(--text-dim); margin-top:4px; font-size:11px; line-height:1.5;">
+                偵測到包含「指令」、「Git」、「安裝」，已自動為您切換並生成 Shell 操作腳本！
+              </div>
+            </div>
+          </div>
+
+          <!-- 模式選擇 -->
+          <div class="form-group">
+            <label>選擇自動操作情境：</label>
+            <div class="option-grid" style="grid-template-columns: 1fr 1fr; gap:10px;">
+              <div class="opt-card selected" id="opt-ap-terminal" onclick="selectAutoPilotMode('terminal')">
+                <div class="opt-title">💻 終端機全自動操作</div>
+                <div class="opt-desc">自動敲入 Shell 指令、執行日誌串流與成功提示</div>
+              </div>
+              <div class="opt-card" id="opt-ap-browser" onclick="selectAutoPilotMode('browser')">
+                <div class="opt-title">🌐 網頁與 AI 工具操作</div>
+                <div class="opt-desc">模擬瀏覽器中輸入提示詞、點擊送出、AI即時回答</div>
+              </div>
+              <div class="opt-card" id="opt-ap-editor" onclick="selectAutoPilotMode('editor')">
+                <div class="opt-title">📝 代碼編輯與自動編譯</div>
+                <div class="opt-desc">VS Code 語法高亮、逐行寫代碼、點擊 Run 執行</div>
+              </div>
+              <div class="opt-card" id="opt-ap-desktop" onclick="selectAutoPilotMode('desktop')">
+                <div class="opt-title">🖥️ 系統螢幕即時錄影</div>
+                <div class="opt-desc">跨平台實體螢幕捕捉（自動備援高畫質無人模擬）</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 標題設定 -->
+          <div class="form-group">
+            <label>示範標題 / 視窗標籤：</label>
+            <input type="text" id="apTitleInput" class="text-input" value="AI 影片自動化管線一鍵啟動" placeholder="輸入操作視窗頂部標題">
+          </div>
+
+          <!-- 依模式切換的自訂內容輸入 -->
+          <div class="form-group" id="apContentGroup">
+            <label id="apContentLabel">欲執行的指令（每行一個）：</label>
+            <textarea id="apContentInput" class="edit-textarea" rows="3" placeholder="例如：python create_video.py --topic '2026最強AI實戰' --duration 3">git clone https://github.com/ethan628/ai-youtube-studio.git
+python create_video.py --topic '2026最強AI實戰' --duration 3</textarea>
+          </div>
+
+          <!-- 時長設定 -->
+          <div class="form-group">
+            <label>錄影時長（秒）：</label>
+            <div class="duration-pills" style="margin-bottom:8px;">
+              <button class="dur-pill" onclick="setApDuration(5)">⚡ 5 秒 (超快)</button>
+              <button class="dur-pill active" onclick="setApDuration(8)">🎯 8 秒 (推薦)</button>
+              <button class="dur-pill" onclick="setApDuration(15)">🚀 15 秒 (完整)</button>
+              <button class="dur-pill" onclick="setApDuration(30)">📚 30 秒 (長展示)</button>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <input type="range" id="apDurationSlider" min="3" max="60" step="1" value="8" oninput="onApDurationSlider(this.value)" style="flex:1;">
+              <span class="duration-val-badge" id="apDurValDisplay">8 秒</span>
+            </div>
+          </div>
+
+          <!-- 旁白選項 -->
+          <div class="form-group">
+            <label>加入同步解說配音（可選，免人工配音）：</label>
+            <input type="text" id="apNarrationInput" class="text-input" value="現在我們啟動全自動化管線，讓系統自動在背景完成所有分鏡與影音渲染！" placeholder="若輸入旁白，系統會自動使用微軟神經語音合成並融入錄影片段">
+          </div>
+
+          <!-- 啟動按鈕 -->
+          <button class="btn btn-magic" style="width:100%; justify-content:center; padding:14px; font-size:15px; margin-top:10px;" id="btnStartAutoPilot" onclick="startAutoPilotRecording()">
+            🎬 啟動無人電腦操作並自動錄影
+          </button>
+        </div>
+
+        <!-- 右側：錄製成果播放器與已錄製清單 -->
+        <div class="card">
+          <div class="card-title">
+            <span class="icon">🎥</span> 最新錄影成品預覽播放
+          </div>
+
+          <!-- 播放器區塊 -->
+          <div style="background:#090d16; border-radius:12px; overflow:hidden; border:1px solid var(--border); min-height:300px; display:flex; flex-direction:column; align-items:center; justify-content:center; margin-bottom:16px;">
+            <video id="apPreviewVideo" controls style="width:100%; max-height:340px; display:none; background:#000;">
+              <source id="apVideoSource" src="" type="video/mp4">
+            </video>
+            <div id="apEmptyPlaceholder" style="text-align:center; padding:40px; color:var(--text-dim);">
+              <div style="font-size:48px; margin-bottom:12px;">🤖</div>
+              <div style="font-size:15px; color:#fff; font-weight:bold; margin-bottom:6px;">尚無錄影正在播放</div>
+              <div style="font-size:13px;">點擊左側「啟動無人電腦操作並自動錄影」立即全自動生成！</div>
+            </div>
+          </div>
+
+          <!-- 歷史錄影片段清單 -->
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <h4 style="margin:0; font-size:14px; color:#fff;">📁 已錄製片段庫 (output_recordings)</h4>
+            <button class="btn btn-secondary" style="padding:4px 10px; font-size:12px;" onclick="loadRecordingsList()">🔄 重新整理</button>
+          </div>
+          <div id="apRecordingsList" style="max-height:220px; overflow-y:auto; display:flex; flex-direction:column; gap:8px;">
+            <!-- JS 動態填入 -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: YouTube 頻道經理與上傳審核中心 -->
+    <div id="tab-youtube" class="tab-panel">
+      <!-- 總監承諾與守則橫幅 -->
+      <div style="background:linear-gradient(135deg, rgba(239,68,68,0.15), rgba(168,85,247,0.15)); border:2px solid #ef4444; border-radius:14px; padding:20px; margin-bottom:20px; box-shadow:0 0 25px rgba(239,68,68,0.2);">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px;">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <div style="width:48px; height:48px; border-radius:12px; background:#ef4444; display:flex; align-items:center; justify-content:center; font-size:26px; box-shadow:0 0 15px rgba(239,68,68,0.6);">
+              📺
+            </div>
+            <div>
+              <h3 style="font-size:18px; font-weight:800; color:#fff; display:flex; align-items:center; gap:8px;">
+                YouTube 頻道營運中樞 · 待審核發布中心
+                <span class="badge" style="background:#ef4444; color:#fff; font-size:11px;">防呆審核鐵律</span>
+              </h3>
+              <p style="font-size:13px; color:#cbd5e1; margin-top:4px;">
+                👑 <strong>經營準則</strong>：我已接管本台 Ubuntu 頻道製作全流程！所有產出影片<strong>在上傳前必須呈送給主人審核確認</strong>，主人未批准絕不擅自上傳！
+              </p>
+            </div>
+          </div>
+          <div style="display:flex; gap:10px; align-items:center;">
+            <button class="btn btn-secondary" style="padding:7px 14px; font-size:12px;" onclick="loadYoutubeQueue()">
+              🔄 重新整理審核佇列
+            </button>
+            <button class="btn btn-secondary" style="padding:7px 14px; font-size:12px; border-color:#a855f7; color:#c084fc;" onclick="openApiSetupModal()">
+              🔑 API 憑證狀態說明
+            </button>
+          </div>
+        </div>
+
+        <!-- 數據統計橫條 -->
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); gap:12px; margin-top:16px;">
+          <div style="background:rgba(0,0,0,0.4); border:1px solid var(--card-border); border-radius:10px; padding:12px 14px;">
+            <div style="font-size:11px; color:var(--text-muted);">🟡 待主人審核影片</div>
+            <div style="font-size:18px; font-weight:900; color:var(--amber); margin-top:4px;" id="ytCountPending">0 部</div>
+          </div>
+          <div style="background:rgba(0,0,0,0.4); border:1px solid var(--card-border); border-radius:10px; padding:12px 14px;">
+            <div style="font-size:11px; color:var(--text-muted);">✅ 主人已批准影片</div>
+            <div style="font-size:18px; font-weight:900; color:var(--emerald); margin-top:4px;" id="ytCountApproved">0 部</div>
+          </div>
+          <div style="background:rgba(0,0,0,0.4); border:1px solid var(--card-border); border-radius:10px; padding:12px 14px;">
+            <div style="font-size:11px; color:var(--text-muted);">🚀 已上傳成功紀錄</div>
+            <div style="font-size:18px; font-weight:900; color:var(--cyan); margin-top:4px;" id="ytCountUploaded">0 部</div>
+          </div>
+          <div style="background:rgba(0,0,0,0.4); border:1px solid var(--card-border); border-radius:10px; padding:12px 14px;">
+            <div style="font-size:11px; color:var(--text-muted);">📡 YouTube 上傳通道</div>
+            <div style="font-size:13px; font-weight:bold; color:#fff; margin-top:6px;" id="ytApiStatusBadge">檢查中...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 待審核佇列卡片清單 -->
+      <div id="ytQueueContainer" style="display:flex; flex-direction:column; gap:20px;">
+        <div style="text-align:center; padding:40px; color:var(--text-dim);">
+          正在讀取影片庫與審核佇列中...
+        </div>
+      </div>
+    </div>
+
     <!-- TAB 6: 啟動說明 -->
     <div id="tab-guide" class="tab-panel">
       <div class="card">
@@ -734,11 +934,125 @@
       </div>
     </div>
 
+  <!-- ⚡ 9:16 Shorts 預告片生成 Modal -->
+  <div id="shortsTeaserModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); backdrop-filter:blur(8px); z-index:10000; align-items:center; justify-content:center; padding:16px;">
+    <div style="background:#0f172a; border:2px solid #a855f7; box-shadow:0 0 35px rgba(168,85,247,0.35); border-radius:16px; max-width:540px; width:100%; padding:24px; position:relative;">
+      <!-- Close Button -->
+      <button onclick="closeTeaserModal()" style="position:absolute; top:16px; right:16px; background:none; border:none; color:#94a3b8; font-size:20px; cursor:pointer;">✕</button>
+      
+      <!-- Modal Header -->
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+        <span style="font-size:26px;">⚡</span>
+        <div>
+          <h3 style="font-size:18px; font-weight:800; background:linear-gradient(90deg, #f43f5e, #c084fc); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">
+            一鍵製作 9:16 Shorts 導流預告片
+          </h3>
+          <p style="font-size:12px; color:#94a3b8; margin-top:2px;">
+            智慧動態羽化背景 + 居中長片精華 + 頂底霓虹導流卡片
+          </p>
+        </div>
+      </div>
+
+      <!-- Feature Highlight Banner -->
+      <div style="background:rgba(168,85,247,0.1); border-left:3px solid #a855f7; border-radius:8px; padding:10px 14px; margin-bottom:16px; font-size:12px; color:#e2e8f0; line-height:1.6;">
+        💡 <strong>全自動演算法</strong>：截取正片開頭精華，自動轉為 1080x1920 垂直短影音，上方放置大標題與預告勳章，下方放置「👉 點擊主頁看完整正片」強導流卡！
+      </div>
+
+      <!-- Target Video Filename Display -->
+      <div style="margin-bottom:14px;">
+        <label style="font-size:12px; color:#94a3b8; display:block; margin-bottom:5px;">來源影片：</label>
+        <div id="teaserSourceFilename" style="background:#050811; border:1px solid #1e293b; color:#38bdf8; font-family:monospace; font-size:12px; padding:8px 12px; border-radius:6px; word-break:break-all;">
+          -
+        </div>
+      </div>
+
+      <!-- Duration Selector Pills -->
+      <div style="margin-bottom:14px;">
+        <label style="font-size:12px; color:#94a3b8; display:block; margin-bottom:6px;">預告片時長 (Duration)：</label>
+        <div style="display:flex; gap:8px;">
+          <button type="button" class="teaser-dur-btn" onclick="selectTeaserDuration(15, this)" style="flex:1; padding:8px; border-radius:8px; border:1px solid #334155; background:#1e293b; color:#cbd5e1; font-size:12px; font-weight:bold; cursor:pointer;">15 秒<br><span style="font-size:10px; font-weight:normal; color:#94a3b8;">節奏快</span></button>
+          <button type="button" class="teaser-dur-btn active" onclick="selectTeaserDuration(30, this)" style="flex:1; padding:8px; border-radius:8px; border:1px solid #a855f7; background:rgba(168,85,247,0.2); color:#c084fc; font-size:12px; font-weight:bold; cursor:pointer;">30 秒 ⭐<br><span style="font-size:10px; font-weight:normal; color:#c084fc;">推薦黃金</span></button>
+          <button type="button" class="teaser-dur-btn" onclick="selectTeaserDuration(45, this)" style="flex:1; padding:8px; border-radius:8px; border:1px solid #334155; background:#1e293b; color:#cbd5e1; font-size:12px; font-weight:bold; cursor:pointer;">45 秒<br><span style="font-size:10px; font-weight:normal; color:#94a3b8;">深度片段</span></button>
+          <button type="button" class="teaser-dur-btn" onclick="selectTeaserDuration(60, this)" style="flex:1; padding:8px; border-radius:8px; border:1px solid #334155; background:#1e293b; color:#cbd5e1; font-size:12px; font-weight:bold; cursor:pointer;">60 秒<br><span style="font-size:10px; font-weight:normal; color:#94a3b8;">Shorts上限</span></button>
+        </div>
+        <input type="hidden" id="teaserDurationVal" value="30">
+      </div>
+
+      <!-- Teaser Title Input -->
+      <div style="margin-bottom:14px;">
+        <label style="font-size:12px; color:#94a3b8; display:block; margin-bottom:5px;">頂部預告大標題 (Title)：</label>
+        <input type="text" id="teaserTitleInput" class="text-input" style="padding:9px 12px; font-size:13px;" placeholder="例如：2026 最新 AI 實戰工作流">
+      </div>
+
+      <!-- CTA Text Input -->
+      <div style="margin-bottom:20px;">
+        <label style="font-size:12px; color:#94a3b8; display:block; margin-bottom:5px;">底部導流按鈕文案 (CTA)：</label>
+        <input type="text" id="teaserCtaInput" class="text-input" style="padding:9px 12px; font-size:13px;" value="👉 點擊主頁看完整正片">
+      </div>
+
+      <!-- Action Buttons & Progress -->
+      <div id="teaserModalActions" style="display:flex; justify-content:flex-end; gap:10px;">
+        <button type="button" class="btn btn-secondary" onclick="closeTeaserModal()" style="padding:9px 16px; font-size:13px;">取消</button>
+        <button type="button" id="btnSubmitTeaser" class="btn btn-magic" onclick="submitCreateShortsTeaser()" style="padding:9px 22px; font-size:13px; background:linear-gradient(90deg, #ec4899, #8b5cf6); color:#fff; border:none;">
+          🚀 開始生成 9:16 Shorts 預告片
+        </button>
+      </div>
+
+      <div id="teaserModalLoading" style="display:none; align-items:center; gap:12px; margin-top:14px; background:#070b14; padding:12px; border-radius:8px; border:1px solid #a855f7;">
+        <div class="spinner"></div>
+        <div style="font-size:12px; color:#e2e8f0;">
+          <div style="font-weight:bold; color:#c084fc;">⚡ 正在生成 9:16 Shorts 預告中...</div>
+          <div style="color:#94a3b8; margin-top:2px;">FFmpeg 正在截取精華、渲染 1080x1920 羽化模糊背景與導流圖層 (約需 2~5 秒)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🔑 YouTube API 憑證配置說明 Modal -->
+  <div id="apiSetupModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); backdrop-filter:blur(8px); z-index:10000; align-items:center; justify-content:center; padding:16px;">
+    <div style="background:#0f172a; border:2px solid #ef4444; box-shadow:0 0 35px rgba(239,68,68,0.35); border-radius:16px; max-width:580px; width:100%; padding:24px; position:relative;">
+      <button onclick="closeApiSetupModal()" style="position:absolute; top:16px; right:16px; background:none; border:none; color:#94a3b8; font-size:20px; cursor:pointer;">✕</button>
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+        <span style="font-size:26px;">🔑</span>
+        <div>
+          <h3 style="font-size:18px; font-weight:800; color:#fff;">
+            YouTube API 發布通道設置指引
+          </h3>
+          <p style="font-size:12px; color:#94a3b8; margin-top:2px;">
+            支援「一鍵官方 API 全自動上傳」與「智慧文案秒複製上傳」雙模式
+          </p>
+        </div>
+      </div>
+
+      <div style="background:#070b14; border:1px solid #1e293b; border-radius:10px; padding:16px; margin-bottom:16px; font-size:13px; color:#cbd5e1; line-height:1.7;">
+        <h4 style="color:#38bdf8; margin-bottom:6px;">模式一：智慧文案秒複製（現已完全就緒，免配置零門檻）</h4>
+        <p style="margin-bottom:12px;">
+          點擊每部影片下方的 <strong>「📋 複製完整發布包」</strong>，系統會自動將 SEO 標題、分段章節時間軸、關鍵字與 HashTags 格式化打包好。直接打開 YouTube Studio 拖入影片並貼上文案即可！
+        </p>
+
+        <h4 style="color:#ef4444; margin-bottom:6px;">模式二：Google YouTube API 全自動上傳通道</h4>
+        <p>
+          若您希望在審核通過後，直接在網頁上一鍵自動推送到 YouTube 頻道：<br>
+          1. 前往 <a href="https://console.cloud.google.com/" target="_blank" style="color:var(--cyan);">Google Cloud Console</a> 啟用 YouTube Data API v3。<br>
+          2. 建立 OAuth 2.0 Client ID (桌面應用程式 Desktop App)。<br>
+          3. 下載 JSON 憑證，並重命名為 <code>client_secrets.json</code> 放進此專案根目錄。<br>
+          4. 終端機安裝套件：<code>.venv/bin/pip install google-api-python-client google-auth-oauthlib</code><br>
+          5. 審核通過後，點擊「🚀 立即上傳至 YouTube」即會全自動進行！
+        </p>
+      </div>
+
+      <div style="display:flex; justify-content:flex-end;">
+        <button class="btn btn-secondary" onclick="closeApiSetupModal()">我知道了，返回審核中心</button>
+      </div>
+    </div>
   </div>
 
   <div id="toast">已複製到剪貼簿！</div>
 
   <script>
+    // 跨環境 API 基礎路徑（支援 http://127.0.0.1:8501 與 file:/// 直接開啟）
+    const API_BASE = (window.location.origin && window.location.origin.includes("8501")) ? "" : "http://127.0.0.1:8501";
+
     let currentTopic = "2026最新：三大AI工具自動化實戰教學";
     let currentDuration = 3.0;
     let selectedAspect = "16x9";
@@ -756,7 +1070,8 @@
     function buildScriptScenes(topic, duration) {
       const cleanTopic = topic.trim() || "2026 最新 AI 全自動實戰工作流";
       const totalSeconds = duration * 60;
-      const numScenes = Math.max(2, Math.round(totalSeconds / 25));
+      const paceSec = duration <= 5 ? 25 : (duration <= 15 ? 30 : 35);
+      const numScenes = Math.max(2, Math.round(totalSeconds / paceSec));
 
       const prototypes = [
         {
@@ -773,7 +1088,7 @@
           sub: "多模型協同運作，各司其職發揮極致威力",
           bullets: ["資料層：自動收集並清洗關鍵資訊", "推理層：大模型智能決策與邏輯推理", "執行層：一鍵自動化輸出最終成果"],
           code: `[Workflow Engine]\nInput Data -> AI Reasoning\n-> Structured Action -> Done!`,
-          narration: `要搞定「${cleanTopic}」，核心關鍵就在於架構分工。讓 AI 負責邏輯分析與繁瑣處理，你只需要專注在決策與靈感輸出。`
+          narration: `要徹底搞定「${cleanTopic}」，核心關鍵就在於架構分工與多模型協同。由系統自動負責資料收集、邏輯分析與繁瑣處理，創作者只需要專注在決策與靈感輸出，就能將生產力推升至極致！`
         },
         {
           badge: "🛠️ 實戰第一步",
@@ -781,7 +1096,7 @@
           sub: "不需要複雜的安裝設定，開箱即用",
           bullets: ["支援 Windows、Mac 與 Linux 跨平台", "模組化設計：免設定複雜 API 即可開跑", "直覺化操作：界面與指令雙軌支援"],
           code: `$ setup-agent --quick-start\n[✔] Dependencies installed\n[✔] Studio ready!`,
-          narration: "第一步非常簡單，我們完全不需要配置昂貴的伺服器或複雜環境，只要透過預設好的工作台，一鍵就能把整個系統啟動起來。"
+          narration: "第一步非常簡單，我們完全不需要配置昂貴的伺服器或安裝繁雜的環境依賴，只要透過今天展示的這套自動化工作台，點擊一鍵就能把整個系統無縫啟動，快速進入創作狀態！"
         },
         {
           badge: "🚀 實戰第二步",
@@ -789,7 +1104,7 @@
           sub: "將繁複的流程轉化為全自動閉環",
           bullets: ["自動化管線監控：實時掌握運行狀態", "異常自動重試與修復機制", "毫秒級響應速度，告別等待焦慮"],
           code: `$ run-task --mode continuous\n>>> Processing batch items...\n>>> Status: 200 OK (0.42s)`,
-          narration: "接下來就是最精彩的部分：我們把剛才設定好的規則交給系統自動運轉，你會發現原本要花好幾天的繁瑣流程，現在幾秒鐘就處理完畢！"
+          narration: "接下來就是最精彩的核心環節：我們把設定好的規格與工作流程交給系統自動運轉，你會發現原本需要耗費好幾天反覆調整的繁瑣步驟，現在只需要短短幾秒鐘就能全部精準跑完！"
         },
         {
           badge: "🎯 成果示範",
@@ -797,7 +1112,7 @@
           sub: "只需一句話指令，成果直接呈現眼前",
           bullets: ["高精準度：輸出品質超越手動成果", "多格式支援：表格、圖文、影音一應俱全", "即時預覽與一鍵導出"],
           code: `User: 產生完整分析報表\nAgent: Generating report...\nSaved: output_final.mp4 [Success!]`,
-          narration: "你看畫面上的實際成果！從輸入指令到完整產出，不僅速度極快，而且細節豐富，這就是最新 AI 協同帶來的生產力革命。"
+          narration: "大家可以仔細看畫面上展示的實際成果！從輸入最初的一句話指令，到整部影片與圖文資料完整產出，不僅速度極快而且細節滿滿，這就是最新 AI 自動化協同帶來的震撼生產力！"
         },
         {
           badge: "💡 進階秘訣",
@@ -805,7 +1120,7 @@
           sub: "老手才知道的隱藏設定，讓效果再提升 200%",
           bullets: ["提示詞優化：如何引導 AI 給出最精準解答", "快取機制：節省時間與算力消耗", "靈活調參：自訂最適合你工作習慣的模式"],
           code: `Optimization Tips:\n- Use structured markdown inputs\n- Enable local caching for 10x speed`,
-          narration: "在這裡跟大家分享一個關鍵技巧：在執行時善用結構化指令與快取機制，可以讓整體穩定度大幅提升，完全避免常見的卡頓問題。"
+          narration: "在這裡跟大家分享一個老手才知道的關鍵技巧：在執行時善用結構化指令規範與本地快取機制，可以讓整體運算穩定度大幅提升，還能節省算力開銷，完全避免常見的格式錯誤與延遲！"
         },
         {
           badge: "📊 效益對比",
@@ -813,7 +1128,7 @@
           sub: "數據說話！效率翻倍、時間成本直降 90%",
           bullets: ["時間投入：從數小時壓縮至幾分鐘", "人力成本：單人即可搞定團隊工作量", "持續複利：建立一次，隨時反覆調用"],
           code: `[Comparison]\nManual: 4.5 hours | High effort\nAI Studio: 3 minutes | 1-Click Done`,
-          narration: "算一算這筆帳：以前手動操作需要耗費大半天，現在全部自動化，你把省下來的時間拿去構思新題目或休息，效率直接翻了好幾倍！"
+          narration: "我們來認真算一算這筆時間成本：過去手動剪輯與腳本撰寫往往需要耗費一整天，現在全面導入自動化，你把省下來的大量寶貴時間拿去構思更多優質題目，長期的複利效益絕對超過數倍！"
         },
         {
           badge: "🔔 訂閱與資源",
@@ -833,17 +1148,37 @@
       } else if (numScenes <= 8) {
         picked = prototypes.slice(0, numScenes);
       } else {
-        picked = [...prototypes];
-        for (let i = prototypes.length; i < numScenes; i++) {
+        const curriculumTopics = [
+          { title: "資料流架構設計與強型別合約", sub: "建立端到端強型別資料檢驗標準", bullets: ["Pydantic 結構化欄位驗證", "異常格式自動修復補齊", "邊界資料雜訊即時過濾"], code: "$ schema-validate --strict\nStatus: 100% Validated" },
+          { title: "超長文本自動分塊與語義摘要", sub: "保留核心邏輯並精確控制 Token", bullets: ["層級化摘要遞迴演算法", "關鍵論點加權排序保留", "動態滑動窗口 (Sliding Window)"], code: "$ summarizer --mode chunked\nTokens: 18,500 -> 920" },
+          { title: "動態視訊字幕毫秒級同步對齊", sub: "波形頻譜與時間軸自動精準吻合", bullets: ["VAD 語音活動檢測精確到毫秒", "音高與音量波形動態反饋", "智慧斷句與螢幕邊緣防遮擋"], code: "$ align-subtitles --precision ms\nOffset: 0.00ms [Sync OK]" },
+          { title: "高對比科技視覺排版與渲染", sub: "霓虹賽博龐克風格，大螢幕清晰吸睛", bullets: ["粗體描邊與立體陰影特效", "背景電路網格動態融合", "支援 1080p 橫片與 9:16 Shorts"], code: "$ render-canvas --res 1080p\nStyle: Cyberpunk Neon Blue" },
+          { title: "神經擬真聲音情感與語調調校", sub: "突破機械感！讓 AI 配音充滿感染力", bullets: ["語速微調 (+0% ~ +8%) 匹配節奏", "標點符號換氣與停頓深度控制", "雙聲道立體聲母帶級響度標準化"], code: "$ tts-engine --tune expressiveness\nPitch: +2Hz | Rate: +5% [Natural]" },
+          { title: "本地私有大模型無網絡離線部署", sub: "完全不依賴雲端，數據 100% 留在電腦", bullets: ["Ollama 與 vLLM 高速推論引擎", "4-bit / 8-bit 量化顯存極限壓榨", "離線環境毫秒級極速回應"], code: "$ ollama run deepseek-r1:8b\nLoaded to GPU VRAM: 4.8 GB" },
+          { title: "自動化防當機與常駐服務守護", sub: "Systemd 與 Supervisor 背景無人維運", bullets: ["進程異常重啟與自動心跳檢測", "崩潰日誌自動快照與告警推播", "平滑重啟 (Zero-Downtime Reload)"], code: "$ systemctl status ai-studio-daemon\nActive: active (running) [24/7 OK]" },
+          { title: "多智能體協同 (Multi-Agent Swarm)", sub: "專職專責！打造頂級 AI 虛擬專家團隊", bullets: ["規劃者 (Planner) 制定整體策略", "執行者 (Coder) 專注產出高品質結果", "審查者 (Reviewer) 雙重驗證驗收"], code: "[Agent Swarm]\nPlanner -> Coder -> Reviewer\nFinal Consensus: Approved (100%)" },
+          { title: "大規模批次生片排程系統", sub: "一次生成數十部影片的高速管線", bullets: ["佇列管理 (Queue System) 依序排程", "多核心 CPU 與硬體 GPU 加速編碼", "完成後自動重命名並分類歸檔"], code: "$ batch-producer --queue video_jobs/\nProcessed: 12/12 Completed (100%)" },
+          { title: "高續播率與點閱率 (CTR) 實戰秘訣", sub: "抓住眼球！讓 YouTube 演算法主動推薦", bullets: ["前 3 秒黃金留存法則精準落實", "縮圖與標題的對比張力營造", "觀眾互動觸發點的策略性埋入"], code: "[Audience Retention]\nTarget: > 65% at 30s\nAlgorithm Boost Factor: High" }
+        ];
+
+        picked = prototypes.slice(0, 4);
+        const extraCount = numScenes - 6;
+        for (let i = 0; i < extraCount; i++) {
+          const mod = curriculumTopics[i % curriculumTopics.length];
+          const cycle = Math.floor(i / curriculumTopics.length) + 1;
+          const idx = i + 5;
+          const suffix = `：${mod.title}` + (cycle > 1 ? ` (第${cycle}講)` : "");
           picked.push({
-            badge: `🔍 深度探討 0${i-prototypes.length+1}`,
-            suffix: `：模組實作第 ${i-prototypes.length+1} 講`,
-            sub: "針對進階情境與實戰案例深入剖析",
-            bullets: ["邊界情況處理機制", "自動化測試與監控日誌", "長期維護與成本優化建議"],
-            code: `$ run-deep-dive --part ${i-prototypes.length+1}\nStatus: ALL PASS`,
-            narration: `現在我們來看進階實務環節。透過這個模組的深入設置，能確保你的工作流在處理大量任務時依然保持高速穩定。`
+            badge: `🔍 實戰探討 ${String(idx).padStart(2, '0')}`,
+            suffix: suffix,
+            sub: mod.sub,
+            bullets: mod.bullets,
+            code: mod.code,
+            narration: `現在我們深入探討【${cleanTopic}】的第 ${idx} 個關鍵核心模組：${mod.title}。在很多團隊的實際落地中，手動處理容易遭遇效能瓶頸或格式錯誤。透過我們設計的自動化檢驗機制，能確保所有環節穩定運作。大家跟著畫面設定，就能輕鬆掌握這套高效率工作流！`
           });
         }
+        picked.push(prototypes[4]); // 成果示範
+        picked.push(prototypes[7]); // 總結與訂閱領取
       }
 
       return picked.map(p => ({
@@ -871,27 +1206,405 @@
       if (tabId === 'gallery') {
         refreshVideoGallery();
       }
+      if (tabId === 'autopilot') {
+        loadRecordingsList();
+      }
+      if (tabId === 'youtube') {
+        loadYoutubeQueue();
+      }
+    }
+
+    // --- 無人電腦操作與錄影功能 (Auto-Pilot) ---
+    let currentApMode = 'terminal';
+    let currentApDuration = 8;
+
+    // 🧠 腳本智能解析與模式自動決策核心演算法
+    function autoDetectScriptMode(text) {
+      if (!text || !text.trim()) {
+        const badge = document.getElementById('smartDetectionBadge');
+        if (badge) badge.style.display = 'none';
+        return;
+      }
+
+      const lower = text.toLowerCase();
+      let scores = { terminal: 0, browser: 0, editor: 0, desktop: 0 };
+      let reasons = { terminal: [], browser: [], editor: [], desktop: [] };
+
+      // 1. 終端機特徵
+      const termKws = [
+        { kw: "git", pts: 5, label: "Git 版本控制" },
+        { kw: "pip", pts: 5, label: "Pip 套件管理" },
+        { kw: "npm", pts: 5, label: "NPM 套件管理" },
+        { kw: "install", pts: 4, label: "安裝套件" },
+        { kw: "安裝", pts: 4, label: "安裝套件" },
+        { kw: "終端機", pts: 6, label: "終端機環境" },
+        { kw: "指令", pts: 5, label: "Shell 指令" },
+        { kw: "命令行", pts: 5, label: "命令行" },
+        { kw: "terminal", pts: 6, label: "Terminal" },
+        { kw: "bash", pts: 5, label: "Bash" },
+        { kw: "docker", pts: 5, label: "Docker" },
+        { kw: "curl", pts: 4, label: "Curl 請求" },
+        { kw: "run-", pts: 4, label: "CLI 執行" },
+        { kw: "$ ", pts: 6, label: "Shell Prompt 指令符號" },
+        { kw: "cd ", pts: 4, label: "切換目錄" },
+        { kw: "環境", pts: 3, label: "環境就緒" },
+        { kw: "setup", pts: 4, label: "初始化設定" }
+      ];
+      termKws.forEach(k => {
+        if (lower.includes(k.kw)) {
+          scores.terminal += k.pts;
+          if (!reasons.terminal.includes(k.label)) reasons.terminal.push(k.label);
+        }
+      });
+
+      // 2. 網頁與 AI 助手特徵
+      const browserKws = [
+        { kw: "http", pts: 5, label: "HTTP 網址" },
+        { kw: "chatgpt", pts: 6, label: "ChatGPT" },
+        { kw: "claude", pts: 6, label: "Claude" },
+        { kw: "deepseek", pts: 6, label: "DeepSeek" },
+        { kw: "gemini", pts: 5, label: "Gemini" },
+        { kw: "notebooklm", pts: 6, label: "NotebookLM" },
+        { kw: "prompt", pts: 5, label: "AI 提示詞" },
+        { kw: "提示詞", pts: 5, label: "提示詞 Prompt" },
+        { kw: "網頁", pts: 5, label: "網頁介面" },
+        { kw: "網站", pts: 4, label: "網站平台" },
+        { kw: "瀏覽器", pts: 6, label: "瀏覽器操作" },
+        { kw: "搜尋", pts: 4, label: "搜尋操作" },
+        { kw: "提問", pts: 4, label: "AI 對話提問" },
+        { kw: "對話", pts: 3, label: "AI 對話" },
+        { kw: "問答", pts: 3, label: "智慧問答" },
+        { kw: "線上", pts: 3, label: "線上雲端" }
+      ];
+      browserKws.forEach(k => {
+        if (lower.includes(k.kw)) {
+          scores.browser += k.pts;
+          if (!reasons.browser.includes(k.label)) reasons.browser.push(k.label);
+        }
+      });
+
+      // 3. 代碼編輯器特徵
+      const editorKws = [
+        { kw: "def ", pts: 6, label: "Python 函式 (def)" },
+        { kw: "import ", pts: 5, label: "模組導入 (import)" },
+        { kw: "class ", pts: 5, label: "物件類別 (class)" },
+        { kw: "python", pts: 4, label: "Python 語言" },
+        { kw: ".py", pts: 5, label: "Python 程式檔案" },
+        { kw: "代碼", pts: 5, label: "程式代碼" },
+        { kw: "寫代碼", pts: 6, label: "撰寫代碼" },
+        { kw: "程式", pts: 4, label: "寫程式" },
+        { kw: "函式", pts: 4, label: "函式封裝" },
+        { kw: "vscode", pts: 6, label: "VS Code 編輯器" },
+        { kw: "編輯器", pts: 5, label: "代碼編輯器" },
+        { kw: "print(", pts: 5, label: "Print 輸出語法" },
+        { kw: "return ", pts: 4, label: "語法結構 (return)" }
+      ];
+      editorKws.forEach(k => {
+        if (lower.includes(k.kw)) {
+          scores.editor += k.pts;
+          if (!reasons.editor.includes(k.label)) reasons.editor.push(k.label);
+        }
+      });
+
+      // 4. 實體螢幕桌面特徵
+      const desktopKws = [
+        { kw: "桌面", pts: 5, label: "電腦桌面" },
+        { kw: "螢幕", pts: 5, label: "螢幕錄影" },
+        { kw: "檔案總管", pts: 5, label: "檔案管理員" },
+        { kw: "資料夾", pts: 4, label: "資料夾操作" },
+        { kw: "視窗", pts: 4, label: "視窗切換" },
+        { kw: "軟體", pts: 3, label: "桌面軟體" }
+      ];
+      desktopKws.forEach(k => {
+        if (lower.includes(k.kw)) {
+          scores.desktop += k.pts;
+          if (!reasons.desktop.includes(k.label)) reasons.desktop.push(k.label);
+        }
+      });
+
+      let bestMode = 'terminal';
+      let maxScore = scores.terminal;
+      for (let m in scores) {
+        if (scores[m] > maxScore) {
+          maxScore = scores[m];
+          bestMode = m;
+        }
+      }
+
+      const totalScore = scores.terminal + scores.browser + scores.editor + scores.desktop;
+      const confidence = totalScore > 0 ? Math.min(99, Math.max(70, Math.round((maxScore / totalScore) * 100))) : 88;
+
+      // 自動切換上方模式卡片
+      selectAutoPilotMode(bestMode);
+
+      // 智慧萃取標題與執行內容
+      const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+      const cleanTitle = (lines[0] || "AI 自動化操作實戰").replace(/^[0-9\.\-\:\#\*\s]+/, '').slice(0, 24);
+      document.getElementById('apTitleInput').value = cleanTitle;
+
+      if (bestMode === 'terminal') {
+        const cmdLines = lines.filter(l => l.includes('$') || l.includes('python') || l.includes('git') || l.includes('pip') || l.includes('run'));
+        if (cmdLines.length > 0) {
+          document.getElementById('apContentInput').value = cmdLines.map(l => l.replace(/^\$\s*/, '')).join('\n');
+        } else {
+          document.getElementById('apContentInput').value = `git clone https://github.com/ethan628/ai-youtube-studio.git\npython create_video.py --topic "${cleanTitle}" --duration 3`;
+        }
+      } else if (bestMode === 'browser') {
+        const promptCandidate = lines.find(l => l.length > 10 && !l.includes('http') && !l.includes('$')) || text.slice(0, 60);
+        document.getElementById('apContentInput').value = promptCandidate;
+      } else if (bestMode === 'editor') {
+        const codeLines = lines.filter(l => l.includes('import') || l.includes('def') || l.includes('=') || l.includes('print'));
+        if (codeLines.length > 0) {
+          document.getElementById('apContentInput').value = codeLines.join('\n');
+        } else {
+          document.getElementById('apContentInput').value = `from src.script_generator import generate_script_by_ai\n\n# 自動依主題生成專業分鏡\nscript = generate_script_by_ai(topic="${cleanTitle}")\nprint(f"[OK] 成功規劃 {len(script['scenes'])} 幕分鏡")`;
+        }
+      }
+
+      // 自動填入旁白解說
+      const narrCandidate = lines.find(l => l.length > 20) || text.slice(0, 80);
+      document.getElementById('apNarrationInput').value = narrCandidate;
+
+      // 顯示辨識卡片
+      const badge = document.getElementById('smartDetectionBadge');
+      const modeTag = document.getElementById('detectedModeTag');
+      const confTag = document.getElementById('detectedConfidence');
+      const reasonTag = document.getElementById('detectedReason');
+
+      const modeNames = {
+        terminal: "💻 終端機全自動操作 (Terminal)",
+        browser: "🌐 網頁與 AI 工具操作 (Browser)",
+        editor: "📝 代碼編輯與自動編譯 (VS Code)",
+        desktop: "🖥️ 系統螢幕即時錄影 (Desktop)"
+      };
+
+      modeTag.innerText = `🎯 推薦模式：${modeNames[bestMode]}`;
+      confTag.innerText = `${confidence}% 匹配`;
+      const detectedKws = reasons[bestMode].length > 0 ? reasons[bestMode].slice(0, 4).join("、") : "語意結構特徵";
+      reasonTag.innerHTML = `系統偵測到腳本包含「<strong>${detectedKws}</strong>」，已為您自動切換至最適情境並提煉操作指令！`;
+      badge.style.display = 'block';
+    }
+
+    let smartInputTimer = null;
+    function onSmartScriptInput(val) {
+      clearTimeout(smartInputTimer);
+      smartInputTimer = setTimeout(() => {
+        autoDetectScriptMode(val);
+      }, 300);
+    }
+
+    function loadCurrentSceneToDetector() {
+      if (!generatedScenes || generatedScenes.length === 0) {
+        showToast("尚未產生分鏡腳本，請先在控制台生成！");
+        return;
+      }
+      let targetScene = generatedScenes.find(s => (s.title && (s.title.includes("步") || s.title.includes("架構") || s.title.includes("實戰") || s.title.includes("示範"))));
+      if (!targetScene) targetScene = generatedScenes[Math.min(2, generatedScenes.length - 1)];
+
+      const combinedText = `${targetScene.badge} · ${targetScene.title}\n${targetScene.subtitle || ''}\n${(targetScene.bullets || []).join('\n')}\n${targetScene.code || ''}\n${targetScene.narration || ''}`;
+      
+      document.getElementById('smartScriptInput').value = combinedText;
+      autoDetectScriptMode(combinedText);
+      showToast(`🪄 已成功帶入「${targetScene.title}」並完成智能匹配！`);
+    }
+
+    function selectAutoPilotMode(mode) {
+      currentApMode = mode;
+      document.querySelectorAll('#opt-ap-terminal, #opt-ap-browser, #opt-ap-editor, #opt-ap-desktop').forEach(el => el.classList.remove('selected'));
+      const activeEl = document.getElementById('opt-ap-' + mode);
+      if (activeEl) activeEl.classList.add('selected');
+
+      const titleInput = document.getElementById('apTitleInput');
+      const label = document.getElementById('apContentLabel');
+      const contentInput = document.getElementById('apContentInput');
+      const narrInput = document.getElementById('apNarrationInput');
+
+      if (mode === 'terminal') {
+        titleInput.value = "AI 影片自動化管線一鍵啟動";
+        label.innerText = "欲執行的指令（每行一個）：";
+        contentInput.value = "git clone https://github.com/ethan628/ai-youtube-studio.git\npython create_video.py --topic '2026最強AI實戰' --duration 3";
+        narrInput.value = "現在我們打開終端機，執行自動化腳本，系統會瞬間備妥所需模組並開始生片！";
+      } else if (mode === 'browser') {
+        titleInput.value = "DeepSeek AI · 自動化工作流助理";
+        label.innerText = "欲在 AI 搜尋列輸入的提問：";
+        contentInput.value = "請幫我規劃一套完全不用人操作的 YouTube 影片自動生成工作流";
+        narrInput.value = "在瀏覽器中向 AI 提問，系統會即時串流回傳結構化解答與方案！";
+      } else if (mode === 'editor') {
+        titleInput.value = "VS Code · create_video.py";
+        label.innerText = "欲自動撰寫的 Python 代碼：";
+        contentInput.value = "from src.script_generator import generate_script_by_ai\nscript = generate_script_by_ai('2026最新AI生片')\nprint('[AI Studio] 成功規劃分鏡')";
+        narrInput.value = "進入代碼編輯器，系統自動打字輸入代碼並點擊執行，毫秒級輸出成功！";
+      } else {
+        titleInput.value = "本機實體螢幕自動錄製";
+        label.innerText = "錄影備註說明：";
+        contentInput.value = "正在錄製本機桌面操作...";
+        narrInput.value = "系統正在全自動捕捉電腦螢幕動態！";
+      }
+    }
+
+    function setApDuration(dur) {
+      currentApDuration = parseInt(dur);
+      document.getElementById('apDurationSlider').value = dur;
+      document.getElementById('apDurValDisplay').innerText = `${dur} 秒`;
+      document.querySelectorAll('#tab-autopilot .duration-pills .dur-pill').forEach(btn => {
+        btn.classList.toggle('active', btn.innerText.includes(`${dur} 秒`));
+      });
+    }
+
+    function onApDurationSlider(val) {
+      currentApDuration = parseInt(val);
+      document.getElementById('apDurValDisplay').innerText = `${val} 秒`;
+      document.querySelectorAll('#tab-autopilot .duration-pills .dur-pill').forEach(btn => {
+        btn.classList.toggle('active', btn.innerText.includes(`${val} 秒`));
+      });
+    }
+
+    async function startAutoPilotRecording() {
+      const btn = document.getElementById('btnStartAutoPilot');
+      btn.disabled = true;
+      btn.innerHTML = `<span class="spinner" style="display:inline-block;width:14px;height:14px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:spin 0.8s linear infinite;margin-right:6px;"></span> 🤖 電腦自動操作錄影中，請稍候...`;
+
+      const title = document.getElementById('apTitleInput').value.trim() || "AI 電腦無人操作自動錄影";
+      const content = document.getElementById('apContentInput').value.trim();
+      const narration = document.getElementById('apNarrationInput').value.trim();
+
+      const payload = {
+        mode: currentApMode,
+        title: title,
+        duration: currentApDuration,
+        prompt: content,
+        commands: content ? content.split('\n').filter(l => l.trim().length > 0) : null,
+        narration: narration,
+        aspect: selectedAspect
+      };
+
+      try {
+        const res = await fetch(`${API_BASE}/api/run_autopilot_recording`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast("🎉 無人電腦操作錄影完成！");
+          playRecordingVideo(data.filename);
+          loadRecordingsList();
+        } else {
+          alert("錄製失敗：" + (data.error || "未知錯誤"));
+        }
+      } catch (err) {
+        alert("請求失敗：" + err);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = "🎬 啟動無人電腦操作並自動錄影";
+      }
+    }
+
+    function playRecordingVideo(filename) {
+      const video = document.getElementById('apPreviewVideo');
+      const source = document.getElementById('apVideoSource');
+      const placeholder = document.getElementById('apEmptyPlaceholder');
+
+      source.src = `${API_BASE}/recordings/${encodeURIComponent(filename)}?t=${Date.now()}`;
+      video.load();
+      placeholder.style.display = 'none';
+      video.style.display = 'block';
+      video.play().catch(() => {});
+    }
+
+    async function loadRecordingsList() {
+      const listContainer = document.getElementById('apRecordingsList');
+      if (!listContainer) return;
+
+      try {
+        const res = await fetch(`${API_BASE}/api/list_recordings`);
+        const data = await res.json();
+        if (data.success && data.recordings && data.recordings.length > 0) {
+          listContainer.innerHTML = '';
+          data.recordings.forEach(r => {
+            const item = document.createElement('div');
+            item.style.cssText = "display:flex; justify-content:space-between; align-items:center; background:#1e293b; padding:8px 12px; border-radius:8px; font-size:13px;";
+            item.innerHTML = `
+              <div style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:65%;">
+                <span style="color:var(--cyan); font-weight:bold;">🎬 ${r.filename}</span>
+                <span style="color:var(--text-dim); font-size:11px; margin-left:6px;">(${r.size_mb} MB)</span>
+              </div>
+              <div style="display:flex; gap:6px;">
+                <button class="btn btn-secondary" style="padding:3px 8px; font-size:11px;" onclick="playRecordingVideo('${r.filename}')">▶ 播放</button>
+                <button class="btn btn-secondary" style="padding:3px 8px; font-size:11px; color:#c084fc; border-color:#a855f7;" onclick="openTeaserModal('${r.filename}')">⚡ 轉預告</button>
+                <a href="${API_BASE}/recordings/${encodeURIComponent(r.filename)}" download class="btn btn-secondary" style="padding:3px 8px; font-size:11px; text-decoration:none;">📥 下載</a>
+                <button class="btn btn-secondary" style="padding:3px 8px; font-size:11px; color:#ef4444;" onclick="deleteRecordingFile('${r.filename}')">🗑️</button>
+              </div>
+            `;
+            listContainer.appendChild(item);
+          });
+        } else {
+          listContainer.innerHTML = '<div style="color:var(--text-dim); font-size:12px; text-align:center; padding:10px;">目前 output_recordings 中尚無錄影檔</div>';
+        }
+      } catch (e) {
+        listContainer.innerHTML = '<div style="color:var(--text-dim); font-size:12px;">載入錄影清單失敗 (請確認後端已開啟)</div>';
+      }
+    }
+
+    async function deleteRecordingFile(filename) {
+      if (!confirm(`確定要刪除錄影片段 ${filename} 嗎？`)) return;
+      try {
+        const res = await fetch(`${API_BASE}/api/delete_recording`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ filename: filename })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast(`已成功刪除 ${filename}`);
+          loadRecordingsList();
+        } else {
+          alert("刪除失敗：" + data.error);
+        }
+      } catch (e) {
+        alert("刪除請求失敗: " + e);
+      }
+    }
+
+    function onDurationNumberInput(val) {
+      let dur = parseFloat(val);
+      if (isNaN(dur)) return;
+      if (dur < 0.5) dur = 0.5;
+      if (dur > 60) dur = 60;
+      currentDuration = dur;
+      document.getElementById('durationSlider').value = dur;
+      updateDurationDisplayAndScript();
     }
 
     function setDuration(dur) {
       currentDuration = parseFloat(dur);
       document.getElementById('durationSlider').value = dur;
-      onDurationSlider(dur);
-      document.querySelectorAll('.dur-pill').forEach(btn => {
-        btn.classList.toggle('active', btn.innerText.includes(`${dur} 分鐘`));
-      });
+      const numInput = document.getElementById('durationNumberInput');
+      if (numInput) numInput.value = dur;
+      updateDurationDisplayAndScript();
     }
 
     function onDurationSlider(val) {
       currentDuration = parseFloat(val);
+      const numInput = document.getElementById('durationNumberInput');
+      if (numInput) numInput.value = val;
+      updateDurationDisplayAndScript();
+    }
+
+    function updateDurationDisplayAndScript() {
       document.getElementById('durValDisplay').innerText = `${currentDuration.toFixed(1)} 分鐘`;
       
+      const paceSec = currentDuration <= 5 ? 25 : (currentDuration <= 15 ? 30 : 35);
       const words = Math.round(currentDuration * 225);
-      const scenes = Math.max(2, Math.round((currentDuration * 60) / 25));
+      const scenes = Math.max(2, Math.round((currentDuration * 60) / paceSec));
       
       document.getElementById('calcWords').innerText = `約 ${words} 字`;
       document.getElementById('calcScenes').innerText = `${scenes} 個場景`;
       
+      document.querySelectorAll('.dur-pill').forEach(btn => {
+        btn.classList.toggle('active', btn.innerText.includes(`${currentDuration} 分鐘`) || btn.innerText.includes(`${currentDuration}分`));
+      });
+
       generateAiScriptUI(false);
     }
 
@@ -1173,12 +1886,18 @@
       
       const slider = document.getElementById('durationSlider');
       if (slider) slider.value = currentDuration;
+      const numInput = document.getElementById('durationNumberInput');
+      if (numInput) numInput.value = currentDuration;
       const disp = document.getElementById('durValDisplay');
       if (disp) disp.innerText = `${currentDuration.toFixed(1)} 分鐘`;
       const calcWords = document.getElementById('calcWords');
       if (calcWords) calcWords.innerText = `約 ${totalChars} 字`;
       const calcScenes = document.getElementById('calcScenes');
       if (calcScenes) calcScenes.innerText = `${generatedScenes.length} 個場景`;
+
+      document.querySelectorAll('.dur-pill').forEach(btn => {
+        btn.classList.toggle('active', btn.innerText.includes(`${currentDuration} 分鐘`) || btn.innerText.includes(`${currentDuration}分`));
+      });
 
       const scriptCountDisp = document.getElementById('scriptSceneCountDisplay');
       if (scriptCountDisp) scriptCountDisp.innerText = `${generatedScenes.length} 分鏡 (${currentDuration.toFixed(1)} 分鐘)`;
@@ -1363,7 +2082,8 @@
           <div class="video-title">${bname}</div>
           <div class="video-meta">
             <span>${isShorts ? '📱 9:16 Shorts' : '🖥️ 16:9 · 1080p'} ${size ? '· ' + size : ''}</span>
-            <div style="display:flex; gap:6px;">
+            <div style="display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end;">
+              ${!bname.startsWith('Shorts預告_') ? `<button class="btn btn-secondary" style="padding:4px 8px; font-size:11px; color:#c084fc; border-color:#a855f7;" onclick="openTeaserModal('${bname}')">⚡ 轉 Shorts 預告</button>` : `<span class="badge badge-purple" style="padding:4px 6px;">✨ 預告片</span>`}
               <button class="btn btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="copyText('output_videos/${bname}')">複製路徑</button>
               <button class="btn-delete" onclick="deleteVideo('${bname}')">🗑️ 刪除</button>
             </div>
@@ -1466,8 +2186,12 @@
         btn.disabled = false;
         btn.style.opacity = "1";
 
-        copyText(document.getElementById("cmdText").innerText);
-        alert("💡 提示：本機生片後台服務 (8501) 尚未啟動。\n\n已自動為您複製好終端機生成指令！\n只要在終端機貼上執行即可立即生片：\n\n" + document.getElementById("cmdText").innerText);
+        if (err.message && !err.message.includes("Failed to fetch") && !err.message.includes("NetworkError")) {
+          alert("⚠️ 影片生成失敗：" + err.message);
+        } else {
+          copyText(document.getElementById("cmdText").innerText);
+          alert("💡 提示：本機生片後台服務 (8501) 尚未啟動或無法連線。\n\n已自動為您複製好終端機生成指令！\n只要在終端機貼上執行即可立即生片：\n\n" + document.getElementById("cmdText").innerText);
+        }
       }
     }
 
@@ -1619,9 +2343,357 @@
       setTimeout(() => { t.style.opacity = '0'; }, 2200);
     }
 
+    // --- ⚡ 9:16 Shorts 導流預告片生成模組 ---
+    let currentTeaserSource = "";
+
+    function openTeaserModal(filename) {
+      if (!filename) return;
+      currentTeaserSource = filename;
+      document.getElementById('teaserSourceFilename').innerText = filename;
+
+      // 自動從檔名提煉乾淨標題
+      let cleanTitle = filename.replace(/\.mp4$/i, '').replace(/^(AI生成_|Shorts預告_|錄影_|錄製_)/, '');
+      const parts = cleanTitle.split('_');
+      cleanTitle = parts[0] || cleanTitle;
+      document.getElementById('teaserTitleInput').value = cleanTitle;
+
+      // 預設時長 30 秒
+      document.getElementById('teaserDurationVal').value = "30";
+      document.querySelectorAll('.teaser-dur-btn').forEach(btn => {
+        if (btn.innerText.includes('30 秒')) {
+          btn.style.borderColor = '#a855f7';
+          btn.style.background = 'rgba(168,85,247,0.2)';
+          btn.style.color = '#c084fc';
+        } else {
+          btn.style.borderColor = '#334155';
+          btn.style.background = '#1e293b';
+          btn.style.color = '#cbd5e1';
+        }
+      });
+
+      // 預設 CTA
+      document.getElementById('teaserCtaInput').value = "👉 點擊主頁看完整正片";
+
+      // 重設狀態
+      document.getElementById('teaserModalActions').style.display = 'flex';
+      document.getElementById('teaserModalLoading').style.display = 'none';
+      document.getElementById('btnSubmitTeaser').disabled = false;
+
+      // 顯示 Modal
+      document.getElementById('shortsTeaserModal').style.display = 'flex';
+    }
+
+    function closeTeaserModal() {
+      document.getElementById('shortsTeaserModal').style.display = 'none';
+    }
+
+    function selectTeaserDuration(dur, el) {
+      document.getElementById('teaserDurationVal').value = dur;
+      document.querySelectorAll('.teaser-dur-btn').forEach(btn => {
+        btn.style.borderColor = '#334155';
+        btn.style.background = '#1e293b';
+        btn.style.color = '#cbd5e1';
+      });
+      el.style.borderColor = '#a855f7';
+      el.style.background = 'rgba(168,85,247,0.2)';
+      el.style.color = '#c084fc';
+    }
+
+    async function submitCreateShortsTeaser() {
+      if (!currentTeaserSource) return;
+      const duration = parseFloat(document.getElementById('teaserDurationVal').value || "30");
+      const title = document.getElementById('teaserTitleInput').value.trim();
+      const cta = document.getElementById('teaserCtaInput').value.trim();
+
+      document.getElementById('btnSubmitTeaser').disabled = true;
+      document.getElementById('teaserModalActions').style.display = 'none';
+      document.getElementById('teaserModalLoading').style.display = 'flex';
+
+      try {
+        const res = await fetch(`${API_BASE}/api/create_shorts_teaser`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            filename: currentTeaserSource,
+            duration: duration,
+            title: title,
+            cta: cta
+          })
+        });
+        const data = await res.json();
+        if (data.success) {
+          closeTeaserModal();
+          showToast(`🎉 9:16 Shorts 預告片已成功生成！`);
+          // 切換至影片庫並重新整理
+          switchTab('gallery');
+          await refreshVideoGallery();
+        } else {
+          alert("預告片生成失敗：" + (data.error || "未知錯誤"));
+          document.getElementById('teaserModalActions').style.display = 'flex';
+          document.getElementById('teaserModalLoading').style.display = 'none';
+          document.getElementById('btnSubmitTeaser').disabled = false;
+        }
+      } catch (err) {
+        alert("連線或請求失敗：" + err);
+        document.getElementById('teaserModalActions').style.display = 'flex';
+        document.getElementById('teaserModalLoading').style.display = 'none';
+        document.getElementById('btnSubmitTeaser').disabled = false;
+      }
+    }
+
+    // --- 📺 YouTube 頻道經理與上傳審核中心模組 ---
+    let currentYtQueue = [];
+
+    async function loadYoutubeQueue() {
+      const container = document.getElementById('ytQueueContainer');
+      if (!container) return;
+
+      try {
+        const res = await fetch(`${API_BASE}/api/youtube_queue`);
+        const data = await res.json();
+        if (!data.success) {
+          container.innerHTML = `<div style="color:#ef4444; text-align:center; padding:30px;">載入審核佇列失敗：${data.error || '未知錯誤'}</div>`;
+          return;
+        }
+
+        currentYtQueue = data.queue || [];
+        const apiStatus = data.api_status || {};
+
+        // 更新數據統計
+        const pendingCount = currentYtQueue.filter(v => v.status === 'pending_review').length;
+        const approvedCount = currentYtQueue.filter(v => v.status === 'approved').length;
+        const uploadedCount = currentYtQueue.filter(v => v.status === 'uploaded').length;
+
+        const countPendingEl = document.getElementById('ytCountPending');
+        const countApprovedEl = document.getElementById('ytCountApproved');
+        const countUploadedEl = document.getElementById('ytCountUploaded');
+        if (countPendingEl) countPendingEl.innerText = `${pendingCount} 部`;
+        if (countApprovedEl) countApprovedEl.innerText = `${approvedCount} 部`;
+        if (countUploadedEl) countUploadedEl.innerText = `${uploadedCount} 部`;
+
+        // 導航列 Badge
+        const tabBadge = document.getElementById('ytPendingBadge');
+        if (tabBadge) {
+          if (pendingCount > 0) {
+            tabBadge.style.display = 'inline-block';
+            tabBadge.innerText = `待審核 ${pendingCount}`;
+          } else {
+            tabBadge.style.display = 'none';
+          }
+        }
+
+        // API 狀態 Badge
+        const apiBadge = document.getElementById('ytApiStatusBadge');
+        if (apiBadge) {
+          if (apiStatus.ready) {
+            apiBadge.innerHTML = '<span style="color:#34d399;">● 官方 API 自動上傳已就緒</span>';
+          } else if (apiStatus.has_client_secrets) {
+            apiBadge.innerHTML = '<span style="color:#f59e0b;">● 憑證已導入，待首次授權</span>';
+          } else {
+            apiBadge.innerHTML = '<span style="color:#38bdf8;">● 智慧文案模式 (一鍵複製上傳)</span>';
+          }
+        }
+
+        // 渲染列表
+        renderYoutubeQueueCards(currentYtQueue);
+      } catch (err) {
+        container.innerHTML = `<div style="color:var(--text-dim); text-align:center; padding:30px;">無法連線後端抓取 YouTube 佇列 (${err})</div>`;
+      }
+    }
+
+    function renderYoutubeQueueCards(queue) {
+      const container = document.getElementById('ytQueueContainer');
+      if (!container) return;
+
+      container.innerHTML = '';
+      if (queue.length === 0) {
+        container.innerHTML = '<div style="color:var(--text-dim); text-align:center; padding:40px; background:var(--card-bg); border-radius:12px; border:1px solid var(--card-border);">目前尚無已生成影片。請先在控制台點擊「🎬 立即全自動生成影片」，完成後影片會自動出現在此等候您親自審核！</div>';
+        return;
+      }
+
+      queue.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        const isApproved = item.status === 'approved';
+        const isUploaded = item.status === 'uploaded';
+        const borderColor = isApproved ? 'var(--emerald)' : (isUploaded ? 'var(--cyan)' : 'var(--amber)');
+        card.style.borderColor = borderColor;
+        card.style.borderWidth = '2px';
+        card.style.boxShadow = isApproved ? '0 0 15px rgba(16, 185, 129, 0.15)' : 'none';
+
+        card.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:8px;">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <span style="font-size:22px;">${item.is_shorts ? '📱' : '🖥️'}</span>
+              <span style="font-weight:bold; font-size:15px; color:#fff; word-break:break-all;">${item.filename}</span>
+              <span class="badge ${item.is_shorts ? 'badge-purple' : 'badge-cyan'}">${item.is_shorts ? '9:16 Shorts' : '16:9 長片'}</span>
+              <span style="font-size:12px; color:var(--text-dim);">${item.size_mb} MB · ${item.created_at}</span>
+            </div>
+            <div>
+              ${item.status === 'pending_review' ? '<span class="badge badge-amber" style="font-size:12px; padding:4px 10px;">🟡 等待主人審核</span>' : ''}
+              ${item.status === 'approved' ? '<span class="badge" style="background:var(--emerald); color:#000; font-size:12px; padding:4px 10px; font-weight:800;">✅ 主人已親自批准</span>' : ''}
+              ${item.status === 'uploaded' ? '<span class="badge badge-cyan" style="font-size:12px; padding:4px 10px;">🚀 已發布至 YouTube</span>' : ''}
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <!-- 影片播放器與權限 -->
+            <div>
+              <video controls preload="metadata" src="output_videos/${item.filename}" style="width:100%; border-radius:10px; background:#000; max-height:280px;"></video>
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px; background:#050811; padding:8px 12px; border-radius:8px; border:1px solid #1e293b;">
+                <span style="font-size:12px; color:var(--text-muted); font-weight:bold;">發布權限：</span>
+                <select id="privacy_${item.id}" class="text-input" style="width:auto; padding:4px 10px; font-size:12px;">
+                  <option value="unlisted" ${item.privacy_status === 'unlisted' ? 'selected' : ''}>🔒 不公開 (Unlisted - 推薦先預覽確認)</option>
+                  <option value="private" ${item.privacy_status === 'private' ? 'selected' : ''}>🚫 私人 (Private)</option>
+                  <option value="public" ${item.privacy_status === 'public' ? 'selected' : ''}>🌍 公開 (Public)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- SEO 標題與說明欄 -->
+            <div style="display:flex; flex-direction:column; gap:10px;">
+              <div>
+                <label style="font-size:12px; color:var(--cyan); font-weight:bold; display:block; margin-bottom:4px;">🎯 SEO 爆款標題 (Title)：</label>
+                <input type="text" id="title_${item.id}" class="text-input" value="${item.title.replace(/"/g, '&quot;')}" style="font-size:13px; font-weight:bold; color:#fff;">
+              </div>
+              <div>
+                <label style="font-size:12px; color:var(--amber); font-weight:bold; display:block; margin-bottom:4px;">📝 結構化 YouTube 說明欄 (Description)：</label>
+                <textarea id="desc_${item.id}" class="edit-textarea" rows="7" style="font-size:12px; line-height:1.5;">${item.description}</textarea>
+              </div>
+            </div>
+          </div>
+
+          <!-- 操作按鈕列 -->
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:16px; padding-top:14px; border-top:1px solid var(--card-border); flex-wrap:wrap; gap:10px;">
+            <div style="font-size:12px; color:var(--text-dim);">
+              審核狀態備註：<span style="color:#fff; font-weight:bold;">${item.approval_note || '等待主人審核'}</span>
+            </div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <button class="btn btn-secondary" style="padding:6px 12px; font-size:12px;" onclick="copyYoutubePackage('${item.id}', '${item.filename}')">
+                📋 複製完整發布包
+              </button>
+              ${!item.is_shorts ? `<button class="btn btn-secondary" style="padding:6px 12px; font-size:12px; color:#c084fc; border-color:#a855f7;" onclick="openTeaserModal('${item.filename}')">⚡ 轉 Shorts 預告</button>` : ''}
+              
+              ${item.status === 'pending_review' ? `
+                <button class="btn" style="background:#e11d48; color:#fff; padding:6px 14px; font-size:12px; border:none; border-radius:8px; cursor:pointer;" onclick="rejectQueueVideo('${item.filename}')">
+                  ❌ 退回修改
+                </button>
+                <button class="btn btn-magic" style="padding:7px 18px; font-size:13px; background:linear-gradient(90deg, #10b981, #06b6d4); color:#000; font-weight:900;" onclick="approveQueueVideo('${item.filename}', '${item.id}')">
+                  ✅ 審核通過，批准上傳 (Approve)
+                </button>
+              ` : ''}
+
+              ${item.status === 'approved' ? `
+                <button class="btn btn-secondary" style="padding:6px 12px; font-size:12px; color:var(--amber);" onclick="rejectQueueVideo('${item.filename}', '主人撤回重新審核')">
+                  ↩️ 撤回重新審查
+                </button>
+                <button class="btn btn-magic" style="padding:7px 20px; font-size:13px; background:linear-gradient(90deg, #ef4444, #f97316); color:#fff; font-weight:900;" onclick="triggerYoutubeUpload('${item.filename}', '${item.id}')">
+                  🚀 立即上傳至 YouTube
+                </button>
+              ` : ''}
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    async function approveQueueVideo(filename, itemId) {
+      const title = document.getElementById(`title_${itemId}`).value.trim();
+      const description = document.getElementById(`desc_${itemId}`).value.trim();
+      const privacy_status = document.getElementById(`privacy_${itemId}`).value;
+
+      try {
+        const res = await fetch(`${API_BASE}/api/youtube_approve`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ filename, title, description, privacy_status })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast(`🎉 審核通過！影片已進入「已批准」發布佇列！`);
+          await loadYoutubeQueue();
+        } else {
+          alert("審核標記失敗：" + (data.error || "未知錯誤"));
+        }
+      } catch (err) {
+        alert("請求失敗：" + err);
+      }
+    }
+
+    async function rejectQueueVideo(filename, customReason) {
+      const reason = customReason || prompt("請輸入退回或修改原因：", "需要調整腳本與畫面");
+      if (!reason) return;
+
+      try {
+        const res = await fetch(`${API_BASE}/api/youtube_reject`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ filename, reason })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast(`已退回影片「${filename}」`);
+          await loadYoutubeQueue();
+        } else {
+          alert("退回失敗：" + (data.error || "未知錯誤"));
+        }
+      } catch (err) {
+        alert("請求失敗：" + err);
+      }
+    }
+
+    async function triggerYoutubeUpload(filename, itemId) {
+      if (!confirm(`【發布確認】確定要將影片 ${filename} 上傳至 YouTube 嗎？`)) return;
+
+      try {
+        const res = await fetch(`${API_BASE}/api/youtube_upload`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ filename })
+        });
+        const data = await res.json();
+        if (data.success) {
+          alert(`🎉 恭喜！${data.message || '影片已成功發布至 YouTube！'}\n連結：${data.url}`);
+          await loadYoutubeQueue();
+        } else {
+          if (data.manual_ready) {
+            copyYoutubePackage(itemId, filename);
+            alert(`💡 系統提示：${data.error}\n\n👉 已自動為您複製「完整 SEO 標題與說明欄文案」至剪貼簿！請直接於 YouTube Studio 貼上發布！`);
+          } else {
+            alert(`上傳未完成：${data.error}`);
+          }
+        }
+      } catch (err) {
+        alert("上傳請求失敗：" + err);
+      }
+    }
+
+    function copyYoutubePackage(itemId, filename) {
+      const titleEl = document.getElementById(`title_${itemId}`);
+      const descEl = document.getElementById(`desc_${itemId}`);
+      const title = titleEl ? titleEl.value : filename;
+      const desc = descEl ? descEl.value : "";
+
+      const fullPackage = `【YouTube 影片標題】\n${title}\n\n【YouTube 說明欄】\n${desc}\n\n【本機檔案路徑】\noutput_videos/${filename}`;
+      copyText(fullPackage);
+      showToast("📋 已複製完整 YouTube 標題與說明欄文案！");
+    }
+
+    function openApiSetupModal() {
+      const modal = document.getElementById('apiSetupModal');
+      if (modal) modal.style.display = 'flex';
+    }
+
+    function closeApiSetupModal() {
+      const modal = document.getElementById('apiSetupModal');
+      if (modal) modal.style.display = 'none';
+    }
+
     // 初始化
     generateAiScriptUI(false);
     refreshVideoGallery();
+    loadYoutubeQueue();
   </script>
 </body>
 </html>
