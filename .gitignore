@@ -1,0 +1,18 @@
+# Python 快取與虛擬環境
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+env/
+venv/
+*.log
+
+# 作業系統暫存
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 產出影片與暫存（可依需求取消註解以節省空間）
+# output_videos/*.mp4
+# voice_samples/*.webm
+# inputs_notebooklm/*.m4a

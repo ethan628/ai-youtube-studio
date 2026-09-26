@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI YouTube 影片全自動生成工作台</title>
+  <style>
+    :root {
+      --bg: #070b14;
+      --card-bg: #0f172a;
+      --card-border: #1e293b;
+      --content-bg: #0b1120;
+      --cyan: #00f0ff;
+      --cyan-glow: rgba(0, 240, 255, 0.25);
+      --purple: #a855f7;
+      --purple-glow: rgba(168, 85, 247, 0.25);
+      --emerald: #10b981;
+      --amber: #f59e0b;
+      --rose: #f43f5e;
+      --text: #f8fafc;
+      --text-dim: #94a3b8;
+      --text-muted: #64748b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Microsoft JhengHei", "PingFang TC", sans-serif; }
+    body { background: var(--bg); color: var(--text); padding: 24px 16px; min-height: 100vh; }
+    .container { max-width: 1240px; margin: 0 auto; }
+
+    /* Header */
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--card-border); padding-bottom: 18px; flex-wrap: wrap; gap: 12px; }
+    .logo-area { display: flex; align-items: center; gap: 14px; }
+    .logo-icon { width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, var(--cyan), var(--purple)); display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 0 20px var(--cyan-glow); }
+    .logo-title h1 { font-size: 22px; font-weight: 800; background: linear-gradient(90deg, #fff, #38bdf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .logo-title p { color: var(--text-dim); font-size: 13px; margin-top: 3px; }
+    
+    .status-badge { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; padding: 6px 14px; border-radius: 20px; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: #34d399; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #34d399; box-shadow: 0 0 8px #34d399; }
+
+    /* Nav Tabs */
+    .tabs-bar { display: flex; gap: 8px; margin-bottom: 24px; background: var(--content-bg); padding: 6px; border-radius: 12px; border: 1px solid var(--card-border); overflow-x: auto; }
+    .tab-btn { background: transparent; border: none; color: var(--text-dim); padding: 10px 18px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; white-space: nowrap; display: flex; align-items: center; gap: 6px; }
+    .tab-btn:hover { color: #fff; background: rgba(255,255,255,0.04); }
+    .tab-btn.active { background: var(--card-bg); color: var(--cyan); box-shadow: 0 2px 8px rgba(0,0,0,0.4); border: 1px solid var(--card-border); }
+
+    /* Tab Content Panels */
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; animation: fadeIn 0.25s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Grid Layouts */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    @media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } }
+    
+    .card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 14px; padding: 22px; position: relative; }
+    .card-title { font-size: 16px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; color: var(--text); }
+    .card-title .icon { color: var(--cyan); }
+
+    /* Forms & Inputs */
+    .form-group { margin-bottom: 18px; }
+    label { display: block; font-size: 13px; font-weight: 600; color: var(--text-dim); margin-bottom: 8px; }
+    .text-input { width: 100%; background: var(--content-bg); border: 1px solid var(--card-border); color: #fff; padding: 11px 14px; border-radius: 8px; font-size: 14px; transition: border-color 0.2s; outline: none; }
+    .text-input:focus { border-color: var(--cyan); box-shadow: 0 0 10px var(--cyan-glow); }
+
+    /* Duration Selector */
+    .duration-pills { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+    .dur-pill { background: var(--content-bg); border: 1px solid var(--card-border); color: var(--text-dim); padding: 7px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+    .dur-pill:hover { border-color: var(--cyan); color: #fff; }
+    .dur-pill.active { background: rgba(0, 240, 255, 0.15); border-color: var(--cyan); color: var(--cyan); font-weight: 700; }
+    
+    .slider-row { display: flex; align-items: center; gap: 14px; margin-top: 8px; }
+    .slider-row input[type="range"] { flex: 1; accent-color: var(--cyan); cursor: pointer; }
+    .duration-val-badge { font-family: monospace; font-size: 14px; font-weight: 800; color: var(--cyan); background: #000; padding: 4px 10px; border-radius: 6px; border: 1px solid var(--card-border); }
+    
+    .calc-meta-bar { display: flex; gap: 14px; background: rgba(0,0,0,0.3); border-radius: 8px; padding: 8px 12px; margin-top: 8px; font-size: 12px; color: var(--text-muted); }
+    .calc-meta-bar span { color: var(--text); font-weight: bold; }
+
+    /* Options Grid */
+    .option-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
+    .opt-card { background: var(--content-bg); border: 2px solid var(--card-border); border-radius: 10px; padding: 12px 14px; cursor: pointer; transition: all 0.2s; text-align: left; }
+    .opt-card:hover { border-color: var(--cyan); }
+    .opt-card.selected { border-color: var(--cyan); background: rgba(0, 240, 255, 0.08); box-shadow: 0 0 14px var(--cyan-glow); }
+    .opt-card.selected.purple { border-color: var(--purple); background: rgba(168, 85, 247, 0.08); box-shadow: 0 0 14px var(--purple-glow); }
+    .opt-card.selected.amber { border-color: var(--amber); background: rgba(245, 158, 11, 0.08); box-shadow: 0 0 14px rgba(245, 158, 11, 0.3); }
+    .opt-title { font-size: 13px; font-weight: bold; color: #fff; display: flex; align-items: center; justify-content: space-between; }
+    .opt-desc { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+    .badge { font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
+    .badge-cyan { background: var(--cyan); color: #000; }
+    .badge-purple { background: var(--purple); color: #fff; }
+    .badge-amber { background: var(--amber); color: #000; }
+
+    /* Voice Clone Mini Box */
+    .voice-clone-details { background: rgba(245, 158, 11, 0.08); border: 1px dashed var(--amber); border-radius: 10px; padding: 12px 14px; margin-top: 10px; display: none; }
+    .voice-clone-details.show { display: block; animation: fadeIn 0.2s; }
+
+    /* Action Box */
+    .action-box { background: rgba(0,0,0,0.4); border: 1px solid var(--card-border); border-radius: 12px; padding: 16px; margin-top: 16px; }
+    .cmd-display { background: #050811; border: 1px solid #1f293d; border-radius: 8px; padding: 12px 14px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 13px; color: #38bdf8; word-break: break-all; margin-bottom: 12px; user-select: all; }
+    .btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
+    .btn { padding: 11px 20px; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; border: none; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; text-decoration: none; }
+    .btn:active { transform: scale(0.98); }
+    .btn-primary { background: linear-gradient(90deg, #0284c7, #9333ea); color: #fff; flex: 1; justify-content: center; box-shadow: 0 4px 14px rgba(147, 51, 234, 0.3); }
+    .btn-primary:hover { opacity: 0.95; box-shadow: 0 6px 20px rgba(147, 51, 234, 0.5); }
+    .btn-secondary { background: #1e293b; color: var(--cyan); border: 1px solid var(--cyan); }
+    .btn-secondary:hover { background: var(--cyan); color: #000; }
+    .btn-magic { background: linear-gradient(90deg, #d97706, #f59e0b); color: #000; font-weight: 800; border: none; }
+    .btn-record { background: #f43f5e; color: #fff; font-weight: 800; }
+    .btn-record:hover { background: #e11d48; }
+
+    /* Scene Mockup Preview */
+    .mockup-container { background: #070b14; border: 2px solid #1e293b; border-radius: 14px; padding: 24px; position: relative; overflow: hidden; }
+    .mockup-grid-bg { position: absolute; inset: 0; background-image: linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px); background-size: 40px 40px; pointer-events: none; }
+    .mockup-badge { display: inline-block; background: #1e293b; border: 1px solid var(--cyan); color: var(--cyan); font-size: 12px; font-weight: bold; padding: 4px 12px; border-radius: 6px; margin-bottom: 12px; }
+    .mockup-title { font-size: 24px; font-weight: 900; color: #fff; margin-bottom: 6px; letter-spacing: -0.5px; text-shadow: 0 0 20px rgba(0, 240, 255, 0.4); }
+    .mockup-subtitle { font-size: 14px; color: #94a3b8; margin-bottom: 18px; }
+    .mockup-bullets { list-style: none; margin-bottom: 18px; }
+    .mockup-bullets li { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #cbd5e1; margin-bottom: 8px; }
+    .mockup-bullets li::before { content: "●"; color: var(--cyan); font-size: 12px; }
+    .mockup-code { background: #02040a; border: 1px solid rgba(0,240,255,0.3); border-radius: 8px; padding: 12px; font-family: monospace; font-size: 12px; color: #4ade80; white-space: pre-wrap; margin-bottom: 16px; }
+    .mockup-narration { background: rgba(245, 158, 11, 0.1); border-left: 3px solid #f59e0b; padding: 10px 14px; font-size: 13px; color: #fde68a; border-radius: 4px; }
+
+    /* Scene Selector Pills */
+    .scene-selector { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+    .scene-pill { background: var(--content-bg); border: 1px solid var(--card-border); color: var(--text-dim); padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; }
+    .scene-pill.active { background: var(--cyan); color: #000; border-color: var(--cyan); font-weight: 800; }
+
+    /* Recording Studio Components */
+    .record-box { background: #000; border: 2px solid var(--card-border); border-radius: 14px; padding: 24px; text-align: center; position: relative; }
+    .record-timer { font-family: monospace; font-size: 38px; font-weight: 900; color: #f43f5e; margin: 12px 0; text-shadow: 0 0 20px rgba(244, 63, 94, 0.4); }
+    .record-timer.idle { color: #64748b; text-shadow: none; }
+    
+    .wave-bars { display: flex; justify-content: center; align-items: center; gap: 4px; height: 36px; margin-bottom: 16px; }
+    .wave-bar { width: 4px; background: #334155; border-radius: 2px; height: 8px; transition: height 0.15s ease; }
+    .wave-bars.active .wave-bar { background: #f43f5e; animation: wavePulse 0.6s infinite ease-in-out alternate; }
+    .wave-bars.active .wave-bar:nth-child(2) { animation-delay: 0.1s; }
+    .wave-bars.active .wave-bar:nth-child(3) { animation-delay: 0.2s; }
+    .wave-bars.active .wave-bar:nth-child(4) { animation-delay: 0.3s; }
+    .wave-bars.active .wave-bar:nth-child(5) { animation-delay: 0.4s; }
+    .wave-bars.active .wave-bar:nth-child(6) { animation-delay: 0.25s; }
+    .wave-bars.active .wave-bar:nth-child(7) { animation-delay: 0.15s; }
+    .wave-bars.active .wave-bar:nth-child(8) { animation-delay: 0.35s; }
+    @keyframes wavePulse { from { height: 6px; } to { height: 32px; } }
+
+    .sample-script-box { background: var(--content-bg); border-left: 3px solid var(--cyan); border-radius: 8px; padding: 14px; text-align: left; margin: 16px 0; }
+    .sample-script-box p { font-size: 13px; color: #cbd5e1; line-height: 1.7; margin-top: 6px; }
+
+    /* Video Gallery */
+    .video-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px; }
+    .video-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 12px; overflow: hidden; padding: 14px; }
+    .video-card video { width: 100%; border-radius: 8px; background: #000; max-height: 220px; outline: none; }
+    .video-title { font-size: 14px; font-weight: bold; color: #fff; margin-top: 10px; margin-bottom: 4px; word-break: break-all; }
+    .video-meta { font-size: 12px; color: var(--text-dim); display: flex; justify-content: space-between; align-items: center; margin-top: 6px; }
+
+    /* Toast */
+    #toast { position: fixed; bottom: 24px; right: 24px; background: #10b981; color: #000; font-weight: bold; font-size: 13px; padding: 12px 20px; border-radius: 10px; box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4); opacity: 0; pointer-events: none; transition: opacity 0.3s; z-index: 9999; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header>
+      <div class="logo-area">
+        <div class="logo-icon">🎬</div>
+        <div class="logo-title">
+          <h1>AI YouTube 影片全自動生成工作台</h1>
+          <p>網頁直接錄音 · 模仿個人聲音 (Voice Clone) · 內建 AI 智慧腳本 · 指定幾分鐘自動運算</p>
+        </div>
+      </div>
+      <div class="status-badge">
+        <span class="status-dot"></span>
+        <span>工作台離線就緒 (本機 HTML)</span>
+      </div>
+    </header>
+
+    <!-- Nav Tabs -->
+    <div class="tabs-bar">
+      <button class="tab-btn active" onclick="switchTab('studio')">🤖 內建 AI 腳本與影片生成</button>
+      <button class="tab-btn" onclick="switchTab('record')">🎙️ 網頁直接錄製聲音 (Voice Studio)</button>
+      <button class="tab-btn" onclick="switchTab('preview')">👁️ 分鏡畫面即時預覽</button>
+      <button class="tab-btn" onclick="switchTab('gallery')">📁 影片成品播放庫 (3)</button>
+      <button class="tab-btn" onclick="switchTab('podcast')">📻 Google NotebookLM 轉影片</button>
+      <button class="tab-btn" onclick="switchTab('guide')">🛠️ 執行指南</button>
+    </div>
+
+    <!-- TAB 1: 內建 AI 寫腳本與長度設定 -->
+    <div id="tab-studio" class="tab-panel active">
+      <div class="grid-2">
+        <!-- 左側：參數選擇 -->
+        <div class="card">
+          <div class="card-title"><span class="icon">✨</span> 1. 設定影片主題與目標分鐘數</div>
+          
+          <!-- 主題輸入 -->
+          <div class="form-group">
+            <label>影片主題 / 關鍵字（AI 將依此寫出專業分鏡腳本）：</label>
+            <div style="display:flex; gap:8px;">
+              <input type="text" id="topicInput" class="text-input" value="2026最新：三大AI工具自動化實戰教學" placeholder="輸入你想做的影片主題">
+              <button class="btn btn-magic" style="white-space:nowrap;" onclick="generateAiScriptUI()">
+                ✨ AI寫腳本
+              </button>
+            </div>
+          </div>
+
+          <!-- 分鐘數設定 -->
+          <div class="form-group">
+            <label>影片目標時長（精確分鐘數）：</label>
+            <div class="duration-pills">
+              <button class="dur-pill" onclick="setDuration(1)">📱 1 分鐘 (Shorts)</button>
+              <button class="dur-pill" onclick="setDuration(2)">⚡ 2 分鐘 (精華)</button>
+              <button class="dur-pill active" onclick="setDuration(3)">🎯 3 分鐘 (推薦)</button>
+              <button class="dur-pill" onclick="setDuration(5)">🚀 5 分鐘 (深度)</button>
+              <button class="dur-pill" onclick="setDuration(10)">📚 10 分鐘 (完整課)</button>
+            </div>
+            
+            <div class="slider-row">
+              <input type="range" id="durationSlider" min="0.5" max="15" step="0.5" value="3" oninput="onDurationSlider(this.value)">
+              <span class="duration-val-badge" id="durValDisplay">3.0 分鐘</span>
+            </div>
+
+            <div class="calc-meta-bar">
+              <div>預估總字數：<span id="calcWords">約 675 字</span></div>
+              <div>自動編排分鏡：<span id="calcScenes">7 個場景</span></div>
+              <div>均速：<span>每分鐘 225 字</span></div>
+            </div>
+          </div>
+
+          <!-- 畫面比例 -->
+          <div class="form-group">
+            <label>影片規格比例：</label>
+            <div class="option-grid">
+              <div class="opt-card selected" id="aspect-card-16x9" onclick="selectAspect('16x9')">
+                <div class="opt-title">
+                  <span>🖥️ 16:9 長影片</span>
+                  <span class="badge badge-cyan">1080p</span>
+                </div>
+                <div class="opt-desc">1920x1080 YouTube 標準正片</div>
+              </div>
+              <div class="opt-card" id="aspect-card-shorts" onclick="selectAspect('shorts')">
+                <div class="opt-title">
+                  <span>📱 9:16 Shorts</span>
+                  <span class="badge badge-purple">短影音</span>
+                </div>
+                <div class="opt-desc">1080x1920 Shorts / Reels / TikTok</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 語音角色：支援聲音模仿 -->
+          <div class="form-group">
+            <label>配音角色與聲音模仿：</label>
+            <div class="option-grid" style="grid-template-columns: repeat(3, 1fr);">
+              <div class="opt-card selected" id="voice-card-male" onclick="selectVoice('male')">
+                <div class="opt-title">
+                  <span>👨 男聲</span>
+                  <span class="badge badge-cyan">YunJhe</span>
+                </div>
+                <div class="opt-desc">台灣微軟男聲·穩健</div>
+              </div>
+              <div class="opt-card" id="voice-card-female" onclick="selectVoice('female')">
+                <div class="opt-title">
+                  <span>👩 女聲</span>
+                  <span class="badge badge-purple">HsiaoChen</span>
+                </div>
+                <div class="opt-desc">台灣微軟女聲·自然</div>
+              </div>
+              <div class="opt-card" id="voice-card-clone" onclick="selectVoice('clone')">
+                <div class="opt-title">
+                  <span>🗣️ 模仿自己</span>
+                  <span class="badge badge-amber">Clone</span>
+                </div>
+                <div class="opt-desc">使用錄音樣本</div>
+              </div>
+            </div>
+
+            <!-- 聲音模仿配置提示 -->
+            <div class="voice-clone-details" id="voiceCloneDetails">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                <span style="font-size:12px; font-weight:bold; color:var(--amber);">🎙️ 自己的聲音模仿模式已啟用</span>
+                <button class="btn btn-magic" style="padding:4px 10px; font-size:11px;" onclick="switchTab('record')">
+                  🔴 點此直接在網頁上錄音
+                </button>
+              </div>
+              <p style="font-size:12px; color:#cbd5e1; line-height:1.5;">
+                樣本檔案：<code id="activeSamplePathDisplay" style="color:var(--cyan);">voice_samples/my_voice.webm</code><br>
+                系統會自動萃取音質特徵、音高調性與語速，生成你的專屬旁白配音！
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 右側：即時腳本摘要與執行生成 -->
+        <div class="card">
+          <div class="card-title" style="justify-content:space-between;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span class="icon">🚀</span> 2. 腳本狀態與一鍵執行
+            </div>
+            <span class="badge badge-cyan" id="scriptStatusBadge">AI 腳本已就緒</span>
+          </div>
+
+          <!-- AI 即時產生的分鏡清單概覽 -->
+          <div style="background:var(--content-bg); border:1px solid var(--card-border); border-radius:10px; padding:12px; margin-bottom:14px;">
+            <div style="font-size:13px; font-weight:bold; color:#fff; margin-bottom:8px; display:flex; justify-content:space-between;">
+              <span id="scriptTitleDisplay">2026最新：三大AI工具自動化實戰教學</span>
+              <span style="color:var(--cyan); font-size:12px;" id="scriptSceneCountDisplay">7 分鏡 (3.0 分鐘)</span>
+            </div>
+            <div id="scriptScenesList" style="max-height:140px; overflow-y:auto; font-size:12px; color:var(--text-dim); line-height:1.8;">
+              <!-- JS 動態填入 -->
+            </div>
+          </div>
+
+          <div class="action-box">
+            <label>終端機生成指令 (CLI Command)：</label>
+            <div class="cmd-display" id="cmdText">python create_video.py --topic "2026最新：三大AI工具自動化實戰教學" --duration 3</div>
+            <div class="btn-row">
+              <button class="btn btn-primary" onclick="executeOrCopy()">
+                <span>🚀</span> 複製生成指令
+              </button>
+              <button class="btn btn-secondary" onclick="switchTab('preview')">
+                <span>👁️</span> 逐頁預覽分鏡卡片
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: 網頁直接錄製聲音 -->
+    <div id="tab-record" class="tab-panel">
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title"><span class="icon">🎙️</span> 網頁即時錄音室 (Browser Voice Studio)</div>
+          <p style="font-size:13px; color:var(--text-dim); line-height:1.6; margin-bottom:14px;">
+            直接使用瀏覽器麥克風錄製您的日常說話語音，只需 <strong>5 ~ 10 秒</strong>，系統將自動以此聲音作為模仿與複製基準！
+          </p>
+
+          <div class="sample-script-box">
+            <strong style="color:var(--cyan); font-size:12px;">💡 推薦錄音念讀文本（直接照著念即可）：</strong>
+            <p>
+              「哈囉大家好，歡迎來到雙AI協同開發！今天帶大家掌握2026最新自動化工作流，不寫程式也能輕鬆搞定，讓我們馬上開始！」
+            </p>
+          </div>
+
+          <!-- 錄音控制區 -->
+          <div class="record-box">
+            <div class="record-timer idle" id="recordTimer">00:00</div>
+            
+            <div class="wave-bars" id="waveBars">
+              <div class="wave-bar"></div><div class="wave-bar"></div>
+              <div class="wave-bar"></div><div class="wave-bar"></div>
+              <div class="wave-bar"></div><div class="wave-bar"></div>
+              <div class="wave-bar"></div><div class="wave-bar"></div>
+            </div>
+
+            <div style="display:flex; justify-content:center; gap:12px; flex-wrap:wrap; margin-bottom:16px;">
+              <button class="btn btn-record" id="btnStartRecord" onclick="startRecording()">
+                🔴 開始錄音
+              </button>
+              <button class="btn btn-secondary" id="btnStopRecord" onclick="stopRecording()" disabled style="opacity:0.5;">
+                ⏹️ 停止錄音
+              </button>
+            </div>
+
+            <!-- 錄音播放器預覽 -->
+            <div id="audioPreviewSection" style="display:none; margin-top:16px; border-top:1px solid var(--card-border); padding-top:16px;">
+              <div style="font-size:12px; color:var(--text-dim); margin-bottom:8px;">🎧 錄音試聽預覽：</div>
+              <audio id="audioPlayback" controls style="width:100%; max-width:400px; margin-bottom:14px; outline:none;"></audio>
+              <div>
+                <button class="btn btn-magic" style="width:100%; max-width:400px; justify-content:center;" onclick="saveVoiceSample()">
+                  💾 儲存並設為預設模仿聲音樣本 (my_voice.webm)
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title"><span class="icon">✨</span> 聲音模仿技術規格</div>
+          <div style="background:var(--content-bg); border:1px solid var(--card-border); border-radius:10px; padding:16px; margin-bottom:16px;">
+            <h4 style="font-size:14px; color:#fff; margin-bottom:8px;">📌 運作原理解析：</h4>
+            <ul style="font-size:13px; color:var(--text-dim); line-height:1.8; padding-left:18px;">
+              <li><strong>音頻特徵萃取</strong>：透過 FFmpeg 聲學濾波器自動計算基頻音高 (Pitch) 與響度音量 (dB)。</li>
+              <li><strong>語速動態對齊</strong>：根據錄音日常講話節奏自動校正配音語速速率 (+0% ~ +8%)。</li>
+              <li><strong>神經聲線微調</strong>：映射至微軟高保真繁中自然音色模型，進行音調特徵模擬。</li>
+              <li><strong>毫秒級字幕對齊</strong>：聲音合成時自動生成精準 SRT 字幕時間軸。</li>
+            </ul>
+          </div>
+
+          <div style="background:#000; border-radius:10px; padding:16px; border:1px solid var(--card-border);">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-size:12px; font-weight:bold; color:var(--amber);">目前樣本狀態：</span>
+              <span class="badge badge-amber" id="sampleStatusTag">等待錄音</span>
+            </div>
+            <div style="font-family:monospace; font-size:12px; color:var(--cyan); margin-top:8px;" id="samplePathInfo">
+              目錄：voice_samples/
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: 分鏡畫面預覽 -->
+    <div id="tab-preview" class="tab-panel">
+      <div class="card">
+        <div class="card-title" style="justify-content: space-between;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span class="icon">👁️</span>
+            <span id="preview-tpl-title">2026最新：三大AI工具自動化實戰教學</span>
+          </div>
+          <span class="badge badge-cyan" id="preview-aspect-tag">16:9 橫向卡片</span>
+        </div>
+
+        <!-- 分鏡切換按鈕 -->
+        <div class="scene-selector" id="scenePills"></div>
+
+        <!-- 分鏡模擬卡片 -->
+        <div class="mockup-container">
+          <div class="mockup-grid-bg"></div>
+          <div style="position:relative; z-index:2;">
+            <div class="mockup-badge" id="mBadge">🔥 爆款開場</div>
+            <div class="mockup-title" id="mTitle">2026最新：三大AI工具：告別低效手動！</div>
+            <div class="mockup-subtitle" id="mSubtitle">徹底顛覆傳統作法，用 AI 自動化省下 80% 時間</div>
+            
+            <div class="grid-2" style="margin-bottom:16px;">
+              <ul class="mockup-bullets" id="mBullets"></ul>
+              <div class="mockup-code" id="mCode">$ ai-pipeline --init "workflow"\n>>> Status: Ready!</div>
+            </div>
+
+            <div class="mockup-narration" id="mNarration">
+              <strong>🗣️ 配音與字幕文案：</strong> ...
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: 影片成品播放庫 -->
+    <div id="tab-gallery" class="tab-panel">
+      <div class="card">
+        <div class="card-title" style="justify-content: space-between;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span class="icon">📁</span>
+            <span>已生成影片庫（存放於 output_videos 資料夾）</span>
+          </div>
+          <span class="badge badge-cyan">共 3 部成品</span>
+        </div>
+
+        <div class="video-grid">
+          <!-- 影片 1 -->
+          <div class="video-card">
+            <video controls preload="metadata" src="output_videos/雙AI協同_EP5_個人知識庫_16x9_20260926_003803.mp4"></video>
+            <div class="video-title">雙AI協同_EP5_個人知識庫_16x9_20260926_003803.mp4</div>
+            <div class="video-meta">
+              <span>🖥️ 16:9 · 1080p · 1.3 MB</span>
+              <button class="btn btn-secondary" style="padding:4px 10px; font-size:11px;" onclick="copyText('output_videos/雙AI協同_EP5_個人知識庫_16x9_20260926_003803.mp4')">複製路徑</button>
+            </div>
+          </div>
+
+          <!-- 影片 2 -->
+          <div class="video-card">
+            <video controls preload="metadata" src="output_videos/2026最強工作流_網頁資料抓取_shorts_20260926_002912.mp4"></video>
+            <div class="video-title">2026最強工作流_網頁資料抓取_shorts_20260926_002912.mp4</div>
+            <div class="video-meta">
+              <span>📱 9:16 Shorts · 833 KB</span>
+              <button class="btn btn-secondary" style="padding:4px 10px; font-size:11px;" onclick="copyText('output_videos/2026最強工作流_網頁資料抓取_shorts_20260926_002912.mp4')">複製路徑</button>
+            </div>
+          </div>
+
+          <!-- 影片 3 -->
+          <div class="video-card">
+            <video controls preload="metadata" src="output_videos/雙AI協同_EP5_個人知識庫_16x9_20260926_002816.mp4"></video>
+            <div class="video-title">雙AI協同_EP5_個人知識庫_16x9_20260926_002816.mp4</div>
+            <div class="video-meta">
+              <span>🖥️ 16:9 · 1080p · 1.3 MB</span>
+              <button class="btn btn-secondary" style="padding:4px 10px; font-size:11px;" onclick="copyText('output_videos/雙AI協同_EP5_個人知識庫_16x9_20260926_002816.mp4')">複製路徑</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 5: NotebookLM 轉影片 -->
+    <div id="tab-podcast" class="tab-panel">
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title"><span class="icon">📻</span> Google NotebookLM 轉 1080p Podcast 影片</div>
+          <p style="color:var(--text-dim); font-size:13px; line-height:1.6; margin-bottom:14px;">
+            <strong>操作方式超簡單：</strong><br>
+            1. 前往 Google NotebookLM 生成超擬真雙主持 AI 對談語音（Audio Overview）並下載音檔（.m4a 或 .mp3）。<br>
+            2. 將音訊檔案放進 <code>inputs_notebooklm/</code> 資料夾。<br>
+            3. 執行指令即可自動繪製雙 AI 主播卡與隨聲音跳動的動態音波！
+          </p>
+
+          <div class="action-box">
+            <label>轉換指令：</label>
+            <div class="cmd-display">python notebooklm_to_video.py --title "雙AI專案深度對談" --subtitle "2026 精華提煉與架構分析"</div>
+            <button class="btn btn-primary" style="width:100%;" onclick="copyText('python notebooklm_to_video.py --title \"雙AI專案深度對談\" --subtitle \"2026 精華提煉與架構分析\"')">
+              📋 複製 NotebookLM 轉換指令
+            </button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title"><span class="icon">✨</span> 雙 AI 主持人視覺規格</div>
+          <div class="option-grid" style="margin-bottom:14px;">
+            <div class="opt-card selected">
+              <div class="opt-title">AI 男主持 (Leo)</div>
+              <div class="opt-desc">深度技術分析 / 核心推導 / 穩健沉著</div>
+            </div>
+            <div class="opt-card selected purple">
+              <div class="opt-title">AI 女主持 (Mia)</div>
+              <div class="opt-desc">實務場景落地 / 痛點解答 / 活潑生動</div>
+            </div>
+          </div>
+          <div style="background:#000; border-radius:10px; padding:18px; border:1px solid #1e293b; text-align:center;">
+            <div style="color:var(--cyan); font-size:12px; font-weight:bold; margin-bottom:8px;">● 即時跳動聲波視覺 (Waveform)</div>
+            <div style="font-size:28px; letter-spacing:4px; color:#a855f7;"> ▂▃▅▆▇▆▅▃▂ </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 6: 啟動說明 -->
+    <div id="tab-guide" class="tab-panel">
+      <div class="card">
+        <div class="card-title"><span class="icon">🛠️</span> 系統啟動與聲音模仿說明</div>
+        <div style="color:var(--text-dim); font-size:14px; line-height:1.8;">
+          <h3 style="color:#fff; margin-bottom:8px;">1. 網頁直接錄音操作：</h3>
+          <p>
+            • 進入「<strong>🎙️ 網頁直接錄製聲音</strong>」分頁，點擊「開始錄音」，允許瀏覽器麥克風權限。<br>
+            • 照著建議文本念約 5~10 秒，點擊「停止錄音」，即可試聽並一鍵儲存為 <code>voice_samples/my_voice.webm</code>！
+          </p>
+
+          <h3 style="color:#fff; margin-top:16px; margin-bottom:8px;">2. 終端機生成指令：</h3>
+          <div class="cmd-display" style="margin-bottom:8px;">python create_video.py --topic "你的主題" --duration 3 --voice clone</div>
+          <div class="cmd-display">python create_video.py --topic "你的主題" --duration 1 --shorts --voice clone</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div id="toast">已複製到剪貼簿！</div>
+
+  <script>
+    let currentTopic = "2026最新：三大AI工具自動化實戰教學";
+    let currentDuration = 3.0;
+    let selectedAspect = "16x9";
+    let selectedVoice = "male";
+    let activeSceneIdx = 0;
+    let generatedScenes = [];
+
+    // 錄音相關變數
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let recordInterval = null;
+    let recordSeconds = 0;
+    let recordedAudioBlob = null;
+
+    function buildScriptScenes(topic, duration) {
+      const cleanTopic = topic.trim() || "2026 最新 AI 全自動實戰工作流";
+      const totalSeconds = duration * 60;
+      const numScenes = Math.max(2, Math.round(totalSeconds / 25));
+
+      const prototypes = [
+        {
+          badge: "🔥 爆款開場",
+          suffix: "：告別低效手動！",
+          sub: "徹底顛覆傳統作法，用 AI 自動化省下 80% 時間",
+          bullets: ["痛點直擊：手動處理耗時又容易出錯", "零程式門檻：文字指令直接驅動全新架構", `目標達成：${duration} 分鐘完整掌握核心秘訣`],
+          code: `$ ai-pipeline --init "${cleanTopic.slice(0, 18)}"\n>>> Loading AI Engine...\n>>> Ready to Automate: 100%`,
+          narration: `哈囉大家好，歡迎來到雙AI協同頻道！你是不是也常覺得處理「${cleanTopic}」特別耗時間？今天這部影片，帶你用最新的 AI 工作流，徹底告別手動繁瑣步驟！`
+        },
+        {
+          badge: "⚡ 核心架構",
+          suffix: "：三大核心機制拆解",
+          sub: "多模型協同運作，各司其職發揮極致威力",
+          bullets: ["資料層：自動收集並清洗關鍵資訊", "推理層：大模型智能決策與邏輯推理", "執行層：一鍵自動化輸出最終成果"],
+          code: `[Workflow Engine]\nInput Data -> AI Reasoning\n-> Structured Action -> Done!`,
+          narration: `要搞定「${cleanTopic}」，核心關鍵就在於架構分工。讓 AI 負責邏輯分析與繁瑣處理，你只需要專注在決策與靈感輸出。`
+        },
+        {
+          badge: "🛠️ 實戰第一步",
+          suffix: "：環境與工具一鍵就緒",
+          sub: "不需要複雜的安裝設定，開箱即用",
+          bullets: ["支援 Windows、Mac 與 Linux 跨平台", "模組化設計：免設定複雜 API 即可開跑", "直覺化操作：界面與指令雙軌支援"],
+          code: `$ setup-agent --quick-start\n[✔] Dependencies installed\n[✔] Studio ready!`,
+          narration: "第一步非常簡單，我們完全不需要配置昂貴的伺服器或複雜環境，只要透過預設好的工作台，一鍵就能把整個系統啟動起來。"
+        },
+        {
+          badge: "🚀 實戰第二步",
+          suffix: "：核心邏輯與流程串接",
+          sub: "將繁複的流程轉化為全自動閉環",
+          bullets: ["自動化管線監控：實時掌握運行狀態", "異常自動重試與修復機制", "毫秒級響應速度，告別等待焦慮"],
+          code: `$ run-task --mode continuous\n>>> Processing batch items...\n>>> Status: 200 OK (0.42s)`,
+          narration: "接下來就是最精彩的部分：我們把剛才設定好的規則交給系統自動運轉，你會發現原本要花好幾天的繁瑣流程，現在幾秒鐘就處理完畢！"
+        },
+        {
+          badge: "🎯 成果示範",
+          suffix: "：實機震撼效果展示",
+          sub: "只需一句話指令，成果直接呈現眼前",
+          bullets: ["高精準度：輸出品質超越手動成果", "多格式支援：表格、圖文、影音一應俱全", "即時預覽與一鍵導出"],
+          code: `User: 產生完整分析報表\nAgent: Generating report...\nSaved: output_final.mp4 [Success!]`,
+          narration: "你看畫面上的實際成果！從輸入指令到完整產出，不僅速度極快，而且細節豐富，這就是最新 AI 協同帶來的生產力革命。"
+        },
+        {
+          badge: "💡 進階秘訣",
+          suffix: "：避坑指南與關鍵細節",
+          sub: "老手才知道的隱藏設定，讓效果再提升 200%",
+          bullets: ["提示詞優化：如何引導 AI 給出最精準解答", "快取機制：節省時間與算力消耗", "靈活調參：自訂最適合你工作習慣的模式"],
+          code: `Optimization Tips:\n- Use structured markdown inputs\n- Enable local caching for 10x speed`,
+          narration: "在這裡跟大家分享一個關鍵技巧：在執行時善用結構化指令與快取機制，可以讓整體穩定度大幅提升，完全避免常見的卡頓問題。"
+        },
+        {
+          badge: "📊 效益對比",
+          suffix: "：傳統作法 vs AI 自動化",
+          sub: "數據說話！效率翻倍、時間成本直降 90%",
+          bullets: ["時間投入：從數小時壓縮至幾分鐘", "人力成本：單人即可搞定團隊工作量", "持續複利：建立一次，隨時反覆調用"],
+          code: `[Comparison]\nManual: 4.5 hours | High effort\nAI Studio: 3 minutes | 1-Click Done`,
+          narration: "算一算這筆帳：以前手動操作需要耗費大半天，現在全部自動化，你把省下來的時間拿去構思新題目或休息，效率直接翻了好幾倍！"
+        },
+        {
+          badge: "🔔 訂閱與資源",
+          suffix: "：立即動手實作！",
+          sub: "完整專案與設定檔已在說明欄開放領取",
+          bullets: ["歡迎在留言區分享你的實作成果與點子", "持續鎖定頻道，掌握最新 AI 黑科技", "記得按讚、訂閱、開啟小鈴鐺！"],
+          code: `Thanks for watching!\n>>> Next Episode:\n自訂聲音與私有化模型進階實戰`,
+          narration: `以上就是今天的「${cleanTopic}」完整教學！專案代碼與工具都已經整理在下方說明欄。如果覺得實用，別忘了按讚、訂閱並開啟小鈴鐺，我們下期再見！`
+        }
+      ];
+
+      let picked = [];
+      if (numScenes <= 3) {
+        picked = [prototypes[0], prototypes[4], prototypes[7]];
+      } else if (numScenes <= 5) {
+        picked = [prototypes[0], prototypes[1], prototypes[2], prototypes[4], prototypes[7]];
+      } else if (numScenes <= 8) {
+        picked = prototypes.slice(0, numScenes);
+      } else {
+        picked = [...prototypes];
+        for (let i = prototypes.length; i < numScenes; i++) {
+          picked.push({
+            badge: `🔍 深度探討 0${i-prototypes.length+1}`,
+            suffix: `：模組實作第 ${i-prototypes.length+1} 講`,
+            sub: "針對進階情境與實戰案例深入剖析",
+            bullets: ["邊界情況處理機制", "自動化測試與監控日誌", "長期維護與成本優化建議"],
+            code: `$ run-deep-dive --part ${i-prototypes.length+1}\nStatus: ALL PASS`,
+            narration: `現在我們來看進階實務環節。透過這個模組的深入設置，能確保你的工作流在處理大量任務時依然保持高速穩定。`
+          });
+        }
+      }
+
+      return picked.map(p => ({
+        badge: p.badge,
+        title: (cleanTopic + p.suffix).slice(0, 26),
+        subtitle: p.sub,
+        bullets: p.bullets,
+        code: p.code,
+        narration: p.narration
+      }));
+    }
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('tab-' + tabId).classList.add('active');
+      const targetBtn = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.getAttribute('onclick').includes(tabId));
+      if (targetBtn) targetBtn.classList.add('active');
+      if (tabId === 'preview') {
+        renderScenePreview();
+      }
+    }
+
+    function setDuration(dur) {
+      currentDuration = parseFloat(dur);
+      document.getElementById('durationSlider').value = dur;
+      onDurationSlider(dur);
+      document.querySelectorAll('.dur-pill').forEach(btn => {
+        btn.classList.toggle('active', btn.innerText.includes(`${dur} 分鐘`));
+      });
+    }
+
+    function onDurationSlider(val) {
+      currentDuration = parseFloat(val);
+      document.getElementById('durValDisplay').innerText = `${currentDuration.toFixed(1)} 分鐘`;
+      
+      const words = Math.round(currentDuration * 225);
+      const scenes = Math.max(2, Math.round((currentDuration * 60) / 25));
+      
+      document.getElementById('calcWords').innerText = `約 ${words} 字`;
+      document.getElementById('calcScenes').innerText = `${scenes} 個場景`;
+      
+      generateAiScriptUI(false);
+    }
+
+    function generateAiScriptUI(showToastMsg = true) {
+      currentTopic = document.getElementById('topicInput').value.trim() || "2026最新：三大AI工具自動化實戰教學";
+      generatedScenes = buildScriptScenes(currentTopic, currentDuration);
+      activeSceneIdx = 0;
+
+      document.getElementById('scriptTitleDisplay').innerText = currentTopic;
+      document.getElementById('scriptSceneCountDisplay').innerText = `${generatedScenes.length} 分鏡 (${currentDuration.toFixed(1)} 分鐘)`;
+
+      const listContainer = document.getElementById('scriptScenesList');
+      listContainer.innerHTML = '';
+      generatedScenes.forEach((s, idx) => {
+        const item = document.createElement('div');
+        item.innerHTML = `<strong style="color:var(--cyan);">[場景 ${idx+1}]</strong> ${s.badge} · <strong>${s.title}</strong>`;
+        listContainer.appendChild(item);
+      });
+
+      updateCmd();
+      if (showToastMsg) {
+        showToast(`✨ 成功由 AI 編寫 ${generatedScenes.length} 個分鏡腳本！`);
+      }
+    }
+
+    function selectAspect(aspect) {
+      selectedAspect = aspect;
+      document.getElementById('aspect-card-16x9').className = aspect === '16x9' ? 'opt-card selected' : 'opt-card';
+      document.getElementById('aspect-card-shorts').className = aspect === 'shorts' ? 'opt-card selected purple' : 'opt-card';
+      document.getElementById('preview-aspect-tag').innerText = aspect === '16x9' ? '16:9 橫向卡片' : '9:16 Shorts 直向卡片';
+      updateCmd();
+    }
+
+    function selectVoice(voice) {
+      selectedVoice = voice;
+      document.getElementById('voice-card-male').className = voice === 'male' ? 'opt-card selected' : 'opt-card';
+      document.getElementById('voice-card-female').className = voice === 'female' ? 'opt-card selected purple' : 'opt-card';
+      document.getElementById('voice-card-clone').className = voice === 'clone' ? 'opt-card selected amber' : 'opt-card';
+      
+      const cloneDetails = document.getElementById('voiceCloneDetails');
+      if (voice === 'clone') {
+        cloneDetails.classList.add('show');
+      } else {
+        cloneDetails.classList.remove('show');
+      }
+      updateCmd();
+    }
+
+    function updateCmd() {
+      let cmd = `python create_video.py --topic "${currentTopic}" --duration ${currentDuration}`;
+      if (selectedAspect === 'shorts') cmd += ' --shorts';
+      if (selectedVoice === 'female') cmd += ' --voice zh-TW-HsiaoChenNeural';
+      if (selectedVoice === 'clone') cmd += ' --voice clone';
+      document.getElementById('cmdText').innerText = cmd;
+    }
+
+    function renderScenePreview() {
+      document.getElementById('preview-tpl-title').innerText = `${currentTopic} (${currentDuration}分鐘)`;
+      
+      const pillsContainer = document.getElementById('scenePills');
+      pillsContainer.innerHTML = '';
+      generatedScenes.forEach((_, idx) => {
+        const btn = document.createElement('button');
+        btn.innerText = `分鏡 ${idx + 1}`;
+        btn.className = idx === activeSceneIdx ? 'scene-pill active' : 'scene-pill';
+        btn.onclick = () => {
+          activeSceneIdx = idx;
+          renderScenePreview();
+        };
+        pillsContainer.appendChild(btn);
+      });
+
+      const s = generatedScenes[activeSceneIdx] || generatedScenes[0];
+      if (s) {
+        document.getElementById('mBadge').innerText = s.badge;
+        document.getElementById('mTitle').innerText = s.title;
+        document.getElementById('mSubtitle').innerText = s.subtitle;
+        document.getElementById('mCode').innerText = s.code;
+        document.getElementById('mNarration').innerHTML = `<strong>🗣️ 配音與字幕文案：</strong> ${s.narration}`;
+
+        const ul = document.getElementById('mBullets');
+        ul.innerHTML = '';
+        s.bullets.forEach(b => {
+          const li = document.createElement('li');
+          li.innerText = b;
+          ul.appendChild(li);
+        });
+      }
+    }
+
+    // 🎙️ 網頁直接錄音邏輯 (MediaRecorder)
+    async function startRecording() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        audioChunks = [];
+        mediaRecorder = new MediaRecorder(stream);
+        
+        mediaRecorder.ondataavailable = e => {
+          if (e.data.size > 0) audioChunks.push(e.data);
+        };
+
+        mediaRecorder.onstop = () => {
+          recordedAudioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+          const audioUrl = URL.createObjectURL(recordedAudioBlob);
+          const audioElem = document.getElementById('audioPlayback');
+          audioElem.src = audioUrl;
+          document.getElementById('audioPreviewSection').style.display = 'block';
+          document.getElementById('sampleStatusTag').innerText = `錄音完成 (${recordSeconds}s)`;
+          document.getElementById('sampleStatusTag').className = 'badge badge-cyan';
+        };
+
+        mediaRecorder.start();
+        recordSeconds = 0;
+        document.getElementById('recordTimer').innerText = '00:00';
+        document.getElementById('recordTimer').className = 'record-timer';
+        document.getElementById('waveBars').className = 'wave-bars active';
+        
+        document.getElementById('btnStartRecord').disabled = true;
+        document.getElementById('btnStartRecord').style.opacity = '0.5';
+        document.getElementById('btnStopRecord').disabled = false;
+        document.getElementById('btnStopRecord').style.opacity = '1';
+
+        recordInterval = setInterval(() => {
+          recordSeconds++;
+          const sec = recordSeconds % 60;
+          const min = Math.floor(recordSeconds / 60);
+          document.getElementById('recordTimer').innerText = `${min < 10 ? '0' : ''}${min}:${sec < 10 ? '0' : ''}${sec}`;
+        }, 1000);
+
+        showToast("🎙️ 正在錄音中... 請照著上方文字念讀！");
+      } catch (err) {
+        alert("無法存取麥克風，請確認瀏覽器已允許麥克風權限！" + err);
+      }
+    }
+
+    function stopRecording() {
+      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        mediaRecorder.stop();
+        mediaRecorder.stream.getTracks().forEach(track => track.stop());
+      }
+      clearInterval(recordInterval);
+      document.getElementById('waveBars').className = 'wave-bars';
+      document.getElementById('btnStartRecord').disabled = false;
+      document.getElementById('btnStartRecord').style.opacity = '1';
+      document.getElementById('btnStopRecord').disabled = true;
+      document.getElementById('btnStopRecord').style.opacity = '0.5';
+      showToast("⏹️ 錄音停止，請點擊下方播放器試聽！");
+    }
+
+    async function saveVoiceSample() {
+      if (!recordedAudioBlob) {
+        alert("請先完成錄音！");
+        return;
+      }
+
+      // 1. 嘗試透過 API 上傳到後台 voice_samples/my_voice.webm
+      const reader = new FileReader();
+      reader.readAsDataURL(recordedAudioBlob);
+      reader.onloadend = async () => {
+        const base64Data = reader.result;
+        try {
+          const res = await fetch("/api/upload_voice_sample", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              filename: "my_voice.webm",
+              audio_base64: base64Data
+            })
+          });
+          const result = await res.json();
+          if (result.success) {
+            showToast("🎉 已自動將錄音儲存至 voice_samples 資料夾！");
+          }
+        } catch (e) {
+          // 若為本機直接開啟 HTML (file:///)，提供一鍵下載存入 voice_samples
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(recordedAudioBlob);
+          a.download = "my_voice.webm";
+          a.click();
+          showToast("💾 已下載 my_voice.webm！請放進 voice_samples/ 資料夾！");
+        }
+      };
+
+      // 自動將主頁面的配音設為「模仿自己」
+      selectVoice('clone');
+      document.getElementById('sampleStatusTag').innerText = "已就緒 (my_voice.webm)";
+      document.getElementById('sampleStatusTag').className = "badge badge-cyan";
+      document.getElementById('samplePathInfo').innerText = "已設定：voice_samples/my_voice.webm";
+    }
+
+    function copyText(str) {
+      navigator.clipboard.writeText(str).then(() => {
+        showToast("已成功複製到剪貼簿！");
+      }).catch(() => {
+        const el = document.createElement('textarea');
+        el.value = str;
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand('copy');
+        document.body.removeChild(el);
+        showToast("已成功複製到剪貼簿！");
+      });
+    }
+
+    function executeOrCopy() {
+      const cmd = document.getElementById('cmdText').innerText;
+      copyText(cmd);
+      showToast("已複製生成指令！在終端機貼上即可生成！");
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.innerText = msg;
+      t.style.opacity = '1';
+      setTimeout(() => { t.style.opacity = '0'; }, 2200);
+    }
+
+    // 初始化
+    generateAiScriptUI(false);
+  </script>
+</body>
+</html>
