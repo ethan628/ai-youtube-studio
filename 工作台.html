@@ -91,19 +91,24 @@
     .voice-clone-details { background: rgba(245, 158, 11, 0.08); border: 1px dashed var(--amber); border-radius: 10px; padding: 12px 14px; margin-top: 10px; display: none; }
     .voice-clone-details.show { display: block; animation: fadeIn 0.2s; }
 
-    /* Action Box */
-    .action-box { background: rgba(0,0,0,0.4); border: 1px solid var(--card-border); border-radius: 12px; padding: 16px; margin-top: 16px; }
+    /* Action Box & Buttons */
+    .action-box { background: rgba(0,0,0,0.4); border: 1px solid var(--card-border); border-radius: 12px; padding: 18px; margin-top: 16px; }
     .cmd-display { background: #050811; border: 1px solid #1f293d; border-radius: 8px; padding: 12px 14px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 13px; color: #38bdf8; word-break: break-all; margin-bottom: 12px; user-select: all; }
     .btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
     .btn { padding: 11px 20px; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; border: none; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; text-decoration: none; }
     .btn:active { transform: scale(0.98); }
-    .btn-primary { background: linear-gradient(90deg, #0284c7, #9333ea); color: #fff; flex: 1; justify-content: center; box-shadow: 0 4px 14px rgba(147, 51, 234, 0.3); }
-    .btn-primary:hover { opacity: 0.95; box-shadow: 0 6px 20px rgba(147, 51, 234, 0.5); }
+    .btn-generate { width: 100%; justify-content: center; font-size: 16px; font-weight: 800; padding: 14px 24px; border-radius: 10px; background: linear-gradient(90deg, #0284c7, #9333ea); color: #fff; box-shadow: 0 4px 20px rgba(147, 51, 234, 0.45); cursor: pointer; border: none; transition: all 0.2s; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
+    .btn-generate:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 26px rgba(147, 51, 234, 0.65); filter: brightness(1.1); }
+    .btn-generate:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
     .btn-secondary { background: #1e293b; color: var(--cyan); border: 1px solid var(--cyan); }
     .btn-secondary:hover { background: var(--cyan); color: #000; }
     .btn-magic { background: linear-gradient(90deg, #d97706, #f59e0b); color: #000; font-weight: 800; border: none; }
     .btn-record { background: #f43f5e; color: #fff; font-weight: 800; }
     .btn-record:hover { background: #e11d48; }
+
+    /* Loading Spinner */
+    .spinner { width: 28px; height: 28px; border: 3px solid rgba(255,255,255,0.2); border-top-color: var(--cyan); border-radius: 50%; animation: spin 0.8s linear infinite; flex-shrink: 0; }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
     /* Scene Mockup Preview */
     .mockup-container { background: #070b14; border: 2px solid #1e293b; border-radius: 14px; padding: 24px; position: relative; overflow: hidden; }
@@ -144,7 +149,7 @@
 
     /* Video Gallery */
     .video-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px; }
-    .video-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 12px; overflow: hidden; padding: 14px; }
+    .video-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 12px; overflow: hidden; padding: 14px; transition: transform 0.2s; }
     .video-card video { width: 100%; border-radius: 8px; background: #000; max-height: 220px; outline: none; }
     .video-title { font-size: 14px; font-weight: bold; color: #fff; margin-top: 10px; margin-bottom: 4px; word-break: break-all; }
     .video-meta { font-size: 12px; color: var(--text-dim); display: flex; justify-content: space-between; align-items: center; margin-top: 6px; }
@@ -161,18 +166,18 @@
         <div class="logo-icon">🎬</div>
         <div class="logo-title">
           <h1>AI YouTube 影片全自動生成工作台</h1>
-          <p>網頁直接錄音 · 模仿個人聲音 (Voice Clone) · 內建 AI 智慧腳本 · 指定幾分鐘自動運算</p>
+          <p>一鍵生成影片 · 內建 AI 智慧腳本 · 指定幾分鐘自動運算 · 模仿個人聲音 · 網頁直接錄音</p>
         </div>
       </div>
       <div class="status-badge">
         <span class="status-dot"></span>
-        <span>工作台離線就緒 (本機 HTML)</span>
+        <span id="backendStatusTag">工作台就緒 (點擊即可生成)</span>
       </div>
     </header>
 
     <!-- Nav Tabs -->
     <div class="tabs-bar">
-      <button class="tab-btn active" onclick="switchTab('studio')">🤖 內建 AI 腳本與影片生成</button>
+      <button class="tab-btn active" onclick="switchTab('studio')">🚀 一鍵 AI 生片控制台</button>
       <button class="tab-btn" onclick="switchTab('record')">🎙️ 網頁直接錄製聲音 (Voice Studio)</button>
       <button class="tab-btn" onclick="switchTab('preview')">👁️ 分鏡畫面即時預覽</button>
       <button class="tab-btn" onclick="switchTab('gallery')">📁 影片成品播放庫 (3)</button>
@@ -289,7 +294,7 @@
         <div class="card">
           <div class="card-title" style="justify-content:space-between;">
             <div style="display:flex; align-items:center; gap:8px;">
-              <span class="icon">🚀</span> 2. 腳本狀態與一鍵執行
+              <span class="icon">🚀</span> 2. 腳本狀態與開始生成
             </div>
             <span class="badge badge-cyan" id="scriptStatusBadge">AI 腳本已就緒</span>
           </div>
@@ -305,15 +310,38 @@
             </div>
           </div>
 
+          <!-- 生成控制核心按鈕區 -->
           <div class="action-box">
-            <label>終端機生成指令 (CLI Command)：</label>
+            <!-- 🌟 核心生成按鈕 🌟 -->
+            <button class="btn-generate" id="btnGenNow" onclick="generateVideoFromWeb()">
+              <span>🎬</span> 立即全自動生成影片 (Generate Video)
+            </button>
+
+            <!-- 即時生成進度動畫卡 -->
+            <div id="genLoadingCard" style="display:none; background:#1e1b4b; border:2px solid var(--purple); border-radius:12px; padding:16px 18px; margin-bottom:14px;">
+              <div style="display:flex; align-items:center; gap:16px;">
+                <div class="spinner"></div>
+                <div>
+                  <strong style="color:var(--cyan); font-size:14px;" id="genStatusTitle">🎬 正在全自動生成影片中...</strong>
+                  <p style="color:#cbd5e1; font-size:12px; margin-top:4px;" id="genStatusDesc">
+                    系統正在調用 AI 腳本、微軟自然語音合成、繪製科技視覺卡片並串接字幕燒錄，約需 15~30 秒，請稍候！
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <label style="font-size:12px; margin-top:4px;">終端機備用指令 (CLI Command)：</label>
             <div class="cmd-display" id="cmdText">python create_video.py --topic "2026最新：三大AI工具自動化實戰教學" --duration 3</div>
+            
             <div class="btn-row">
-              <button class="btn btn-primary" onclick="executeOrCopy()">
-                <span>🚀</span> 複製生成指令
+              <button class="btn btn-secondary" onclick="executeOrCopy()">
+                <span>📋</span> 複製指令
               </button>
               <button class="btn btn-secondary" onclick="switchTab('preview')">
-                <span>👁️</span> 逐頁預覽分鏡卡片
+                <span>👁️</span> 逐頁預覽分鏡
+              </button>
+              <button class="btn btn-secondary" onclick="switchTab('gallery')">
+                <span>📁</span> 查看成品庫
               </button>
             </div>
           </div>
@@ -438,10 +466,10 @@
             <span class="icon">📁</span>
             <span>已生成影片庫（存放於 output_videos 資料夾）</span>
           </div>
-          <span class="badge badge-cyan">共 3 部成品</span>
+          <span class="badge badge-cyan" id="galleryCountBadge">共 3 部成品</span>
         </div>
 
-        <div class="video-grid">
+        <div class="video-grid" id="galleryVideoGrid">
           <!-- 影片 1 -->
           <div class="video-card">
             <video controls preload="metadata" src="output_videos/雙AI協同_EP5_個人知識庫_16x9_20260926_003803.mp4"></video>
@@ -521,10 +549,10 @@
       <div class="card">
         <div class="card-title"><span class="icon">🛠️</span> 系統啟動與聲音模仿說明</div>
         <div style="color:var(--text-dim); font-size:14px; line-height:1.8;">
-          <h3 style="color:#fff; margin-bottom:8px;">1. 網頁直接錄音操作：</h3>
+          <h3 style="color:#fff; margin-bottom:8px;">1. 網頁直接點擊生片：</h3>
           <p>
-            • 進入「<strong>🎙️ 網頁直接錄製聲音</strong>」分頁，點擊「開始錄音」，允許瀏覽器麥克風權限。<br>
-            • 照著建議文本念約 5~10 秒，點擊「停止錄音」，即可試聽並一鍵儲存為 <code>voice_samples/my_voice.webm</code>！
+            • 在「🚀 一鍵 AI 生片控制台」，設定好主題、時長與語音後，直接點擊 <strong>「🎬 立即全自動生成影片」</strong> 即可自動跑完整套生片管線！<br>
+            • 生成完成後，影片會自動加載到「<strong>📁 影片成品播放庫</strong>」中直接線上觀看！
           </p>
 
           <h3 style="color:#fff; margin-top:16px; margin-bottom:8px;">2. 終端機生成指令：</h3>
@@ -776,6 +804,75 @@
       }
     }
 
+    // 🚀 核心：網頁上一鍵全自動生片功能
+    async function generateVideoFromWeb() {
+      const topic = currentTopic;
+      const duration = currentDuration;
+      const aspect = selectedAspect;
+      const voice = selectedVoice === 'clone' ? 'clone' : (selectedVoice === 'female' ? 'zh-TW-HsiaoChenNeural' : 'zh-TW-YunJheNeural');
+
+      const btn = document.getElementById("btnGenNow");
+      btn.disabled = true;
+      btn.style.opacity = "0.5";
+      
+      const loadingCard = document.getElementById("genLoadingCard");
+      loadingCard.style.display = "block";
+      document.getElementById("genStatusTitle").innerText = `🎬 正在為您全自動生成【${topic}】影片...`;
+      document.getElementById("genStatusDesc").innerText = `設定：${duration} 分鐘 | 比例：${aspect === 'shorts' ? '9:16 Shorts' : '16:9 長片'} | 語音：${selectedVoice}。預估需 15~30 秒，請稍候！`;
+
+      const apiUrl = window.location.origin.includes("8501") ? "/api/generate_custom" : "http://127.0.0.1:8501/api/generate_custom";
+
+      try {
+        const res = await fetch(apiUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ topic, duration, aspect, voice })
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          showToast("🎉 影片全自動生成成功！已存入 output_videos 資料夾！");
+          loadingCard.style.display = "none";
+          btn.disabled = false;
+          btn.style.opacity = "1";
+          
+          prependVideoCard(data.file, aspect);
+          switchTab('gallery');
+          return;
+        } else {
+          throw new Error(data.error || "生成失敗");
+        }
+      } catch (err) {
+        loadingCard.style.display = "none";
+        btn.disabled = false;
+        btn.style.opacity = "1";
+
+        copyText(document.getElementById("cmdText").innerText);
+        alert("💡 提示：本機生片後台服務 (8501) 尚未啟動。\n\n已自動為您複製好終端機生成指令！\n只要在終端機貼上執行即可立即生片：\n\n" + document.getElementById("cmdText").innerText);
+      }
+    }
+
+    function prependVideoCard(filePath, aspect) {
+      const bname = filePath.split(/[\\\\/]/).pop();
+      const isShorts = aspect === 'shorts';
+      const container = document.getElementById('galleryVideoGrid');
+      if (!container) return;
+
+      const card = document.createElement('div');
+      card.className = 'video-card';
+      card.style.border = '2px solid var(--cyan)';
+      card.style.boxShadow = '0 0 16px var(--cyan-glow)';
+      card.innerHTML = `
+        <video controls autoplay preload="metadata" src="output_videos/${bname}"></video>
+        <div class="video-title" style="color:var(--cyan);">✨ 最新生成：${bname}</div>
+        <div class="video-meta">
+          <span>${isShorts ? '📱 9:16 Shorts' : '🖥️ 16:9 · 1080p'} · 剛剛生成</span>
+          <button class="btn btn-secondary" style="padding:4px 10px; font-size:11px;" onclick="copyText('output_videos/${bname}')">複製路徑</button>
+        </div>
+      `;
+      container.insertBefore(card, container.firstChild);
+    }
+
     // 🎙️ 網頁直接錄音邏輯 (MediaRecorder)
     async function startRecording() {
       try {
@@ -841,13 +938,12 @@
         return;
       }
 
-      // 1. 嘗試透過 API 上傳到後台 voice_samples/my_voice.webm
       const reader = new FileReader();
       reader.readAsDataURL(recordedAudioBlob);
       reader.onloadend = async () => {
         const base64Data = reader.result;
         try {
-          const res = await fetch("/api/upload_voice_sample", {
+          const res = await fetch("http://127.0.0.1:8501/api/upload_voice_sample", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -860,7 +956,6 @@
             showToast("🎉 已自動將錄音儲存至 voice_samples 資料夾！");
           }
         } catch (e) {
-          // 若為本機直接開啟 HTML (file:///)，提供一鍵下載存入 voice_samples
           const a = document.createElement("a");
           a.href = URL.createObjectURL(recordedAudioBlob);
           a.download = "my_voice.webm";
@@ -869,7 +964,6 @@
         }
       };
 
-      // 自動將主頁面的配音設為「模仿自己」
       selectVoice('clone');
       document.getElementById('sampleStatusTag').innerText = "已就緒 (my_voice.webm)";
       document.getElementById('sampleStatusTag').className = "badge badge-cyan";

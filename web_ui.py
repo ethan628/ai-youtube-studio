@@ -416,9 +416,19 @@ class VideoStudioHandler(SimpleHTTPRequestHandler):
                 self.send_json_response({"success": False, "error": str(e)}, status=500)
             return
 
+    def do_OPTIONS(self):
+        self.send_response(200)
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "*")
+        self.end_headers()
+
     def send_json_response(self, data, status=200):
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "*")
         self.end_headers()
         self.wfile.write(json.dumps(data).encode("utf-8"))
 
