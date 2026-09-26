@@ -189,7 +189,7 @@
       <button class="tab-btn" onclick="switchTab('script')">📜 完整分鏡腳本 (看腳本)</button>
       <button class="tab-btn" onclick="switchTab('preview')">👁️ 分鏡畫面即時預覽</button>
       <button class="tab-btn" onclick="switchTab('record')">🎙️ 網頁直接錄製聲音 (Voice Studio)</button>
-      <button class="tab-btn" onclick="switchTab('gallery')">📁 影片成品播放庫 (3)</button>
+      <button class="tab-btn" onclick="switchTab('gallery')">📁 影片成品播放庫 (5)</button>
       <button class="tab-btn" onclick="switchTab('podcast')">📻 Google NotebookLM 轉影片</button>
       <button class="tab-btn" onclick="switchTab('guide')">🛠️ 執行指南</button>
     </div>
@@ -529,11 +529,31 @@
             <span class="icon">📁</span>
             <span>已生成影片庫（存放於 output_videos 資料夾）</span>
           </div>
-          <span class="badge badge-cyan" id="galleryCountBadge">共 3 部成品</span>
+          <span class="badge badge-cyan" id="galleryCountBadge">共 5 部成品</span>
         </div>
 
         <div class="video-grid" id="galleryVideoGrid">
-          <!-- 影片 1 -->
+          <!-- 影片 1: 11分鐘 AI生成實戰長片 -->
+          <div class="video-card">
+            <video controls preload="metadata" src="output_videos/AI生成_2026最新三大AI工具自動化實戰教學_11分_16x9_20260926_160430.mp4"></video>
+            <div class="video-title">AI生成_2026最新三大AI工具自動化實戰教學_11分_16x9_20260926_160430.mp4</div>
+            <div class="video-meta">
+              <span>🖥️ 16:9 · 1080p · 7.6 MB</span>
+              <button class="btn btn-secondary" style="padding:4px 10px; font-size:11px;" onclick="copyText('output_videos/AI生成_2026最新三大AI工具自動化實戰教學_11分_16x9_20260926_160430.mp4')">複製路徑</button>
+            </div>
+          </div>
+
+          <!-- 影片 2: 一鍵測試長片 -->
+          <div class="video-card">
+            <video controls preload="metadata" src="output_videos/AI生成_一鍵測試_0分_16x9_20260926_160340.mp4"></video>
+            <div class="video-title">AI生成_一鍵測試_0分_16x9_20260926_160340.mp4</div>
+            <div class="video-meta">
+              <span>🖥️ 16:9 · 1080p · 865 KB</span>
+              <button class="btn btn-secondary" style="padding:4px 10px; font-size:11px;" onclick="copyText('output_videos/AI生成_一鍵測試_0分_16x9_20260926_160340.mp4')">複製路徑</button>
+            </div>
+          </div>
+
+          <!-- 影片 3 -->
           <div class="video-card">
             <video controls preload="metadata" src="output_videos/雙AI協同_EP5_個人知識庫_16x9_20260926_003803.mp4"></video>
             <div class="video-title">雙AI協同_EP5_個人知識庫_16x9_20260926_003803.mp4</div>
