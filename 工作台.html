@@ -154,6 +154,14 @@
     .video-title { font-size: 14px; font-weight: bold; color: #fff; margin-top: 10px; margin-bottom: 4px; word-break: break-all; }
     .video-meta { font-size: 12px; color: var(--text-dim); display: flex; justify-content: space-between; align-items: center; margin-top: 6px; }
 
+    /* Script Viewer Styles */
+    .script-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 12px; padding: 20px; transition: all 0.2s; position: relative; }
+    .script-card:hover { border-color: var(--cyan); box-shadow: 0 4px 20px rgba(0, 240, 255, 0.12); }
+    .script-card-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--card-border); }
+    .script-card-title { font-size: 16px; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .script-narration-box { background: rgba(245, 158, 11, 0.08); border-left: 4px solid var(--amber); border-radius: 8px; padding: 16px; margin-top: 14px; }
+    .script-narration-text { font-size: 15px; line-height: 1.8; color: #fef08a; font-weight: 500; margin-top: 8px; letter-spacing: 0.3px; }
+
     /* Toast */
     #toast { position: fixed; bottom: 24px; right: 24px; background: #10b981; color: #000; font-weight: bold; font-size: 13px; padding: 12px 20px; border-radius: 10px; box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4); opacity: 0; pointer-events: none; transition: opacity 0.3s; z-index: 9999; }
   </style>
@@ -178,8 +186,9 @@
     <!-- Nav Tabs -->
     <div class="tabs-bar">
       <button class="tab-btn active" onclick="switchTab('studio')">🚀 一鍵 AI 生片控制台</button>
-      <button class="tab-btn" onclick="switchTab('record')">🎙️ 網頁直接錄製聲音 (Voice Studio)</button>
+      <button class="tab-btn" onclick="switchTab('script')">📜 完整分鏡腳本 (看腳本)</button>
       <button class="tab-btn" onclick="switchTab('preview')">👁️ 分鏡畫面即時預覽</button>
+      <button class="tab-btn" onclick="switchTab('record')">🎙️ 網頁直接錄製聲音 (Voice Studio)</button>
       <button class="tab-btn" onclick="switchTab('gallery')">📁 影片成品播放庫 (3)</button>
       <button class="tab-btn" onclick="switchTab('podcast')">📻 Google NotebookLM 轉影片</button>
       <button class="tab-btn" onclick="switchTab('guide')">🛠️ 執行指南</button>
@@ -308,7 +317,13 @@
             <div id="scriptScenesList" style="max-height:140px; overflow-y:auto; font-size:12px; color:var(--text-dim); line-height:1.8;">
               <!-- JS 動態填入 -->
             </div>
+            <div style="margin-top:10px; border-top:1px solid var(--card-border); padding-top:8px;">
+              <button class="btn btn-secondary" style="width:100%; justify-content:center; padding:8px 12px; font-size:12px;" onclick="switchTab('script')">
+                <span>📜</span> 開啟「看腳本」檢視完整文案與逐字稿
+              </button>
+            </div>
           </div>
+
 
           <!-- 生成控制核心按鈕區 -->
           <div class="action-box">
@@ -346,6 +361,54 @@
             </div>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- TAB: 完整分鏡腳本 (看腳本) -->
+    <div id="tab-script" class="tab-panel">
+      <div class="card" style="margin-bottom: 20px;">
+        <div class="card-title" style="justify-content: space-between; flex-wrap:wrap; gap:10px;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span class="icon">📜</span>
+            <span id="scriptViewerHeading">完整分鏡腳本與口播逐字稿</span>
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button class="btn btn-magic" style="padding:6px 14px; font-size:12px;" onclick="copyAllNarrations()">
+              📋 複製全部逐字稿 (提詞機模式)
+            </button>
+            <button class="btn btn-secondary" style="padding:6px 14px; font-size:12px;" onclick="downloadScriptMarkdown()">
+              📥 下載 Markdown 腳本
+            </button>
+            <button class="btn btn-primary" style="padding:6px 14px; font-size:12px;" onclick="switchTab('studio')">
+              🚀 返回生片
+            </button>
+          </div>
+        </div>
+
+        <!-- 統計數據橫條 -->
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:12px; margin-top:8px;">
+          <div style="background:var(--content-bg); border:1px solid var(--card-border); border-radius:10px; padding:12px; text-align:center;">
+            <div style="font-size:11px; color:var(--text-muted);">影片主題</div>
+            <div style="font-size:13px; font-weight:bold; color:#fff; margin-top:4px;" id="svTopicText">2026最新：三大AI工具自動化實戰教學</div>
+          </div>
+          <div style="background:var(--content-bg); border:1px solid var(--card-border); border-radius:10px; padding:12px; text-align:center;">
+            <div style="font-size:11px; color:var(--text-muted);">目標時長</div>
+            <div style="font-size:14px; font-weight:bold; color:var(--cyan); margin-top:4px;" id="svDurationText">3.0 分鐘</div>
+          </div>
+          <div style="background:var(--content-bg); border:1px solid var(--card-border); border-radius:10px; padding:12px; text-align:center;">
+            <div style="font-size:11px; color:var(--text-muted);">總分鏡場景數</div>
+            <div style="font-size:14px; font-weight:bold; color:var(--purple); margin-top:4px;" id="svScenesText">7 個場景</div>
+          </div>
+          <div style="background:var(--content-bg); border:1px solid var(--card-border); border-radius:10px; padding:12px; text-align:center;">
+            <div style="font-size:11px; color:var(--text-muted);">預估總字數</div>
+            <div style="font-size:14px; font-weight:bold; color:var(--amber); margin-top:4px;" id="svWordsText">約 675 字</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 逐場景分鏡卡片清單容器 -->
+      <div id="scriptCardsContainer" style="display:flex; flex-direction:column; gap:16px;">
+        <!-- JS 動態生成每幕詳細腳本卡片 -->
       </div>
     </div>
 
@@ -693,6 +756,9 @@
       if (tabId === 'preview') {
         renderScenePreview();
       }
+      if (tabId === 'script') {
+        renderFullScriptView();
+      }
     }
 
     function setDuration(dur) {
@@ -734,6 +800,7 @@
       });
 
       updateCmd();
+      renderFullScriptView();
       if (showToastMsg) {
         showToast(`✨ 成功由 AI 編寫 ${generatedScenes.length} 個分鏡腳本！`);
       }
@@ -802,6 +869,128 @@
           ul.appendChild(li);
         });
       }
+    }
+
+    // 📜 完整分鏡腳本檢視器邏輯 (看腳本)
+    function renderFullScriptView() {
+      if (!generatedScenes || generatedScenes.length === 0) {
+        generatedScenes = buildScriptScenes(currentTopic, currentDuration);
+      }
+      const totalChars = generatedScenes.reduce((acc, s) => acc + (s.narration ? s.narration.length : 0), 0);
+      const estSeconds = Math.round(totalChars / 3.75);
+      const estMin = (estSeconds / 60).toFixed(1);
+
+      const svTopic = document.getElementById('svTopicText');
+      if (svTopic) svTopic.innerText = currentTopic;
+      const svDur = document.getElementById('svDurationText');
+      if (svDur) svDur.innerText = `${currentDuration.toFixed(1)} 分鐘`;
+      const svScenes = document.getElementById('svScenesText');
+      if (svScenes) svScenes.innerText = `${generatedScenes.length} 個分鏡場景`;
+      const svWords = document.getElementById('svWordsText');
+      if (svWords) svWords.innerText = `約 ${totalChars} 字 (口播約 ${estMin} 分鐘 / ${estSeconds} 秒)`;
+
+      const container = document.getElementById('scriptCardsContainer');
+      if (!container) return;
+      container.innerHTML = '';
+
+      generatedScenes.forEach((s, idx) => {
+        const sceneChars = s.narration ? s.narration.length : 0;
+        const sceneSec = Math.round(sceneChars / 3.75);
+
+        const card = document.createElement('div');
+        card.className = 'script-card';
+        card.innerHTML = `
+          <div class="script-card-header">
+            <div class="script-card-title">
+              <span class="badge badge-cyan" style="font-size:12px;">分鏡 ${idx + 1} / ${generatedScenes.length}</span>
+              <span class="mockup-badge" style="margin-bottom:0; font-size:12px;">${s.badge}</span>
+              <span style="font-size:16px;">${s.title}</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <span style="font-size:12px; color:var(--text-muted);">約 ${sceneChars} 字 · 預估 ${sceneSec} 秒</span>
+              <button class="btn btn-secondary" style="padding:4px 10px; font-size:11px;" onclick="copySingleNarration(${idx})">
+                📋 複製此段旁白
+              </button>
+            </div>
+          </div>
+
+          <div style="font-size:13px; color:var(--text-dim); margin-bottom:12px;">
+            <strong style="color:var(--purple);">📌 本幕核心：</strong> ${s.subtitle}
+          </div>
+
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:12px; margin-bottom:14px;">
+            <div style="background:var(--content-bg); border:1px solid var(--card-border); border-radius:8px; padding:12px;">
+              <div style="font-size:12px; font-weight:bold; color:var(--cyan); margin-bottom:6px;">🖥️ 畫面條列重點：</div>
+              <ul style="list-style:none; padding-left:0; margin:0; font-size:12px; color:#cbd5e1; line-height:1.7;">
+                ${s.bullets.map(b => `<li style="display:flex; gap:6px; align-items:center;"><span style="color:var(--cyan);">●</span> ${b}</li>`).join('')}
+              </ul>
+            </div>
+            <div style="background:#02040a; border:1px solid rgba(0,240,255,0.25); border-radius:8px; padding:12px; font-family:monospace; font-size:11px; color:#4ade80; white-space:pre-wrap; overflow-x:auto;">
+              <div style="color:#64748b; margin-bottom:4px; font-size:10px;">// 畫面終端機指令區</div>
+              ${s.code}
+            </div>
+          </div>
+
+          <div class="script-narration-box">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <span style="font-size:12px; font-weight:bold; color:var(--amber);">🗣️ 口播旁白逐字稿 (配音與字幕內容)：</span>
+              <span style="font-size:11px; color:#fde68a;">${sceneChars} 字</span>
+            </div>
+            <div class="script-narration-text">${s.narration}</div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function copySingleNarration(idx) {
+      const s = generatedScenes[idx];
+      if (!s) return;
+      copyText(s.narration);
+      showToast(`📋 已複製第 ${idx + 1} 幕旁白！`);
+    }
+
+    function copyAllNarrations() {
+      if (!generatedScenes || generatedScenes.length === 0) {
+        showToast("尚未產生分鏡腳本！");
+        return;
+      }
+      const fullText = generatedScenes.map((s, i) => `【第 ${i + 1} 幕：${s.badge} ${s.title}】\n${s.narration}`).join('\n\n');
+      copyText(fullText);
+      showToast(`📋 已複製全部 ${generatedScenes.length} 幕逐字稿！`);
+    }
+
+    function downloadScriptMarkdown() {
+      if (!generatedScenes || generatedScenes.length === 0) {
+        showToast("尚未產生分鏡腳本！");
+        return;
+      }
+      const totalChars = generatedScenes.reduce((acc, s) => acc + (s.narration ? s.narration.length : 0), 0);
+      let md = `# 影片分鏡腳本：${currentTopic}\n\n`;
+      md += `- **目標時長**：${currentDuration} 分鐘\n`;
+      md += `- **分鏡總數**：${generatedScenes.length} 幕\n`;
+      md += `- **預估字數**：約 ${totalChars} 字\n`;
+      md += `- **生成時間**：${new Date().toLocaleString()}\n\n`;
+      md += `---\n\n`;
+
+      generatedScenes.forEach((s, i) => {
+        md += `## 分鏡 ${i + 1}：${s.badge} ${s.title}\n\n`;
+        md += `**副標題**：${s.subtitle}\n\n`;
+        md += `**視覺要點**：\n`;
+        s.bullets.forEach(b => {
+          md += `- ${b}\n`;
+        });
+        md += `\n**終端機展示**：\n\`\`\`bash\n${s.code}\n\`\`\`\n\n`;
+        md += `**🗣️ 口播旁白（逐字稿）**：\n> ${s.narration}\n\n`;
+        md += `---\n\n`;
+      });
+
+      const blob = new Blob([md], { type: 'text/markdown;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `腳本_${currentTopic.replace(/[\/\\:*?"<>|]/g, '_')}.md`;
+      link.click();
+      showToast("📥 已成功下載 Markdown 腳本檔案！");
     }
 
     // 🚀 核心：網頁上一鍵全自動生片功能

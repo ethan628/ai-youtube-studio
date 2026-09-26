@@ -281,6 +281,14 @@ class VideoStudioHandler(SimpleHTTPRequestHandler):
                 return
 
         if parsed.path in ("/", "/index.html"):
+            target_html = "工作台.html" if os.path.exists("工作台.html") else ("index.html" if os.path.exists("index.html") else None)
+            if target_html:
+                self.send_response(200)
+                self.send_header("Content-Type", "text/html; charset=utf-8")
+                self.end_headers()
+                with open(target_html, "rb") as f:
+                    self.wfile.write(f.read())
+                return
             self.render_dashboard()
             return
 
