@@ -12,7 +12,13 @@ venv/
 Thumbs.db
 desktop.ini
 
-# 產出影片與暫存（可依需求取消註解以節省空間）
-# output_videos/*.mp4
-# voice_samples/*.webm
-# inputs_notebooklm/*.m4a
+# 敏感憑證與 Token（嚴禁外流）
+client_secrets.json
+youtube_token.json
+
+# 產出影片與暫存檔案
+output_videos/*.mp4
+output_recordings/
+voice_samples/
+archive_shorts/
+inputs_notebooklm/*.m4a

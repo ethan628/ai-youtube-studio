@@ -4,6 +4,7 @@ import json
 import glob
 import threading
 import urllib.parse
+from datetime import datetime
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from src.composer import compose_video
 from src.podcast_visualizer import convert_audio_to_podcast_video
@@ -116,8 +117,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                     <div class="form-group">
                         <label>影片規格比例：</label>
                         <select name="aspect" id="aspectSelect">
-                            <option value="16x9">16:9 橫向標準影片 (YouTube 長片 1920x1080)</option>
-                            <option value="shorts">9:16 直向短影音 (YouTube Shorts 1080x1920)</option>
+                            <option value="16x9">16:9 橫向標準長影片 (YouTube 1080p 正片首選)</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -267,15 +267,16 @@ class VideoStudioHandler(SimpleHTTPRequestHandler):
             self.wfile.write(b'{"status": "ok"}')
         if parsed.path in ("/api/list_videos", "/list_videos"):
             mp4_files = sorted(glob.glob(os.path.join(OUTPUT_DIR, "*.mp4")), key=os.path.getmtime, reverse=True)
+            # 嚴格只收錄 16:9 橫向長片
+            mp4_files = [f for f in mp4_files if not os.path.basename(f).startswith("Shorts預告_") and "shorts" not in os.path.basename(f).lower() and "9x16" not in os.path.basename(f).lower()]
             v_list = []
             for f in mp4_files:
                 bname = os.path.basename(f)
                 size_mb = os.path.getsize(f) / (1024 * 1024)
-                is_shorts = "shorts" in bname.lower() or "9x16" in bname.lower()
                 v_list.append({
                     "filename": bname,
                     "size_mb": round(size_mb, 2),
-                    "is_shorts": is_shorts,
+                    "is_shorts": False,
                     "mtime": os.path.getmtime(f)
                 })
             self.send_json_response({"success": True, "videos": v_list})
@@ -295,39 +296,59 @@ class VideoStudioHandler(SimpleHTTPRequestHandler):
             for f in rec_files:
                 bname = os.path.basename(f)
                 size_mb = os.path.getsize(f) / (1024 * 1024)
+                mtime = os.path.getmtime(f)
+                mode_guess = "terminal"
+                if "browser" in bname.lower(): mode_guess = "browser"
+                elif "editor" in bname.lower(): mode_guess = "editor"
+                elif "desktop" in bname.lower(): mode_guess = "desktop"
                 r_list.append({
                     "filename": bname,
                     "size_mb": round(size_mb, 2),
-                    "mtime": os.path.getmtime(f)
+                    "mtime": mtime,
+                    "time_str": datetime.fromtimestamp(mtime).strftime("%Y-%m-%d %H:%M:%S"),
+                    "mode": mode_guess
                 })
             self.send_json_response({"success": True, "recordings": r_list})
+            return
+
+        if parsed.path in ("/api/list_voice_samples", "/list_voice_samples"):
+            os.makedirs("voice_samples", exist_ok=True)
+            samples = []
+            for ext in ["mp3", "wav", "m4a", "webm", "aac", "ogg"]:
+                for p in glob.glob(os.path.join("voice_samples", f"*.{ext}")):
+                    bname = os.path.basename(p)
+                    size_kb = round(os.path.getsize(p) / 1024, 1)
+                    samples.append({
+                        "filename": bname,
+                        "size_kb": size_kb,
+                        "url": f"/voice_samples/{urllib.parse.quote(bname)}"
+                    })
+            self.send_json_response({"success": True, "samples": samples})
+            return
+
+        if parsed.path.startswith("/voice_samples/"):
+            filename = urllib.parse.unquote(parsed.path[15:])
+            filepath = os.path.join("voice_samples", filename)
+            self.send_file_with_range(filepath)
             return
 
         if parsed.path.startswith("/recordings/"):
             filename = urllib.parse.unquote(parsed.path[12:])
             filepath = os.path.join("output_recordings", filename)
-            if os.path.exists(filepath):
-                self.send_response(200)
-                self.send_header("Content-Type", "video/mp4")
-                self.send_header("Content-Length", str(os.path.getsize(filepath)))
-                self.end_headers()
-                with open(filepath, "rb") as f:
-                    while chunk := f.read(65536):
-                        self.wfile.write(chunk)
-                return
+            self.send_file_with_range(filepath)
+            return
 
         if parsed.path.startswith("/videos/"):
             filename = urllib.parse.unquote(parsed.path[8:])
             filepath = os.path.join(OUTPUT_DIR, filename)
-            if os.path.exists(filepath):
-                self.send_response(200)
-                self.send_header("Content-Type", "video/mp4")
-                self.send_header("Content-Length", str(os.path.getsize(filepath)))
-                self.end_headers()
-                with open(filepath, "rb") as f:
-                    while chunk := f.read(65536):
-                        self.wfile.write(chunk)
-                return
+            self.send_file_with_range(filepath)
+            return
+
+        if parsed.path.startswith("/output_videos/"):
+            filename = urllib.parse.unquote(parsed.path[15:])
+            filepath = os.path.join(OUTPUT_DIR, filename)
+            self.send_file_with_range(filepath)
+            return
 
         if parsed.path in ("/", "/index.html"):
             target_html = "工作台.html" if os.path.exists("工作台.html") else ("index.html" if os.path.exists("index.html") else None)
@@ -345,6 +366,8 @@ class VideoStudioHandler(SimpleHTTPRequestHandler):
 
     def render_dashboard(self):
         mp4_files = sorted(glob.glob(os.path.join(OUTPUT_DIR, "*.mp4")), key=os.path.getmtime, reverse=True)
+        # 嚴格只收錄 16:9 橫向長片
+        mp4_files = [f for f in mp4_files if not os.path.basename(f).startswith("Shorts預告_") and "shorts" not in os.path.basename(f).lower() and "9x16" not in os.path.basename(f).lower()]
         video_cards_html = ""
         for v in mp4_files:
             bname = os.path.basename(v)
@@ -513,15 +536,63 @@ class VideoStudioHandler(SimpleHTTPRequestHandler):
             self.send_json_response(res)
             return
 
+        if self.path in ("/api/youtube_auth_start", "/youtube_auth_start"):
+            from src.youtube_uploader import start_auth_flow
+            res = start_auth_flow()
+            self.send_json_response(res)
+            return
+
+        if self.path in ("/api/open_output_folder", "/open_output_folder"):
+            try:
+                import subprocess
+                subprocess.Popen(["xdg-open", OUTPUT_DIR])
+                self.send_json_response({"success": True})
+            except Exception as e:
+                self.send_json_response({"success": False, "error": str(e)}, status=500)
+            return
+
+        if self.path in ("/api/save_client_secrets", "/save_client_secrets"):
+            try:
+                content = data.get("content", "")
+                if isinstance(content, dict):
+                    content = json.dumps(content, indent=2, ensure_ascii=False)
+                if not content or ("installed" not in content and "web" not in content):
+                    self.send_json_response({"success": False, "error": "無效的 Google OAuth Client Secrets JSON 內容"}, status=400)
+                    return
+                with open("client_secrets.json", "w", encoding="utf-8") as f:
+                    f.write(content)
+                from src.youtube_uploader import check_youtube_api_readiness
+                status = check_youtube_api_readiness()
+                self.send_json_response({"success": True, "api_status": status})
+            except Exception as e:
+                self.send_json_response({"success": False, "error": str(e)}, status=500)
+            return
+
+        if self.path in ("/api/detect_autopilot_mode", "/detect_autopilot_mode"):
+            from src.autopilot_detector import detect_mode_by_gemini
+            script_text = data.get("text", "") or data.get("script", "")
+            duration = float(data.get("duration", 15.0))
+            try:
+                res = detect_mode_by_gemini(script_text, duration=duration)
+                self.send_json_response({"success": True, "data": res})
+            except Exception as e:
+                import traceback
+                traceback.print_exc()
+                self.send_json_response({"success": False, "error": str(e)}, status=500)
+            return
+
         if self.path in ("/api/run_autopilot_recording", "/run_autopilot_recording"):
             from src.auto_pilot_recorder import run_autopilot_recording
             mode = data.get("mode", "terminal")
             title = data.get("title", "AI 電腦無人操作自動錄影")
-            duration = float(data.get("duration", 8.0))
+            duration = float(data.get("duration", 15.0))
             prompt = data.get("prompt", None)
             commands = data.get("commands", None)
             narration = data.get("narration", None)
             aspect = data.get("aspect", "16x9")
+            speed = float(data.get("speed", 1.0))
+            show_subtitles = bool(data.get("show_subtitles", True))
+            enable_audio = bool(data.get("enable_audio", True))
             is_vertical = (aspect == "shorts")
 
             try:
@@ -532,12 +603,18 @@ class VideoStudioHandler(SimpleHTTPRequestHandler):
                     prompt=prompt,
                     commands=commands,
                     narration=narration,
-                    is_vertical=is_vertical
+                    is_vertical=is_vertical,
+                    speed=speed,
+                    show_subtitles=show_subtitles,
+                    enable_audio=enable_audio
                 )
+                vtt_file = out_path.rsplit(".", 1)[0] + ".vtt"
+                vtt_name = os.path.basename(vtt_file) if os.path.exists(vtt_file) else None
                 self.send_json_response({
                     "success": True,
                     "file": out_path,
-                    "filename": os.path.basename(out_path)
+                    "filename": os.path.basename(out_path),
+                    "vtt_filename": vtt_name
                 })
             except Exception as e:
                 import traceback
@@ -612,9 +689,84 @@ class VideoStudioHandler(SimpleHTTPRequestHandler):
     def do_OPTIONS(self):
         self.send_response(200)
         self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "*")
+    def send_file_with_range(self, filepath: str, content_type: str = None):
+        """
+        支援標準 HTTP 206 Partial Content 與 Accept-Ranges: bytes。
+        支援 HTML5 影片與音訊進度條任意拖曳、快轉跳轉，絕不跳回開頭。
+        """
+        if not os.path.exists(filepath):
+            self.send_error(404, "File not found")
+            return
+
+        file_size = os.path.getsize(filepath)
+        if not content_type:
+            lower = filepath.lower()
+            if lower.endswith(".mp4"):
+                content_type = "video/mp4"
+            elif lower.endswith(".vtt"):
+                content_type = "text/vtt; charset=utf-8"
+            elif lower.endswith(".srt"):
+                content_type = "text/plain; charset=utf-8"
+            elif lower.endswith(".mp3"):
+                content_type = "audio/mpeg"
+            elif lower.endswith(".wav"):
+                content_type = "audio/wav"
+            elif lower.endswith(".webm"):
+                content_type = "audio/webm"
+            else:
+                content_type = "application/octet-stream"
+
+        range_header = self.headers.get("Range")
+        if range_header and range_header.startswith("bytes="):
+            try:
+                parts = range_header[6:].split("-")
+                start = int(parts[0]) if parts[0] else 0
+                end = int(parts[1]) if len(parts) > 1 and parts[1] else file_size - 1
+                if start >= file_size or start > end:
+                    self.send_response(416)
+                    self.send_header("Content-Range", f"bytes */{file_size}")
+                    self.end_headers()
+                    return
+
+                length = end - start + 1
+                self.send_response(206)
+                self.send_header("Content-Type", content_type)
+                self.send_header("Content-Range", f"bytes {start}-{end}/{file_size}")
+                self.send_header("Content-Length", str(length))
+                self.send_header("Accept-Ranges", "bytes")
+                self.send_header("Access-Control-Allow-Origin", "*")
+                self.end_headers()
+
+                with open(filepath, "rb") as f:
+                    f.seek(start)
+                    bytes_left = length
+                    while bytes_left > 0:
+                        chunk_size = min(65536, bytes_left)
+                        chunk = f.read(chunk_size)
+                        if not chunk:
+                            break
+                        try:
+                            self.wfile.write(chunk)
+                        except (BrokenPipeError, ConnectionResetError):
+                            return
+                        bytes_left -= len(chunk)
+                return
+            except Exception:
+                pass
+
+        self.send_response(200)
+        self.send_header("Content-Type", content_type)
+        self.send_header("Content-Length", str(file_size))
+        self.send_header("Accept-Ranges", "bytes")
+        self.send_header("Access-Control-Allow-Origin", "*")
         self.end_headers()
+
+        with open(filepath, "rb") as f:
+            while chunk := f.read(65536):
+                try:
+                    self.wfile.write(chunk)
+                except (BrokenPipeError, ConnectionResetError):
+                    return
 
     def send_json_response(self, data, status=200):
         self.send_response(status)
@@ -626,7 +778,7 @@ class VideoStudioHandler(SimpleHTTPRequestHandler):
         self.wfile.write(json.dumps(data).encode("utf-8"))
 
 def start_server():
-    server = ThreadingHTTPServer(("127.0.0.1", PORT), VideoStudioHandler)
+    server = ThreadingHTTPServer(("0.0.0.0", PORT), VideoStudioHandler)
     print("=" * 60)
     print(f"🌟 AI YouTube 影片生成工作台 Web UI 已啟動！")
     print(f"👉 請在瀏覽器開啟：http://127.0.0.1:{PORT}")

@@ -21,54 +21,37 @@ def clean_title_from_filename(filename: str) -> str:
 
 def generate_seo_metadata(filename: str, custom_topic: Optional[str] = None) -> Dict:
     """
-    根據影片屬性自動生成高點擊率標題、完整結構化說明欄、時間軸與 SEO 標籤
+    根據影片屬性自動生成高點擊率標題、完整結構化說明欄、時間軸與 SEO 標籤 (專注 16:9 橫向長影片)
     """
     topic = custom_topic or clean_title_from_filename(filename)
-    is_shorts = "shorts" in filename.lower() or "9x16" in filename.lower()
     
-    if is_shorts:
-        title = f"🔥 {topic}！30秒帶你掌握核心黑科技 #Shorts"
-        if len(title) > 95:
-            title = f"🔥 {topic[:35]}... #Shorts"
-            
-        desc = (
-            f"⚡ 30 秒快速了解【{topic}】精華重點！\n\n"
-            f"👉 想看手把手完整 1080p 深度教學？\n"
-            f"請至頻道主頁觀看完整正片與領取開源代碼！\n\n"
-            f"━━━━━━━━━━━━━━━━━━\n"
-            f"📌 關注頻道，解鎖更多 2026 最新 AI 全自動實戰工作流！\n"
-            f"喜歡這支短片請按讚、分享並訂閱開啟小鈴鐺 🔔\n\n"
-            f"#Shorts #AI工具 #自動化 #科技實戰 #YouTube營運 #{topic[:10].replace(' ', '')}"
-        )
-        tags = ["Shorts", "AI工具", "全自動", "科技新知", "實戰教學", topic]
-    else:
-        title = f"【2026必看】{topic}｜零基礎手把手全自動工作流實戰教學（附開源資源）"
-        if len(title) > 98:
-            title = f"【2026實戰】{topic[:40]}｜全自動高質感教學（附開源配置）"
+    title = f"【2026必看】{topic}｜零基礎手把手全自動工作流實戰教學（附開源資源）"
+    if len(title) > 98:
+        title = f"【2026實戰】{topic[:40]}｜全自動高質感教學（附開源配置）"
 
-        desc = (
-            f"🔥 本集深度解析：{topic}\n\n"
-            f"告別繁瑣手動剪輯！今天為大家全面展示這套全自動影音生產管線。\n"
-            f"從自然語音生成、動態視覺排版、精準字幕對齊到一鍵短影音預告，完整拆解核心細節！\n\n"
-            f"━━━━━━━━━━━━━━━━━━\n"
-            f"⏱️ 影片章節導覽 (Timestamps)：\n"
-            f"00:00 - 精彩預告與痛點分析\n"
-            f"00:35 - 核心架構與底層原理拆解\n"
-            f"01:20 - 零門檻實作：三步搞定全自動生成\n"
-            f"02:40 - 實戰避坑指南與關鍵細節\n"
-            f"03:30 - 總結與專案開源配置分享\n\n"
-            f"━━━━━━━━━━━━━━━━━━\n"
-            f"💡 專案開源倉庫與範例配置：\n"
-            f"👉 GitHub: https://github.com/ethan628/ai-youtube-studio\n\n"
-            f"━━━━━━━━━━━━━━━━━━\n"
-            f"🔔 記得按讚、訂閱並開啟小鈴鐺，第一時間掌握最新 AI 自動化黑科技！\n"
-            f"歡迎在留言區分享你的想法，我會親自回覆交流！\n\n"
-            f"#AI生成影片 #YouTube自動化 #Python #EdgeTTS #FFmpeg #2026趨勢 #自媒體經營"
-        )
-        tags = [
-            "AI生成影片", "YouTube自動化", "Python自動化", "Edge-TTS",
-            "FFmpeg", "自媒體經營", "2026趨勢", "工作流", topic
-        ]
+    desc = (
+        f"🔥 本集深度解析：{topic}\n\n"
+        f"告別繁瑣手動剪輯！今天為大家全面展示這套全自動影音生產管線。\n"
+        f"從自然語音生成、動態視覺排版、精準字幕對齊到高畫質渲染，完整拆解核心細節！\n\n"
+        f"━━━━━━━━━━━━━━━━━━\n"
+        f"⏱️ 影片章節導覽 (Timestamps)：\n"
+        f"00:00 - 精彩開場與痛點分析\n"
+        f"00:35 - 核心架構與底層原理拆解\n"
+        f"01:20 - 零門檻實作：三步搞定全自動生成\n"
+        f"02:40 - 實戰避坑指南與關鍵細節\n"
+        f"03:30 - 總結與專案開源配置分享\n\n"
+        f"━━━━━━━━━━━━━━━━━━\n"
+        f"💡 專案開源倉庫與範例配置：\n"
+        f"👉 GitHub: https://github.com/ethan628/ai-youtube-studio\n\n"
+        f"━━━━━━━━━━━━━━━━━━\n"
+        f"🔔 記得按讚、訂閱並開啟小鈴鐺，第一時間掌握最新 AI 自動化黑科技！\n"
+        f"歡迎在留言區分享你的想法，我會親自回覆交流！\n\n"
+        f"#AI生成影片 #YouTube自動化 #Python #EdgeTTS #FFmpeg #2026趨勢 #自媒體經營"
+    )
+    tags = [
+        "AI生成影片", "YouTube自動化", "Python自動化", "Edge-TTS",
+        "FFmpeg", "自媒體經營", "2026趨勢", "工作流", topic
+    ]
 
     return {
         "title": title,
@@ -100,9 +83,23 @@ def sync_and_get_queue() -> List[Dict]:
     - 保留已審核 (approved) 或已發布 (uploaded) 的歷史記錄
     """
     queue = load_queue()
-    existing_filenames = {item["filename"]: item for item in queue}
+    existing_filenames = {}
+    for item in queue:
+        fn = item.get("filename")
+        if not fn and item.get("video_path"):
+            fn = os.path.basename(item["video_path"])
+            item["filename"] = fn
+        if fn:
+            existing_filenames[fn] = item
 
     mp4_files = sorted(glob.glob(os.path.join(OUTPUT_DIR, "*.mp4")), key=os.path.getmtime, reverse=True)
+    # 依主人指示：嚴格只收錄 16:9 橫向長影片 (全面排除任何 Shorts 與短預告)
+    mp4_files = [
+        f for f in mp4_files 
+        if not os.path.basename(f).startswith("Shorts預告_") 
+        and "shorts" not in os.path.basename(f).lower() 
+        and "9x16" not in os.path.basename(f).lower()
+    ]
     
     updated_queue = []
     found_filenames = set()
@@ -112,13 +109,14 @@ def sync_and_get_queue() -> List[Dict]:
         found_filenames.add(bname)
         size_mb = round(os.path.getsize(file_path) / (1024 * 1024), 2)
         mtime = os.path.getmtime(file_path)
-        is_shorts = "shorts" in bname.lower() or "9x16" in bname.lower()
+        is_shorts = False
 
         if bname in existing_filenames:
             # 保留現有狀態與自訂元數據
             item = existing_filenames[bname]
             item["size_mb"] = size_mb
             item["file_exists"] = True
+            item["is_shorts"] = False
             updated_queue.append(item)
         else:
             # 新影片：自動生成 SEO 元數據並標記為待審核

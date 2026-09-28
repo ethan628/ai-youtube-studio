@@ -2,6 +2,9 @@ import os
 import sys
 import json
 import time
+import threading
+from http.server import HTTPServer, BaseHTTPRequestHandler
+import urllib.parse
 from typing import Dict, Optional
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -12,6 +15,119 @@ from src.youtube_manager import load_queue, save_queue
 
 CLIENT_SECRETS_FILE = os.path.join(PROJECT_ROOT, "client_secrets.json")
 TOKEN_FILE = os.path.join(PROJECT_ROOT, "youtube_token.json")
+
+# 清除代理變數，確保 Google OAuth 授權與 YouTube 上傳直連 Google 伺服器
+for k in ['http_proxy', 'https_proxy', 'HTTP_PROXY', 'HTTPS_PROXY', 'all_proxy', 'ALL_PROXY']:
+    os.environ.pop(k, None)
+os.environ["NO_PROXY"] = "*"
+
+CURRENT_AUTH_FLOW = None
+AUTH_SERVER = None
+AUTH_SERVER_LOCK = threading.Lock()
+AUTH_PORT = 8502
+
+class OAuthCallbackHandler(BaseHTTPRequestHandler):
+    def log_message(self, format, *args):
+        # 靜默日誌，避免干擾主伺服器輸出
+        pass
+
+    def do_GET(self):
+        global CURRENT_AUTH_FLOW
+        # 確保此線程環境無 proxy 干擾
+        for k in ['http_proxy', 'https_proxy', 'HTTP_PROXY', 'HTTPS_PROXY', 'all_proxy', 'ALL_PROXY']:
+            os.environ.pop(k, None)
+        os.environ["NO_PROXY"] = "*"
+
+        parsed = urllib.parse.urlparse(self.path)
+        qs = urllib.parse.parse_qs(parsed.query)
+
+        if "code" in qs:
+            code = qs["code"][0]
+            try:
+                if CURRENT_AUTH_FLOW:
+                    auth_resp = f"https://localhost:{AUTH_PORT}{self.path}"
+                    try:
+                        CURRENT_AUTH_FLOW.fetch_token(authorization_response=auth_resp)
+                    except Exception:
+                        CURRENT_AUTH_FLOW.fetch_token(code=code)
+
+                    creds = CURRENT_AUTH_FLOW.credentials
+                    with open(TOKEN_FILE, "w", encoding="utf-8") as f:
+                        f.write(creds.to_json())
+                    
+                    self.send_response(200)
+                    self.send_header("Content-Type", "text/html; charset=utf-8")
+                    self.end_headers()
+                    html = """
+                    <!DOCTYPE html>
+                    <html>
+                    <head><meta charset="utf-8"><title>授權成功</title></head>
+                    <body style="background:#090d16; color:#fff; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; display:flex; flex-direction:column; align-items:center; justify-content:center; height:85vh; margin:0;">
+                        <div style="background:#0f172a; border:2px solid #10b981; border-radius:18px; padding:36px 40px; text-align:center; max-width:480px; box-shadow:0 0 35px rgba(16,185,129,0.35);">
+                            <div style="font-size:52px; margin-bottom:14px;">🎉</div>
+                            <h1 style="color:#10b981; margin:0 0 10px 0; font-size:22px; font-weight:800;">Google YouTube 授權成功！</h1>
+                            <p style="color:#94a3b8; font-size:14px; line-height:1.6; margin-bottom:20px;">
+                                頻道授權已成功綁定！系統正在背景為您全自動上傳影片。<br>
+                                您可以關閉此視窗，回到 <strong>AI YouTube 影片生成工作台</strong> 查看上傳成果！
+                            </p>
+                            <button onclick="window.close()" style="background:#10b981; color:#000; font-weight:bold; border:none; padding:10px 24px; border-radius:8px; cursor:pointer; font-size:14px;">
+                                關閉此視窗
+                            </button>
+                        </div>
+                        <script>
+                            setTimeout(() => { try { window.close(); } catch(e){} }, 4000);
+                        </script>
+                    </body>
+                    </html>
+                    """
+                    self.wfile.write(html.encode("utf-8"))
+                    return
+            except Exception as e:
+                self.send_response(500)
+                self.send_header("Content-Type", "text/html; charset=utf-8")
+                self.end_headers()
+                self.wfile.write(f"<h3>授權交換失敗：{e}</h3>".encode("utf-8"))
+                return
+        elif "error" in qs:
+            self.send_response(400)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.end_headers()
+            self.wfile.write(f"<h3>Google OAuth 拒絕或取消：{qs.get('error')}</h3>".encode("utf-8"))
+            return
+
+        self.send_response(404)
+        self.end_headers()
+
+def start_auth_server_if_needed(port=AUTH_PORT):
+    global AUTH_SERVER
+    with AUTH_SERVER_LOCK:
+        if AUTH_SERVER is None:
+            try:
+                server = HTTPServer(("0.0.0.0", port), OAuthCallbackHandler)
+                AUTH_SERVER = server
+                t = threading.Thread(target=server.serve_forever, daemon=True)
+                t.start()
+            except OSError:
+                # 端口可能已被佔用或已在監聽中
+                pass
+
+def start_auth_flow(port=AUTH_PORT) -> Dict:
+    global CURRENT_AUTH_FLOW
+    from google_auth_oauthlib.flow import InstalledAppFlow
+
+    if not os.path.exists(CLIENT_SECRETS_FILE):
+        return {"success": False, "error": "找不到 client_secrets.json 檔案，請先匯入或建立憑證"}
+
+    start_auth_server_if_needed(port=port)
+
+    SCOPES = ["https://www.googleapis.com/auth/youtube.upload"]
+    CURRENT_AUTH_FLOW = InstalledAppFlow.from_client_secrets_file(
+        CLIENT_SECRETS_FILE,
+        SCOPES,
+        redirect_uri=f"http://localhost:{port}/"
+    )
+    auth_url, _ = CURRENT_AUTH_FLOW.authorization_url(prompt="consent", access_type="offline")
+    return {"success": True, "auth_url": auth_url}
 
 def check_youtube_api_readiness() -> Dict:
     """
@@ -31,7 +147,7 @@ def check_youtube_api_readiness() -> Dict:
         "has_client_secrets": has_client_secrets,
         "has_token": has_token,
         "has_libraries": has_libraries,
-        "ready": has_client_secrets and has_libraries
+        "ready": has_client_secrets and has_libraries and has_token
     }
 
 def get_authenticated_service():
@@ -39,7 +155,6 @@ def get_authenticated_service():
     獲取 Google YouTube Data API v3 服務實例
     """
     from googleapiclient.discovery import build
-    from google_auth_oauthlib.flow import InstalledAppFlow
     from google.oauth2.credentials import Credentials
     from google.auth.transport.requests import Request
 
@@ -52,17 +167,10 @@ def get_authenticated_service():
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
+            with open(TOKEN_FILE, "w", encoding="utf-8") as token_f:
+                token_f.write(creds.to_json())
         else:
-            if not os.path.exists(CLIENT_SECRETS_FILE):
-                raise FileNotFoundError(
-                    f"找不到 Google OAuth 客戶端憑證：{CLIENT_SECRETS_FILE}。\n"
-                    "請至 Google Cloud Console 建立 OAuth 2.0 Client ID，並將 JSON 下載重命名為 client_secrets.json 放進專案根目錄。"
-                )
-            flow = InstalledAppFlow.from_client_secrets_file(CLIENT_SECRETS_FILE, SCOPES)
-            creds = flow.run_local_server(port=0)
-
-        with open(TOKEN_FILE, "w", encoding="utf-8") as token_f:
-            token_f.write(creds.to_json())
+            raise PermissionError("尚未完成 Google YouTube 帳號授權，請先進行授權！")
 
     return build("youtube", "v3", credentials=creds)
 
@@ -99,7 +207,21 @@ def upload_approved_video(filename: str) -> Dict:
             "metadata": target_item
         }
 
-    # 執行官方 API 斷點續傳
+    # 首次授權引導：若尚未產生 youtube_token.json，自動啟動 Web 授權流程並回傳授權連結
+    if not status_check["has_token"]:
+        auth_res = start_auth_flow()
+        if auth_res["success"]:
+            return {
+                "success": False,
+                "need_auth": True,
+                "auth_url": auth_res["auth_url"],
+                "message": "首次使用需進行一次性 Google YouTube 授權綁定",
+                "metadata": target_item
+            }
+        else:
+            return {"success": False, "error": auth_res["error"]}
+
+    # 已具備 Token，執行官方 API 斷點續傳
     try:
         from googleapiclient.http import MediaFileUpload
         youtube = get_authenticated_service()
