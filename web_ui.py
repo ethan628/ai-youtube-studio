@@ -8,6 +8,8 @@ from datetime import datetime
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from src.composer import compose_video
 from src.podcast_visualizer import convert_audio_to_podcast_video
+from src.podcast_generator import generate_podcast_dialogue
+from src.podcast_composer import generate_podcast_full
 from create_video import PRESET_TEMPLATES, generate_video_from_template
 from notebooklm_to_video import run_notebooklm_converter
 
@@ -738,6 +740,37 @@ class VideoStudioHandler(SimpleHTTPRequestHandler):
                     self.send_json_response({"success": True, "file": out_path})
                 else:
                     self.send_json_response({"success": False, "error": "找不到音訊檔案"}, status=400)
+            except Exception as e:
+                self.send_json_response({"success": False, "error": str(e)}, status=500)
+            return
+
+        if self.path in ("/api/generate_podcast_script", "/generate_podcast_script"):
+            topic = data.get("topic", "2026 AI 自動化工作流革命")
+            duration = float(data.get("duration", 3.0))
+            style = data.get("style", "科技趨勢對談")
+            api_key = data.get("api_key", None)
+            try:
+                meta = generate_podcast_dialogue(topic=topic, duration_minutes=duration, style=style, api_key=api_key)
+                self.send_json_response({"success": True, "podcast": meta})
+            except Exception as e:
+                self.send_json_response({"success": False, "error": str(e)}, status=500)
+            return
+
+        if self.path in ("/api/render_podcast", "/render_podcast"):
+            topic = data.get("topic", "2026 AI 自動化工作流革命")
+            duration = float(data.get("duration", 3.0))
+            style = data.get("style", "科技趨勢對談")
+            dialogue = data.get("dialogue", None)
+            api_key = data.get("api_key", None)
+            try:
+                result = generate_podcast_full(
+                    topic=topic,
+                    duration_minutes=duration,
+                    style=style,
+                    custom_dialogue=dialogue,
+                    api_key=api_key
+                )
+                self.send_json_response(result)
             except Exception as e:
                 self.send_json_response({"success": False, "error": str(e)}, status=500)
             return

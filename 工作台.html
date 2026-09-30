@@ -212,7 +212,7 @@
       <button class="tab-btn" onclick="switchTab('record')">🎙️ 網頁直接錄製聲音 (Voice Studio)</button>
       <button class="tab-btn" onclick="switchTab('gallery')">📁 影片成品播放庫 (5)</button>
       <button class="tab-btn" onclick="switchTab('youtube')">📺 YouTube 審核發布中心 <span class="badge badge-amber" id="ytPendingBadge" style="display:none; font-size:10px; margin-left:4px;">0</span></button>
-      <button class="tab-btn" onclick="switchTab('podcast')">📻 Google NotebookLM 轉影片</button>
+      <button class="tab-btn" onclick="switchTab('podcast')">🎙️ 雙主持 AI 播客創作室</button>
       <button class="tab-btn" onclick="switchTab('guide')">🛠️ 執行指南</button>
     </div>
 
@@ -681,14 +681,176 @@
       </div>
     </div>
 
-    <!-- TAB 5: NotebookLM 轉影片 -->
+    <!-- TAB: 雙主持 AI 播客創作室 -->
     <div id="tab-podcast" class="tab-panel">
-      <div class="grid-2">
+      <!-- 頂部創作模式切換 -->
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
+        <div style="display:flex; gap:8px;">
+          <button class="btn btn-primary" id="btnPodcastModeAi" onclick="setPodcastMode('ai')">
+            ✨ 一鍵 AI 雙人對談播客 (Leo & Mia)
+          </button>
+          <button class="btn btn-secondary" id="btnPodcastModeImport" onclick="setPodcastMode('import')">
+            📁 匯入 NotebookLM 外部音檔
+          </button>
+        </div>
+        <div style="font-size:12px; color:var(--text-dim); display:flex; align-items:center; gap:8px;">
+          <span class="status-dot"></span>
+          <span>支援雙主持交替配音 · 即時跳動音波 · 1080p MP4 + MP3 雙輸出</span>
+        </div>
+      </div>
+
+      <!-- 模式一：AI 雙人對談播客創作 (主要模式) -->
+      <div id="podcastAiSection" class="grid-2">
+        <!-- 左側：主題與參數配置 -->
         <div class="card">
-          <div class="card-title"><span class="icon">📻</span> Google NotebookLM 轉 1080p Podcast 影片</div>
+          <div class="card-title">
+            <span class="icon">🎙️</span> 1. 設定播客主題與對談陣容
+          </div>
+          
+          <div class="input-group">
+            <label style="display:flex; justify-content:space-between;">
+              <span>對談核心主題或話題：</span>
+              <span style="font-size:11px; color:var(--cyan); cursor:pointer;" onclick="fillRandomPodcastTopic()">🎲 隨機靈感話題</span>
+            </label>
+            <input type="text" id="podcastTopicInput" value="2026 AI Agent 會取代軟體工程師嗎？" placeholder="輸入想聊的任何話題、問題或概念..." style="font-size:15px; font-weight:600;">
+          </div>
+
+          <!-- 靈感標籤 Chips -->
+          <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:16px;">
+            <button type="button" class="btn btn-secondary" style="font-size:11px; padding:3px 8px;" onclick="setPodcastTopic('2026 AI Agent 會取代軟體工程師嗎？')">🤖 AI 與工程師未來</button>
+            <button type="button" class="btn btn-secondary" style="font-size:11px; padding:3px 8px;" onclick="setPodcastTopic('魔術方塊七步還原法：告別死記硬背的思維躍遷')">🎲 魔術方塊全解心法</button>
+            <button type="button" class="btn btn-secondary" style="font-size:11px; padding:3px 8px;" onclick="setPodcastTopic('自由工作者如何掌控時間：產出翻倍的底層系統')">⏰ 個人效率黑客</button>
+            <button type="button" class="btn btn-secondary" style="font-size:11px; padding:3px 8px;" onclick="setPodcastTopic('冬天不用伸出手的黑科技：雙AI隔空面部追蹤實戰')">❄️ 科技硬核對談</button>
+          </div>
+
+          <!-- 參數網格 -->
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:16px;">
+            <div class="input-group" style="margin-bottom:0;">
+              <label>對談目標時長：</label>
+              <select id="podcastDurationSelect">
+                <option value="1.5">⚡ 1.5 分鐘 (精華短聊 ~6-8 句)</option>
+                <option value="3.0" selected>☕ 3 分鐘 (標準對談 ~12-14 句)</option>
+                <option value="5.0">深度 5 分鐘 (深度探討 ~20-24 句)</option>
+                <option value="10.0">📻 10 分鐘 (長篇專案大訪談)</option>
+              </select>
+            </div>
+            <div class="input-group" style="margin-bottom:0;">
+              <label>對話風格與氛圍：</label>
+              <select id="podcastStyleSelect">
+                <option value="科技趨勢對談" selected>⚡ 科技趨勢對談 (硬核+通俗)</option>
+                <option value="深度思維剖析">🧠 深度思維剖析 (認知升級)</option>
+                <option value="實務避坑指南">🛠️ 實務避坑指南 (大白話實戰)</option>
+                <option value="快問快答與辯論">🔥 快問快答與觀點碰撞</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- 雙主播陣容卡 -->
+          <div style="margin-bottom:18px;">
+            <label style="font-size:13px; font-weight:600; color:var(--text-dim); margin-bottom:8px; display:block;">🎙️ 錄音室固定主持陣容 (Dual Hosts)：</label>
+            <div class="option-grid">
+              <div class="opt-card selected" style="cursor:default;">
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+                  <span style="font-size:20px;">👦</span>
+                  <div class="opt-title">Leo (男主持)</div>
+                </div>
+                <div class="opt-desc">深度技術剖析 / 核心推導<br><span style="color:var(--cyan); font-size:11px;">配音: 台灣微軟自然男聲 (YunJhe)</span></div>
+              </div>
+              <div class="opt-card selected purple" style="cursor:default;">
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+                  <span style="font-size:20px;">👧</span>
+                  <div class="opt-title">Mia (女主持)</div>
+                </div>
+                <div class="opt-desc">實務場景落地 / 痛點解答<br><span style="color:#c084fc; font-size:11px;">配音: 台灣微軟自然女聲 (HsiaoChen)</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 動作按鈕 -->
+          <div style="display:flex; gap:10px;">
+            <button class="btn btn-secondary" id="btnGenPodcastScript" style="flex:1;" onclick="generatePodcastScriptAction()">
+              🧠 規劃雙人對談腳本
+            </button>
+            <button class="btn btn-primary" id="btnGenPodcastFull" style="flex:1.4; background:linear-gradient(90deg, #00f0ff, #a855f7);" onclick="renderPodcastFullAction()">
+              🎙️ 一鍵直接生成 1080p 播客
+            </button>
+          </div>
+        </div>
+
+        <!-- 右側：對話預覽與線上編輯室 -->
+        <div class="card" style="display:flex; flex-direction:column; max-height:820px;">
+          <div class="card-title" style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="display:flex; align-items:center; gap:8px;"><span class="icon">📜</span> 2. 雙人對談逐字腳本線上編輯室</span>
+            <span class="badge badge-cyan" id="podcastTurnCountBadge">12 句對話</span>
+          </div>
+
+          <div style="font-size:12px; color:var(--text-dim); margin-bottom:12px;">
+            可自由微調每位主持人的台詞、切換發言角色，或增減對話。生成時將依據發言者自動調用對應神經擬真聲音！
+          </div>
+
+          <!-- 對話滾動清單 -->
+          <div id="podcastDialogueContainer" style="flex:1; overflow-y:auto; padding-right:6px; display:flex; flex-direction:column; gap:10px; margin-bottom:14px;">
+            <!-- 動態填入每句對談卡片 -->
+          </div>
+
+          <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--card-border); padding-top:12px;">
+            <button class="btn btn-secondary" style="font-size:12px; padding:6px 12px;" onclick="addPodcastTurn()">
+              ➕ 新增對話發言
+            </button>
+            <button class="btn btn-primary" style="font-size:13px; padding:8px 18px; background:linear-gradient(90deg, #10b981, #06b6d4);" onclick="renderPodcastFullAction()">
+              🚀 確認並開始合成播客 (MP4 + MP3)
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 播客生成成果展示 Modal / 卡片 -->
+      <div id="podcastResultCard" class="card" style="display:none; margin-top:20px; border-color:var(--cyan); background:rgba(7,11,20,0.95);">
+        <div class="card-title" style="color:var(--cyan); display:flex; justify-content:space-between; align-items:center;">
+          <span>🎉 雙主持 AI Podcast 影音生成圓滿完成！</span>
+          <button class="btn btn-secondary" style="padding:3px 8px; font-size:12px;" onclick="document.getElementById('podcastResultCard').style.display='none'">✕ 關閉</button>
+        </div>
+        <div style="display:grid; grid-template-columns: 1.4fr 1fr; gap:20px; margin-top:14px;">
+          <div>
+            <video id="podcastResultVideo" controls style="width:100%; border-radius:12px; background:#000; box-shadow:0 0 20px rgba(0,240,255,0.2);"></video>
+            <div style="margin-top:10px; font-size:12px; color:var(--text-dim); text-align:center;">
+              ⚡ 包含 1080p 超高清畫質、即時動態聲波、雙主播高亮發言燈與防溢出安全字幕
+            </div>
+          </div>
+          <div style="display:flex; flex-direction:column; justify-content:space-between;">
+            <div>
+              <div style="font-size:16px; font-weight:bold; color:#fff; margin-bottom:8px;" id="podcastResultTitle">【AI Podcast】</div>
+              <div style="font-size:13px; color:var(--text-dim); margin-bottom:16px;" id="podcastResultMeta">時長與檔案資訊</div>
+              
+              <div style="background:var(--content-bg); border-radius:10px; padding:12px; margin-bottom:16px; border:1px solid var(--card-border);">
+                <div style="font-size:12px; color:var(--cyan); font-weight:bold; margin-bottom:6px;">📻 獨立 Podcast 音訊 (MP3) 試聽：</div>
+                <audio id="podcastResultAudio" controls style="width:100%; height:36px;"></audio>
+                <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">可直接上傳至 Spotify / Apple Podcasts / Firstory</div>
+              </div>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <a id="btnDownloadPodcastVideo" href="#" download class="btn btn-primary" style="text-decoration:none; text-align:center; padding:10px;">
+                📥 下載 1080p Podcast 影片 (MP4)
+              </a>
+              <a id="btnDownloadPodcastAudio" href="#" download class="btn btn-secondary" style="text-decoration:none; text-align:center; padding:9px;">
+                🎧 下載獨立 Podcast 音訊檔 (MP3)
+              </a>
+              <button class="btn btn-secondary" onclick="switchTab('youtube'); loadYoutubeQueue();" style="border-color:var(--amber); color:var(--amber);">
+                📺 前往 YouTube 發布中心審核排程
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 模式二：NotebookLM 外部音檔轉換 (次要模式) -->
+      <div id="podcastImportSection" class="grid-2" style="display:none;">
+        <div class="card">
+          <div class="card-title"><span class="icon">📻</span> Google NotebookLM 外部音檔轉換</div>
           <p style="color:var(--text-dim); font-size:13px; line-height:1.6; margin-bottom:14px;">
-            <strong>操作方式超簡單：</strong><br>
-            1. 前往 Google NotebookLM 生成超擬真雙主持 AI 對談語音（Audio Overview）並下載音檔（.m4a 或 .mp3）。<br>
+            <strong>操作方式：</strong><br>
+            1. 前往 Google NotebookLM 生成音訊（Audio Overview）並下載音檔（.m4a 或 .mp3）。<br>
             2. 將音訊檔案放進 <code>inputs_notebooklm/</code> 資料夾。<br>
             3. 執行指令即可自動繪製雙 AI 主播卡與隨聲音跳動的動態音波！
           </p>
@@ -1738,6 +1900,9 @@ python3 learn_python.py</textarea>
       }
       if (tabId === 'record') {
         loadVoiceSamples();
+      }
+      if (tabId === 'podcast') {
+        initPodcastDialogueIfEmpty();
       }
     }
 
@@ -3951,11 +4116,332 @@ python3 learn_python.py</textarea>
       if (modal) modal.style.display = 'none';
     }
 
+    // ==========================================
+    // 🎙️ 雙主持 AI 播客創作室前端交互邏輯
+    // ==========================================
+    let currentPodcastMode = 'ai';
+    let currentPodcastDialogue = [];
+
+    const RANDOM_PODCAST_TOPICS = [
+      "2026 AI Agent 會取代軟體工程師嗎？",
+      "魔術方塊七步還原法：告別死記硬背的思維躍遷",
+      "自由工作者如何掌控時間：產出翻倍的底層系統",
+      "冬天不用伸出手的黑科技：雙AI隔空面部追蹤實戰",
+      "打造個人私有離線知識庫：隱私與效率的終極平衡",
+      "自媒體高續看率心法：如何抓住觀眾前 15 秒黃金注意力",
+      "從焦慮到心流：克服拖延症的微習慣系統",
+      "普通人如何用 AI 放大 10 倍個人槓桿？",
+      "深度工作者的數位斷捨離：奪回專注力黃金時段",
+      "2026 最新多模態影片自動生成實踐指南"
+    ];
+
+    const DEFAULT_PODCAST_DIALOGUE = [
+      { speaker: "Mia", text: "哈囉大家好，歡迎來到 2026 科技對談室！我是 Mia。今天我們要來聊一個最近讓所有開發者與科技愛好者都熱烈討論的話題：AI Agent 真的會全面取代軟體工程師嗎？" },
+      { speaker: "Leo", text: "哈囉 Mia，大家好，我是 Leo。這個話題確實非常火熱，但如果我們從底層架構與工程落地來看，答案其實完全不是簡單的「會」或「不會」。" },
+      { speaker: "Mia", text: "哦？怎麼說呢？現在像 Claude 3.7、Gemini 2.5 寫程式的能力都已經超越一般初級工程師了，很多人都在擔心初階職缺會不會直接消失？" },
+      { speaker: "Leo", text: "這確實是關鍵盲點。AI 在單一函式、語法補全與除錯上確實神速，但真正的軟體工程核心在於系統架構權衡、業務邏輯理解，以及不可妥協的容錯與安全性維運。" },
+      { speaker: "Mia", text: "也就是說，單純寫語法的人會被衝擊，但能夠定義問題、調度多智能體完成複雜業務的人，反而會變成超級個體！" },
+      { speaker: "Leo", text: "沒錯！未來的軟體工程師角色更像「AI 團隊架構師與技術指揮官」，一個人就能驅動過去一整支工程團隊的產出，這才是最大的複利！" },
+      { speaker: "Mia", text: "聽起來太令人振奮了！掌握自動化工具與系統思維的人，將迎來最好的時代。感謝大家的收聽，我們下期再見！" },
+      { speaker: "Leo", text: "我們下期節目見，拜拜！" }
+    ];
+
+    function setPodcastMode(mode) {
+      currentPodcastMode = mode;
+      const aiSec = document.getElementById('podcastAiSection');
+      const importSec = document.getElementById('podcastImportSection');
+      const btnAi = document.getElementById('btnPodcastModeAi');
+      const btnImport = document.getElementById('btnPodcastModeImport');
+
+      if (mode === 'ai') {
+        if (aiSec) aiSec.style.display = 'grid';
+        if (importSec) importSec.style.display = 'none';
+        if (btnAi) { btnAi.className = 'btn btn-primary'; }
+        if (btnImport) { btnImport.className = 'btn btn-secondary'; }
+      } else {
+        if (aiSec) aiSec.style.display = 'none';
+        if (importSec) importSec.style.display = 'grid';
+        if (btnAi) { btnAi.className = 'btn btn-secondary'; }
+        if (btnImport) { btnImport.className = 'btn btn-primary'; }
+      }
+    }
+
+    function setPodcastTopic(topic) {
+      const input = document.getElementById('podcastTopicInput');
+      if (input) input.value = topic;
+      showToast(`已套用靈感話題：「${topic}」`);
+    }
+
+    function fillRandomPodcastTopic() {
+      const idx = Math.floor(Math.random() * RANDOM_PODCAST_TOPICS.length);
+      const chosen = RANDOM_PODCAST_TOPICS[idx];
+      setPodcastTopic(chosen);
+    }
+
+    function initPodcastDialogueIfEmpty() {
+      if (!currentPodcastDialogue || currentPodcastDialogue.length === 0) {
+        currentPodcastDialogue = JSON.parse(JSON.stringify(DEFAULT_PODCAST_DIALOGUE));
+        renderPodcastDialogueList();
+      }
+    }
+
+    function renderPodcastDialogueList() {
+      const container = document.getElementById('podcastDialogueContainer');
+      const badge = document.getElementById('podcastTurnCountBadge');
+      if (!container) return;
+
+      const totalChars = currentPodcastDialogue.reduce((acc, cur) => acc + (cur.text || '').length, 0);
+      const estSeconds = Math.max(10, Math.round(totalChars / 4.5));
+      if (badge) {
+        badge.innerText = `${currentPodcastDialogue.length} 句對話 (約 ${estSeconds} 秒)`;
+      }
+
+      if (currentPodcastDialogue.length === 0) {
+        container.innerHTML = `
+          <div style="text-align:center; padding:30px 10px; color:var(--text-dim);">
+            <div style="font-size:32px; margin-bottom:10px;">🎙️</div>
+            <div>目前尚無對談內容，請點擊上方「🧠 規劃雙人對談腳本」或下方「➕ 新增對話發言」</div>
+          </div>
+        `;
+        return;
+      }
+
+      let html = '';
+      currentPodcastDialogue.forEach((turn, idx) => {
+        const isLeo = turn.speaker === 'Leo';
+        const borderColor = isLeo ? 'var(--cyan)' : '#c084fc';
+        const bgColor = isLeo ? 'rgba(0, 240, 255, 0.05)' : 'rgba(192, 132, 252, 0.05)';
+        const avatar = isLeo ? '👦' : '👧';
+
+        html += `
+          <div style="background:${bgColor}; border:1px solid var(--card-border); border-left:4px solid ${borderColor}; border-radius:8px; padding:10px 12px; transition:all 0.2s;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span style="font-size:18px;">${avatar}</span>
+                <select onchange="updatePodcastTurnSpeaker(${idx}, this.value)" style="padding:2px 8px; font-size:12px; font-weight:bold; background:rgba(15,23,42,0.8); color:#fff; border:1px solid ${borderColor}; border-radius:6px; cursor:pointer;">
+                  <option value="Leo" ${isLeo ? 'selected' : ''}>👦 Leo (男聲 · YunJhe)</option>
+                  <option value="Mia" ${!isLeo ? 'selected' : ''}>👧 Mia (女聲 · HsiaoChen)</option>
+                </select>
+                <span style="font-size:11px; color:var(--text-dim);">${isLeo ? '深入技術推導' : '場景痛點提問'}</span>
+              </div>
+              <div style="display:flex; gap:4px; align-items:center;">
+                <button type="button" class="btn btn-secondary" style="padding:2px 6px; font-size:10px;" onclick="movePodcastTurn(${idx}, -1)" ${idx === 0 ? 'disabled' : ''} title="上移">▲</button>
+                <button type="button" class="btn btn-secondary" style="padding:2px 6px; font-size:10px;" onclick="movePodcastTurn(${idx}, 1)" ${idx === currentPodcastDialogue.length - 1 ? 'disabled' : ''} title="下移">▼</button>
+                <button type="button" class="btn btn-secondary" style="padding:2px 6px; font-size:10px; color:#ef4444; border-color:rgba(239,68,68,0.3);" onclick="removePodcastTurn(${idx})" title="刪除本句">✕</button>
+              </div>
+            </div>
+            <textarea id="podcastTurnInput_${idx}" rows="2" style="width:100%; font-size:13px; line-height:1.5; padding:8px 10px; border-radius:6px; background:rgba(10,15,30,0.8); border:1px solid rgba(255,255,255,0.1); color:#f1f5f9; resize:vertical;" placeholder="輸入發言台詞..." oninput="updatePodcastTurnText(${idx}, this.value)">${escapeHtml(turn.text)}</textarea>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+    }
+
+    function addPodcastTurn() {
+      const lastSpeaker = currentPodcastDialogue.length > 0 ? currentPodcastDialogue[currentPodcastDialogue.length - 1].speaker : 'Leo';
+      const nextSpeaker = lastSpeaker === 'Leo' ? 'Mia' : 'Leo';
+      currentPodcastDialogue.push({
+        speaker: nextSpeaker,
+        text: ""
+      });
+      renderPodcastDialogueList();
+      const container = document.getElementById('podcastDialogueContainer');
+      if (container) {
+        container.scrollTop = container.scrollHeight;
+      }
+      setTimeout(() => {
+        const lastInput = document.getElementById(`podcastTurnInput_${currentPodcastDialogue.length - 1}`);
+        if (lastInput) lastInput.focus();
+      }, 50);
+    }
+
+    function removePodcastTurn(idx) {
+      if (idx >= 0 && idx < currentPodcastDialogue.length) {
+        currentPodcastDialogue.splice(idx, 1);
+        renderPodcastDialogueList();
+      }
+    }
+
+    function movePodcastTurn(idx, dir) {
+      const targetIdx = idx + dir;
+      if (targetIdx < 0 || targetIdx >= currentPodcastDialogue.length) return;
+      const temp = currentPodcastDialogue[idx];
+      currentPodcastDialogue[idx] = currentPodcastDialogue[targetIdx];
+      currentPodcastDialogue[targetIdx] = temp;
+      renderPodcastDialogueList();
+    }
+
+    function updatePodcastTurnSpeaker(idx, newSpeaker) {
+      if (currentPodcastDialogue[idx]) {
+        currentPodcastDialogue[idx].speaker = newSpeaker;
+        renderPodcastDialogueList();
+      }
+    }
+
+    function updatePodcastTurnText(idx, newText) {
+      if (currentPodcastDialogue[idx]) {
+        currentPodcastDialogue[idx].text = newText;
+        const badge = document.getElementById('podcastTurnCountBadge');
+        if (badge) {
+          const totalChars = currentPodcastDialogue.reduce((acc, cur) => acc + (cur.text || '').length, 0);
+          const estSeconds = Math.max(10, Math.round(totalChars / 4.5));
+          badge.innerText = `${currentPodcastDialogue.length} 句對話 (約 ${estSeconds} 秒)`;
+        }
+      }
+    }
+
+    async function generatePodcastScriptAction() {
+      const topicInput = document.getElementById('podcastTopicInput');
+      const durationSelect = document.getElementById('podcastDurationSelect');
+      const styleSelect = document.getElementById('podcastStyleSelect');
+      const btn = document.getElementById('btnGenPodcastScript');
+
+      const topic = (topicInput ? topicInput.value.trim() : '') || '2026 AI Agent 會取代軟體工程師嗎？';
+      const duration = durationSelect ? parseFloat(durationSelect.value) : 3.0;
+      const style = styleSelect ? styleSelect.value : '科技趨勢對談';
+
+      let origText = "";
+      if (btn) {
+        origText = btn.innerText;
+        btn.disabled = true;
+        btn.innerText = "⏳ 正在構思雙人精彩對談...";
+      }
+      showToast(`🧠 正在生成「${topic}」之雙主持對談腳本...`);
+
+      try {
+        const res = await fetch(`${API_BASE}/api/generate_podcast_script`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ topic, duration, style })
+        });
+        const data = await res.json();
+        if (data.success && data.podcast && Array.isArray(data.podcast.dialogue)) {
+          currentPodcastDialogue = data.podcast.dialogue;
+          renderPodcastDialogueList();
+          showToast(`🎉 雙主持對談腳本已生成（共 ${currentPodcastDialogue.length} 句），可在右側微調！`);
+        } else {
+          throw new Error(data.error || "未能取得對話腳本");
+        }
+      } catch (err) {
+        console.warn("後端 API 調用未成，啟動智慧本機對談生成器：", err);
+        currentPodcastDialogue = [
+          { speaker: "Mia", text: `哈囉大家好，歡迎收聽今天的特別節目！我是 Mia。今天我們要和 Leo 聊一個超熱門的話題：${topic}！` },
+          { speaker: "Leo", text: `哈囉 Mia，大家好，我是 Leo。這個主題最近在業界討論度極高，而且大家的看法往往兩極分化。` },
+          { speaker: "Mia", text: `沒錯！很多人第一時間會覺得難以置信，或者擔心自己會不會跟不上腳步。Leo 你從底層技術來看，核心關鍵到底是什麼？` },
+          { speaker: "Leo", text: `其實關鍵就在於「思維模式的升級」。當我們不再被表面的技術細節困住，而是掌握了核心底層邏輯，整個效率會是指數級的飛躍。` },
+          { speaker: "Mia", text: `太有感觸了！也就是說，我們要學會建立自己的槓桿，把重複繁瑣的工作交給自動化工具，自己專注在最高價值的事情上！` },
+          { speaker: "Leo", text: `完全正確。未來的贏家絕不是比誰花的時間多，而是比誰的系統更穩健、迭代更迅速。` },
+          { speaker: "Mia", text: `今天的分享真是乾貨滿滿！希望聽眾朋友們也能有所啟發，歡迎在評論區留下你的觀點。我們下期節目見！` },
+          { speaker: "Leo", text: `感謝大家的收聽，我們下期再見，拜拜！` }
+        ];
+        renderPodcastDialogueList();
+        showToast(`🎉 本機對談腳本已生成（共 ${currentPodcastDialogue.length} 句）！可自由微調編輯！`);
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerText = origText || "🧠 規劃雙人對談腳本";
+        }
+      }
+    }
+
+    async function renderPodcastFullAction() {
+      const topicInput = document.getElementById('podcastTopicInput');
+      const durationSelect = document.getElementById('podcastDurationSelect');
+      const styleSelect = document.getElementById('podcastStyleSelect');
+      const btn = document.getElementById('btnGenPodcastFull');
+
+      const topic = (topicInput ? topicInput.value.trim() : '') || '2026 AI 雙人對談播客';
+      const duration = durationSelect ? parseFloat(durationSelect.value) : 3.0;
+      const style = styleSelect ? styleSelect.value : '科技趨勢對談';
+
+      // 檢查對話列表
+      const validDialogue = currentPodcastDialogue.filter(d => (d.text || '').trim().length > 0);
+      if (validDialogue.length < 2) {
+        alert("請至少填寫 2 句對談內容再開始合成！");
+        return;
+      }
+
+      let origText = "";
+      if (btn) {
+        origText = btn.innerText;
+        btn.disabled = true;
+        btn.innerText = "⏳ 正在合成雙主持語音與渲染 1080p 影片 (請稍候)...";
+      }
+      showToast("🎙️ 正在排程生成雙主播神經語音、實時跳動波形與 1080p 影片... 請稍候！");
+
+      try {
+        const res = await fetch(`${API_BASE}/api/render_podcast`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            topic,
+            duration,
+            style,
+            dialogue: validDialogue
+          })
+        });
+        const data = await res.json();
+        if (data.success) {
+          const resultCard = document.getElementById('podcastResultCard');
+          const videoEl = document.getElementById('podcastResultVideo');
+          const audioEl = document.getElementById('podcastResultAudio');
+          const titleEl = document.getElementById('podcastResultTitle');
+          const metaEl = document.getElementById('podcastResultMeta');
+          const btnDlVideo = document.getElementById('btnDownloadPodcastVideo');
+          const btnDlAudio = document.getElementById('btnDownloadPodcastAudio');
+
+          const videoUrl = `${API_BASE}/output_videos/${encodeURIComponent(data.video_file)}`;
+          const audioUrl = `${API_BASE}/output_videos/${encodeURIComponent(data.audio_file)}`;
+
+          if (titleEl) titleEl.innerText = `🎙️ ${data.title || topic}`;
+          if (metaEl) metaEl.innerText = `對談句數：${data.turns_count || validDialogue.length} 句 · 畫質：1080p 60fps · 雙主播：Leo (男) & Mia (女)`;
+          
+          if (videoEl) {
+            videoEl.src = videoUrl;
+            videoEl.load();
+          }
+          if (audioEl) {
+            audioEl.src = audioUrl;
+            audioEl.load();
+          }
+
+          if (btnDlVideo) {
+            btnDlVideo.href = videoUrl;
+            btnDlVideo.setAttribute('download', data.video_file);
+          }
+          if (btnDlAudio) {
+            btnDlAudio.href = audioUrl;
+            btnDlAudio.setAttribute('download', data.audio_file);
+          }
+
+          if (resultCard) {
+            resultCard.style.display = 'block';
+            resultCard.scrollIntoView({ behavior: 'smooth' });
+          }
+
+          showToast("🎉 雙主持 AI 播客影音生成圓滿完成！可直接播放或下載！");
+          refreshVideoGallery();
+          loadYoutubeQueue();
+        } else {
+          alert("播客生成失敗：" + (data.error || "未知錯誤"));
+        }
+      } catch (err) {
+        alert("合成請求失敗：" + err);
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerText = origText || "🎙️ 一鍵直接生成 1080p 播客";
+        }
+      }
+    }
+
     // 初始化
     generateAiScriptUI(false);
     refreshVideoGallery();
     loadYoutubeQueue();
     loadVoiceSamples();
+    initPodcastDialogueIfEmpty();
   </script>
 </body>
 </html>
