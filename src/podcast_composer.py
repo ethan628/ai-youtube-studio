@@ -348,9 +348,13 @@ def generate_podcast_full(
         "audio_path": final_audio,
         "srt_path": final_srt,
         "filename": os.path.basename(final_video),
+        "video_file": os.path.basename(final_video),
         "audio_filename": os.path.basename(final_audio),
+        "audio_file": os.path.basename(final_audio),
+        "srt_file": os.path.basename(final_srt),
         "title": meta.get("title", clean_topic),
-        "total_turns": total_turns
+        "total_turns": total_turns,
+        "turns_count": total_turns
     }
 
 if __name__ == "__main__":

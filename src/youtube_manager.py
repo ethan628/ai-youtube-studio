@@ -301,3 +301,21 @@ def reject_video(filename: str, reason: str = "主人退回修改") -> Dict:
         save_queue(queue)
         return {"success": True, "item": target_item}
     return {"success": False, "error": f"找不到佇列中的影片: {filename}"}
+
+def update_publish_queue_metadata(filename: str, title: str, description: str, tags: list = None) -> bool:
+    """
+    更新或註冊指定影片的發布中繼資料 (例如 Podcast 專案自訂標題與說明欄)
+    """
+    queue = sync_and_get_queue()
+    found = False
+    for item in queue:
+        if item.get("filename") == filename:
+            item["title"] = title
+            item["description"] = description
+            if tags:
+                item["tags"] = tags
+            found = True
+            break
+    if found:
+        save_queue(queue)
+    return found

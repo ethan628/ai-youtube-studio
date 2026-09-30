@@ -797,7 +797,7 @@
             <button class="btn btn-secondary" style="font-size:12px; padding:6px 12px;" onclick="addPodcastTurn()">
               ➕ 新增對話發言
             </button>
-            <button class="btn btn-primary" style="font-size:13px; padding:8px 18px; background:linear-gradient(90deg, #10b981, #06b6d4);" onclick="renderPodcastFullAction()">
+            <button class="btn btn-primary" id="btnGenPodcastFullBottom" style="font-size:13px; padding:8px 18px; background:linear-gradient(90deg, #10b981, #06b6d4);" onclick="renderPodcastFullAction()">
               🚀 確認並開始合成播客 (MP4 + MP3)
             </button>
           </div>
@@ -4349,7 +4349,8 @@ python3 learn_python.py</textarea>
       const topicInput = document.getElementById('podcastTopicInput');
       const durationSelect = document.getElementById('podcastDurationSelect');
       const styleSelect = document.getElementById('podcastStyleSelect');
-      const btn = document.getElementById('btnGenPodcastFull');
+      const btn1 = document.getElementById('btnGenPodcastFull');
+      const btn2 = document.getElementById('btnGenPodcastFullBottom');
 
       const topic = (topicInput ? topicInput.value.trim() : '') || '2026 AI 雙人對談播客';
       const duration = durationSelect ? parseFloat(durationSelect.value) : 3.0;
@@ -4362,11 +4363,15 @@ python3 learn_python.py</textarea>
         return;
       }
 
-      let origText = "";
-      if (btn) {
-        origText = btn.innerText;
-        btn.disabled = true;
-        btn.innerText = "⏳ 正在合成雙主持語音與渲染 1080p 影片 (請稍候)...";
+      let origText1 = btn1 ? btn1.innerText : "";
+      let origText2 = btn2 ? btn2.innerText : "";
+      if (btn1) {
+        btn1.disabled = true;
+        btn1.innerText = "⏳ 正在合成中 (請稍候)...";
+      }
+      if (btn2) {
+        btn2.disabled = true;
+        btn2.innerText = "⏳ 正在合成中 (請稍候)...";
       }
       showToast("🎙️ 正在排程生成雙主播神經語音、實時跳動波形與 1080p 影片... 請稍候！");
 
@@ -4383,42 +4388,15 @@ python3 learn_python.py</textarea>
         });
         const data = await res.json();
         if (data.success) {
-          const resultCard = document.getElementById('podcastResultCard');
-          const videoEl = document.getElementById('podcastResultVideo');
-          const audioEl = document.getElementById('podcastResultAudio');
-          const titleEl = document.getElementById('podcastResultTitle');
-          const metaEl = document.getElementById('podcastResultMeta');
-          const btnDlVideo = document.getElementById('btnDownloadPodcastVideo');
-          const btnDlAudio = document.getElementById('btnDownloadPodcastAudio');
+          const filename = data.filename || data.video_file;
+          const audioFilename = data.audio_filename || data.audio_file;
 
-          const videoUrl = `${API_BASE}/output_videos/${encodeURIComponent(data.video_file)}`;
-          const audioUrl = `${API_BASE}/output_videos/${encodeURIComponent(data.audio_file)}`;
-
-          if (titleEl) titleEl.innerText = `🎙️ ${data.title || topic}`;
-          if (metaEl) metaEl.innerText = `對談句數：${data.turns_count || validDialogue.length} 句 · 畫質：1080p 60fps · 雙主播：Leo (男) & Mia (女)`;
-          
-          if (videoEl) {
-            videoEl.src = videoUrl;
-            videoEl.load();
-          }
-          if (audioEl) {
-            audioEl.src = audioUrl;
-            audioEl.load();
-          }
-
-          if (btnDlVideo) {
-            btnDlVideo.href = videoUrl;
-            btnDlVideo.setAttribute('download', data.video_file);
-          }
-          if (btnDlAudio) {
-            btnDlAudio.href = audioUrl;
-            btnDlAudio.setAttribute('download', data.audio_file);
-          }
-
-          if (resultCard) {
-            resultCard.style.display = 'block';
-            resultCard.scrollIntoView({ behavior: 'smooth' });
-          }
+          displayPodcastResult({
+            filename: filename,
+            audio_filename: audioFilename,
+            title: data.title || topic,
+            turns_count: data.turns_count || data.total_turns || validDialogue.length
+          });
 
           showToast("🎉 雙主持 AI 播客影音生成圓滿完成！可直接播放或下載！");
           refreshVideoGallery();
@@ -4429,10 +4407,76 @@ python3 learn_python.py</textarea>
       } catch (err) {
         alert("合成請求失敗：" + err);
       } finally {
-        if (btn) {
-          btn.disabled = false;
-          btn.innerText = origText || "🎙️ 一鍵直接生成 1080p 播客";
+        if (btn1) {
+          btn1.disabled = false;
+          btn1.innerText = origText1 || "🎙️ 一鍵直接生成 1080p 播客";
         }
+        if (btn2) {
+          btn2.disabled = false;
+          btn2.innerText = origText2 || "🚀 確認並開始合成播客 (MP4 + MP3)";
+        }
+      }
+    }
+
+    function displayPodcastResult(info) {
+      const resultCard = document.getElementById('podcastResultCard');
+      const videoEl = document.getElementById('podcastResultVideo');
+      const audioEl = document.getElementById('podcastResultAudio');
+      const titleEl = document.getElementById('podcastResultTitle');
+      const metaEl = document.getElementById('podcastResultMeta');
+      const btnDlVideo = document.getElementById('btnDownloadPodcastVideo');
+      const btnDlAudio = document.getElementById('btnDownloadPodcastAudio');
+
+      const filename = info.filename;
+      const audioFilename = info.audio_filename || (filename ? filename.replace(/\.mp4$/, ".mp3") : "");
+
+      const videoUrl = `${API_BASE}/output_videos/${encodeURIComponent(filename)}`;
+      const audioUrl = `${API_BASE}/output_videos/${encodeURIComponent(audioFilename)}`;
+
+      if (titleEl) titleEl.innerText = `🎙️ ${info.title || filename}`;
+      if (metaEl) metaEl.innerText = `檔案：${filename} · 畫質：1080p 60fps · 雙主播：Leo (男) & Mia (女)`;
+      
+      if (videoEl) {
+        videoEl.src = videoUrl;
+        videoEl.load();
+      }
+      if (audioEl) {
+        audioEl.src = audioUrl;
+        audioEl.load();
+      }
+
+      if (btnDlVideo) {
+        btnDlVideo.href = videoUrl;
+        btnDlVideo.setAttribute('download', filename);
+      }
+      if (btnDlAudio) {
+        btnDlAudio.href = audioUrl;
+        btnDlAudio.setAttribute('download', audioFilename);
+      }
+
+      if (resultCard) {
+        resultCard.style.display = 'block';
+        resultCard.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+
+    async function checkLatestPodcastResult() {
+      try {
+        const res = await fetch(`${API_BASE}/api/list_videos`);
+        const data = await res.json();
+        if (data.success && Array.isArray(data.videos)) {
+          const podcastVid = data.videos.find(v => v.filename && v.filename.startsWith("Podcast_"));
+          if (podcastVid) {
+            displayPodcastResult({
+              filename: podcastVid.filename,
+              audio_filename: podcastVid.filename.replace(/\.mp4$/, ".mp3"),
+              title: podcastVid.title || podcastVid.filename.replace(/^Podcast_/, "").replace(/\.mp4$/, ""),
+              turns_count: 8
+            });
+          }
+        }
+      } catch (e) {
+        console.warn("無法取得最新播客影片：", e);
       }
     }
 
@@ -4442,6 +4486,7 @@ python3 learn_python.py</textarea>
     loadYoutubeQueue();
     loadVoiceSamples();
     initPodcastDialogueIfEmpty();
+    checkLatestPodcastResult();
   </script>
 </body>
 </html>
