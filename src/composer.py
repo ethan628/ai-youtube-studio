@@ -5,6 +5,8 @@ import tempfile
 import imageio_ffmpeg
 from src.tts import generate_speech
 from src.visuals import create_scene_card
+from src.rubiks_cube_engine import is_rubiks_cube_topic, render_rubiks_cube_scene_clip
+from src.subtitle_utils import optimize_srt_file, get_ffmpeg_subtitles_style
 
 # 確保在 Windows 控制台能正確輸出中文與 Emoji
 if sys.platform.startswith("win"):
@@ -44,13 +46,12 @@ def build_scene_clip(
     - 支援 Ken Burns 微縮放/平移動態鏡頭
     - 支援微軟正黑體/Noto Sans CJK TC 高清美化字幕
     """
-    w, h = (1080, 1920) if is_vertical else (1920, 1080)
-    font_size = 28 if is_vertical else 26
-    margin_v = 150 if is_vertical else 45
-    font_name = "Microsoft JhengHei" if sys.platform.startswith("win") else "Noto Sans CJK TC"
+    if srt_path and os.path.exists(srt_path):
+        optimize_srt_file(srt_path, is_vertical=is_vertical)
 
+    w, h = (1080, 1920) if is_vertical else (1920, 1080)
+    style = get_ffmpeg_subtitles_style(is_vertical=is_vertical)
     srt_clean = srt_path.replace("\\", "/").replace(":", "\\:")
-    style = f"FontName={font_name},FontSize={font_size},Bold=1,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BackColour=&H80000000,BorderStyle=3,Outline=2.5,Shadow=1,Alignment=2,MarginV={margin_v}"
 
     fps = 25
 
@@ -112,15 +113,23 @@ def build_scene_clip(
     subprocess.run(cmd, check=True, capture_output=True)
     return output_clip_path
 
-def compose_video(scenes: list, output_video_path: str, is_vertical: bool = False, voice: str = "zh-TW-YunJheNeural", watermark: str = "AI玩科技 | 2026全自動長片"):
+def compose_video(scenes: list, output_video_path: str, is_vertical: bool = False, voice: str = "zh-TW-YunJheNeural", watermark: str = "AI玩科技 | 2026全自動長片", topic: str = ""):
     """
     一鍵串接所有場景生成完整影片，統一輸出到指定路徑
     包含：
     - 多樣化視覺排版與圖形主題生成
+    - 魔術方塊專屬 3D 動態解法動畫引擎
     - 單幕多圖切換（依語音長度自動補入第二視角畫面，確保畫面持續變化）
     - Ken Burns 動態鏡頭
     """
     os.makedirs(os.path.dirname(os.path.abspath(output_video_path)), exist_ok=True)
+
+    is_rubik = is_rubiks_cube_topic(topic) or any(
+        is_rubiks_cube_topic(str(s.get("title", "")) + " " + str(s.get("badge", "")) + " " + str(s.get("narration", "")) + " " + str(s.get("subtitle", "")))
+        for s in scenes
+    )
+    if is_rubik:
+        print("🎲 檢測到魔術方塊主題！全面啟用 3D 解法動態旋轉動畫引擎！")
     
     with tempfile.TemporaryDirectory() as temp_dir:
         clip_paths = []
@@ -136,6 +145,22 @@ def compose_video(scenes: list, output_video_path: str, is_vertical: bool = Fals
             # 1. 產生配音與字幕
             generate_speech(scene["narration"], audio_path, srt_path, voice=voice)
             duration = get_audio_duration(audio_path)
+
+            if is_rubik:
+                # 專屬魔術方塊 3D 解法動態動畫渲染
+                print(f"🎲 [魔方 3D 動畫] 正在渲染第 {idx+1}/{total_scenes} 幕 3D 解法旋轉動畫...")
+                render_rubiks_cube_scene_clip(
+                    scene=scene,
+                    duration=duration,
+                    output_clip_path=clip_path,
+                    is_vertical=is_vertical,
+                    scene_idx=idx,
+                    total_scenes=total_scenes,
+                    audio_path=audio_path,
+                    srt_path=srt_path
+                )
+                clip_paths.append(clip_path)
+                continue
 
             # 2. 智能產生場景視覺畫面：若時長超過 8 秒，自動生成 2 張不同視角視覺圖！
             w, h = (1080, 1920) if is_vertical else (1920, 1080)

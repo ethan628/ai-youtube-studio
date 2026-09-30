@@ -2,6 +2,7 @@ import os
 import re
 import math
 from PIL import Image, ImageDraw, ImageFont
+from src.script_generator import is_programming_topic
 
 # 跨平台中文字型支援 (優先載入繁體中文 TC，確保絕無豆腐框 ▯)
 CANDIDATE_FONTS_BOLD = [
@@ -274,52 +275,87 @@ def _render_workflow_style(title, subtitle, badge, bullets, highlight_box, out_p
 
     img.save(out_path, quality=95)
 
-def _render_console_style(title, subtitle, badge, bullets, highlight_box, out_path, watermark="AI玩科技 | 實戰代碼演示", topic=""):
-    """風格 3：終端機實戰 / 開發者工作台畫面"""
+def _render_console_style(title, subtitle, badge, bullets, highlight_box, out_path, watermark=None, topic=""):
+    """風格 3：終端機實戰 (程式主題) / 知識精華筆記卡 (非程式主題)"""
     w, h = 1920, 1080
-    img = Image.new("RGB", (w, h), (8, 20, 18))
-    draw = ImageDraw.Draw(img)
-    draw_tech_background(draw, w, h, base_color=(6, 18, 16), accent_color=(16, 185, 129))
+    is_code = is_programming_topic(topic)
+    
+    if not is_code:
+        # 非程式主題：優雅墨藍色系背景
+        img = Image.new("RGB", (w, h), (10, 18, 30))
+        draw = ImageDraw.Draw(img)
+        draw_tech_background(draw, w, h, base_color=(10, 18, 30), accent_color=(56, 189, 248))
+        clean_wm = clean_emoji(watermark) if watermark else "精選深度解析 | 實戰精華筆記"
+        clean_b = clean_emoji(badge) or "精華重點筆記"
+        border_c = (56, 189, 248)
+    else:
+        # 程式主題：經典綠色終端機背景
+        img = Image.new("RGB", (w, h), (8, 20, 18))
+        draw = ImageDraw.Draw(img)
+        draw_tech_background(draw, w, h, base_color=(6, 18, 16), accent_color=(16, 185, 129))
+        clean_wm = clean_emoji(watermark) if watermark else "AI玩科技 | 實戰代碼演示"
+        clean_b = clean_emoji(badge) or "實戰代碼演示"
+        border_c = (16, 185, 129)
 
-    clean_wm = clean_emoji(watermark) or "AI玩科技 | 實戰代碼演示"
     draw.text((w - 480, 45), clean_wm, fill=(148, 163, 184), font=get_font(22, bold=True))
 
-    clean_b = clean_emoji(badge) or "實戰代碼演示"
-    draw.rounded_rectangle([100, 65, 380, 115], radius=12, fill=(20, 35, 30), outline=(16, 185, 129), width=2)
-    draw.ellipse([120, 83, 134, 97], fill=(16, 185, 129))
-    draw.text((150, 72), clean_b, fill=(16, 185, 129), font=get_font(26, bold=True))
+    draw.rounded_rectangle([100, 65, 380, 115], radius=12, fill=(20, 35, 30) if is_code else (20, 30, 48), outline=border_c, width=2)
+    draw.ellipse([120, 83, 134, 97], fill=border_c)
+    draw.text((150, 72), clean_b, fill=border_c, font=get_font(26, bold=True))
 
     draw.text((100, 140), clean_emoji(title)[:26], fill=(255, 255, 255), font=get_font(60, bold=True))
     draw.text((100, 220), clean_emoji(subtitle)[:40], fill=(203, 213, 225), font=get_font(32, bold=False))
 
-    # 左側：打勾清單
+    # 左側：條列打勾清單
     ly = 320
     font_bf = get_font(28, bold=True)
-    bullets_to_draw = bullets if bullets else ["瀏覽器支援 WebRTC", "本地離線計算安全私密", "一鍵部署至 GitHub Pages"]
+    bullets_to_draw = bullets if bullets else (
+        ["核心瓶頸精準定位", "五分鐘微行動立即開始", "建立持續正向反饋循環"] if not is_code else
+        ["瀏覽器支援 WebRTC", "本地離線計算安全私密", "一鍵部署至 GitHub Pages"]
+    )
     for i, b in enumerate(bullets_to_draw[:4]):
         by = ly + (i * 120)
-        draw.rounded_rectangle([100, by, 880, by + 95], radius=12, fill=(15, 28, 24), outline=(30, 58, 48), width=1)
-        draw_vector_check(draw, 145, by + 48, radius=20, bg_color=(16, 185, 129))
-        draw.text((195, by + 32), clean_emoji(b)[:24], fill=(240, 253, 244), font=font_bf)
+        draw.rounded_rectangle([100, by, 880, by + 95], radius=12, fill=(15, 28, 24) if is_code else (15, 25, 40), outline=(30, 58, 48) if is_code else (30, 50, 75), width=1)
+        draw_vector_check(draw, 145, by + 48, radius=20, bg_color=(16, 185, 129) if is_code else (56, 189, 248))
+        draw.text((195, by + 32), clean_emoji(b)[:24], fill=(240, 253, 244) if is_code else (240, 249, 255), font=font_bf)
 
-    # 右側：寫實終端機視窗
+    # 右側：寫實終端機視窗 vs 知識精華筆記卡
     tx, ty, tw, th = 940, 320, 880, 520
-    draw.rounded_rectangle([tx, ty, tx + tw, ty + th], radius=16, fill=(10, 15, 20), outline=(16, 185, 129), width=2)
-    draw.rounded_rectangle([tx, ty, tx + tw, ty + 50], radius=16, fill=(24, 30, 38))
-    draw.ellipse([tx + 20, ty + 18, tx + 34, ty + 32], fill=(239, 68, 68))
-    draw.ellipse([tx + 42, ty + 18, tx + 56, ty + 32], fill=(234, 179, 8))
-    draw.ellipse([tx + 64, ty + 18, tx + 78, ty + 32], fill=(34, 197, 94))
-    draw.text((tx + 95, ty + 14), "bash - 80x24 (ai-pipeline-daemon)", fill=(156, 163, 175), font=get_font(20, bold=False))
+    if is_code:
+        draw.rounded_rectangle([tx, ty, tx + tw, ty + th], radius=16, fill=(10, 15, 20), outline=(16, 185, 129), width=2)
+        draw.rounded_rectangle([tx, ty, tx + tw, ty + 50], radius=16, fill=(24, 30, 38))
+        draw.ellipse([tx + 20, ty + 18, tx + 34, ty + 32], fill=(239, 68, 68))
+        draw.ellipse([tx + 42, ty + 18, tx + 56, ty + 32], fill=(234, 179, 8))
+        draw.ellipse([tx + 64, ty + 18, tx + 78, ty + 32], fill=(34, 197, 94))
+        draw.text((tx + 95, ty + 14), "bash - 80x24 (ai-pipeline-daemon)", fill=(156, 163, 175), font=get_font(20, bold=False))
 
-    code_lines = (highlight_box or "$ npm run dev\n>>> Model loaded: 100%\n>>> Sensor active: 60fps\n>>> Listening for gestures...").split("\n")
-    line_y = ty + 75
-    font_code = get_font(24, bold=False)
-    for l in code_lines:
-        color = (52, 211, 153) if "$" in l or ">>>" in l else (229, 231, 235)
-        draw.text((tx + 30, line_y), l, fill=color, font=font_code)
-        line_y += 42
+        code_lines = (highlight_box or "$ npm run dev\n>>> Model loaded: 100%\n>>> Sensor active: 60fps\n>>> Listening for gestures...").split("\n")
+        line_y = ty + 75
+        font_code = get_font(24, bold=False)
+        for l in code_lines:
+            color = (52, 211, 153) if "$" in l or ">>>" in l else (229, 231, 235)
+            draw.text((tx + 30, line_y), l, fill=color, font=font_code)
+            line_y += 42
 
-    draw.rectangle([tx + 30, line_y + 5, tx + 45, line_y + 35], fill=(52, 211, 153))
+        draw.rectangle([tx + 30, line_y + 5, tx + 45, line_y + 35], fill=(52, 211, 153))
+    else:
+        # 非程式主題：優雅知識精華筆記卡 (無終端機、無代碼、無打字光標)
+        draw.rounded_rectangle([tx, ty, tx + tw, ty + th], radius=16, fill=(15, 23, 42), outline=(56, 189, 248), width=2)
+        draw.rounded_rectangle([tx, ty, tx + tw, ty + 50], radius=16, fill=(30, 41, 59))
+        draw.ellipse([tx + 20, ty + 18, tx + 34, ty + 32], fill=(56, 189, 248))
+        draw.ellipse([tx + 42, ty + 18, tx + 56, ty + 32], fill=(129, 140, 248))
+        draw.ellipse([tx + 64, ty + 18, tx + 78, ty + 32], fill=(244, 114, 182))
+        draw.text((tx + 95, ty + 14), "💡 實戰精華筆記 (Key Highlights)", fill=(226, 232, 240), font=get_font(20, bold=True))
+
+        box_lines = (highlight_box or "【核心思維地圖】\n痛點洞察 -> 本質拆解 -> 具體實踐 -> 持續複利").split("\n")
+        line_y = ty + 75
+        font_box = get_font(24, bold=False)
+        for l in box_lines:
+            clean_l = clean_emoji(l)
+            color = (56, 189, 248) if any(k in clean_l for k in ["【", "[", "核心", "清單", "原則"]) else (241, 245, 249)
+            draw.text((tx + 30, line_y), clean_l, fill=color, font=font_box)
+            line_y += 42
+
     img.save(out_path, quality=95)
 
 def _render_comparison_style(title, subtitle, badge, bullets, highlight_box, out_path, watermark="AI玩科技 | 效益數據對比", topic=""):
@@ -376,17 +412,18 @@ def _render_comparison_style(title, subtitle, badge, bullets, highlight_box, out
 
     img.save(out_path, quality=95)
 
-def _render_summary_style(title, subtitle, badge, bullets, highlight_box, out_path, watermark="AI玩科技 | 開源資源分享", topic=""):
-    """風格 5：結尾呼籲 / 開源資源領取卡"""
+def _render_summary_style(title, subtitle, badge, bullets, highlight_box, out_path, watermark=None, topic=""):
+    """風格 5：結尾呼籲 / 資源領取與精華總結卡"""
     w, h = 1920, 1080
+    is_code = is_programming_topic(topic)
     img = Image.new("RGB", (w, h), (18, 10, 30))
     draw = ImageDraw.Draw(img)
     draw_tech_background(draw, w, h, base_color=(18, 10, 30), accent_color=(236, 72, 153))
 
-    clean_wm = clean_emoji(watermark) or "AI玩科技 | 開源資源分享"
+    clean_wm = clean_emoji(watermark) if watermark else ("AI玩科技 | 開源資源分享" if is_code else "精選深度解析 | 實踐指南")
     draw.text((w - 480, 45), clean_wm, fill=(148, 163, 184), font=get_font(22, bold=True))
 
-    clean_b = clean_emoji(badge) or "資源與結尾行動"
+    clean_b = clean_emoji(badge) or ("資源與結尾行動" if is_code else "精華總結與行動")
     draw.rounded_rectangle([100, 65, 380, 115], radius=12, fill=(40, 20, 50), outline=(236, 72, 153), width=2)
     draw.ellipse([120, 83, 134, 97], fill=(236, 72, 153))
     draw.text((150, 72), clean_b, fill=(236, 72, 153), font=get_font(26, bold=True))
@@ -394,27 +431,43 @@ def _render_summary_style(title, subtitle, badge, bullets, highlight_box, out_pa
     draw.text((100, 140), clean_emoji(title)[:26], fill=(255, 255, 255), font=get_font(60, bold=True))
     draw.text((100, 220), clean_emoji(subtitle)[:40], fill=(203, 213, 225), font=get_font(32, bold=False))
 
-    # 訂閱卡
+    # 左側：訂閱卡
+    channel_name = "【雙AI深度成長】頻道" if not is_code else "【AI玩科技】頻道"
+    channel_desc = "每週帶來最實用高效成長與深度思維解析" if not is_code else "每週帶來最新最實用 AI 自動化黑科技實戰教學"
+    note_line = "• 點讚收藏，隨時回頭翻看本集精華筆記" if not is_code else "• 點讚收藏，隨時回頭翻看實作設定檔"
+
     draw.rounded_rectangle([100, 320, 950, 780], radius=18, fill=(28, 16, 40), outline=(236, 72, 153), width=2)
-    draw.text((140, 360), "歡迎訂閱【AI玩科技】頻道", fill=(255, 255, 255), font=get_font(36, bold=True))
-    draw.text((140, 420), "每週帶來最新最實用 AI 自動化黑科技實戰教學", fill=(203, 213, 225), font=get_font(24, bold=False))
+    draw.text((140, 360), f"歡迎訂閱{channel_name}", fill=(255, 255, 255), font=get_font(36, bold=True))
+    draw.text((140, 420), channel_desc, fill=(203, 213, 225), font=get_font(24, bold=False))
     
     draw.rounded_rectangle([140, 480, 500, 550], radius=12, fill=(239, 68, 68))
     draw.text((190, 495), "訂閱頻道 & 開啟小鈴鐺", fill=(255, 255, 255), font=get_font(26, bold=True))
 
     draw.text((140, 580), "• 留言分享你的想法，我會親自回覆交流！", fill=(229, 231, 235), font=get_font(24, bold=False))
-    draw.text((140, 630), "• 點讚收藏，隨時回頭翻看實作設定檔", fill=(229, 231, 235), font=get_font(24, bold=False))
+    draw.text((140, 630), note_line, fill=(229, 231, 235), font=get_font(24, bold=False))
 
-    # GitHub 專案卡
-    draw.rounded_rectangle([1000, 320, 1820, 780], radius=18, fill=(16, 24, 38), outline=(56, 189, 248), width=2)
-    draw.text((1040, 360), "開源專案代碼與配置下載", fill=(56, 189, 248), font=get_font(36, bold=True))
-    draw.text((1040, 420), "GitHub: https://github.com/ethan628/ai-youtube-studio", fill=(148, 163, 184), font=get_font(22, bold=False))
-    
-    draw.rounded_rectangle([1040, 480, 1780, 740], radius=12, fill=(10, 15, 25))
-    draw.text((1070, 510), "$ git clone https://github.com/ethan628/ai-youtube-studio", fill=(52, 211, 153), font=get_font(22, bold=False))
-    draw.text((1070, 560), "$ cd ai-youtube-studio && npm install", fill=(52, 211, 153), font=get_font(22, bold=False))
-    draw.text((1070, 610), "$ npm run dev", fill=(52, 211, 153), font=get_font(22, bold=False))
-    draw.text((1070, 670), ">>> Ready to Launch: 100% Complete!", fill=(56, 189, 248), font=get_font(24, bold=True))
+    # 右側：終端卡 (程式主題) vs 核心精華筆記總結卡 (非程式主題)
+    if is_code:
+        draw.rounded_rectangle([1000, 320, 1820, 780], radius=18, fill=(16, 24, 38), outline=(56, 189, 248), width=2)
+        draw.text((1040, 360), "全自動影音管線運行終端", fill=(56, 189, 248), font=get_font(36, bold=True))
+        draw.text((1040, 420), "Core Engine: Python 3.12+ | FFmpeg | Edge-TTS", fill=(148, 163, 184), font=get_font(22, bold=False))
+        
+        draw.rounded_rectangle([1040, 480, 1780, 740], radius=12, fill=(10, 15, 25))
+        draw.text((1070, 510), "$ pip install -r requirements.txt", fill=(52, 211, 153), font=get_font(22, bold=False))
+        draw.text((1070, 560), "$ python create_video.py --topic 'AI實戰' --duration 10", fill=(52, 211, 153), font=get_font(22, bold=False))
+        draw.text((1070, 610), "$ python web_ui.py", fill=(52, 211, 153), font=get_font(22, bold=False))
+        draw.text((1070, 670), ">>> Ready to Launch: 100% Complete!", fill=(56, 189, 248), font=get_font(24, bold=True))
+    else:
+        # 非程式主題：精華重點總結卡 (絕無程式碼、pip 或終端機指令)
+        draw.rounded_rectangle([1000, 320, 1820, 780], radius=18, fill=(16, 24, 38), outline=(56, 189, 248), width=2)
+        draw.text((1040, 360), "📌 本集核心精華與實踐指引", fill=(56, 189, 248), font=get_font(36, bold=True))
+        draw.text((1040, 420), "Key Takeaways: 認知升級 | 最小行動 | 持續覆盤", fill=(148, 163, 184), font=get_font(22, bold=False))
+        
+        draw.rounded_rectangle([1040, 480, 1780, 740], radius=12, fill=(10, 15, 25))
+        draw.text((1070, 510), "💡 重點 1: 抓準核心槓桿點，拒絕被瑣事耗損精力", fill=(56, 189, 248), font=get_font(22, bold=True))
+        draw.text((1070, 560), "🚀 重點 2: 建立五分鐘微啟動機制，降低執行阻力", fill=(74, 222, 128), font=get_font(22, bold=False))
+        draw.text((1070, 610), "🔄 重點 3: 每週固定十五分鐘覆盤，實現指數級複利", fill=(250, 204, 21), font=get_font(22, bold=False))
+        draw.text((1070, 670), "🎯 實踐行動清單已整理在下方說明欄，歡迎領取！", fill=(244, 114, 182), font=get_font(22, bold=True))
 
     img.save(out_path, quality=95)
 
@@ -444,6 +497,10 @@ def create_scene_card(
     """
     os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
     clean_b = badge or ""
+
+    is_code = is_programming_topic(topic)
+    if not is_code and watermark == "AI玩科技 | 2026全自動長片":
+        watermark = "精選深度解析 | 實踐指南"
 
     # 若單一場景有第二視角 (sub_idx == 1)，自動切換到細部架構或實操控制台
     if sub_idx == 1:

@@ -90,16 +90,22 @@ async def _synthesize_voice_clone_async(text: str, audio_path: str, srt_path: st
             if chunk["type"] == "audio":
                 f.write(chunk["data"])
             elif chunk["type"] in ("WordBoundary", "SentenceBoundary"):
-                submaker.feed(chunk)
-                has_sub = True
+                try:
+                    submaker.feed(chunk)
+                    has_sub = True
+                except Exception:
+                    pass
 
     if srt_path:
         os.makedirs(os.path.dirname(os.path.abspath(srt_path)), exist_ok=True)
+        from src.subtitle_utils import optimize_srt
+        if has_sub and len(submaker.cues) > 0:
+            raw_srt = submaker.get_srt()
+        else:
+            raw_srt = f"1\n00:00:00,000 --> 00:00:05,000\n{text}\n"
+        opt_srt = optimize_srt(raw_srt)
         with open(srt_path, "w", encoding="utf-8") as f:
-            if has_sub and len(submaker.cues) > 0:
-                f.write(submaker.get_srt())
-            else:
-                f.write(f"1\n00:00:00,000 --> 00:00:05,000\n{text}\n")
+            f.write(opt_srt)
 
 def generate_cloned_speech(text: str, audio_path: str, srt_path: str = None, sample_audio_path: str = None):
     """

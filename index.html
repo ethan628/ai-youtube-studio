@@ -246,6 +246,21 @@
               </div>
             </div>
 
+            <!-- 🔮 智慧連載：自動出下一集腳本快捷面板 -->
+            <div id="nextEpisodeBar" style="background: rgba(34, 211, 238, 0.05); border: 1px dashed rgba(34, 211, 238, 0.35); border-radius: 10px; padding: 10px 14px; margin-bottom: 18px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 1.25rem;">🔮</span>
+                <div>
+                  <div style="font-size: 0.75rem; color: var(--cyan); font-weight: bold; letter-spacing: 0.5px;">【連載推薦】AI 自動規劃下一集：</div>
+                  <div id="nextEpisodeBarTitle" style="font-size: 0.88rem; color: #f1f5f9; font-weight: 600;">打造專屬本地私有化 AI 智能體：從零串接與全自動無人維運實戰</div>
+                </div>
+              </div>
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <button class="btn btn-secondary" onclick="cycleNextEpisodeTopic()" style="padding: 5px 10px; font-size: 0.78rem;" title="換一個下一集靈感主題">🎲 換個靈感</button>
+                <button class="btn btn-primary" onclick="applyNextEpisodeScript()" style="padding: 5px 14px; font-size: 0.82rem; background: linear-gradient(135deg, #06b6d4, #10b981); box-shadow: 0 0 10px rgba(6, 182, 212, 0.3);" title="一鍵自動出下一集完整分鏡腳本">⚡ 自己出下一集腳本</button>
+              </div>
+            </div>
+
             <!-- 分鐘數設定 -->
             <div class="form-group">
               <label>影片目標時長（精確分鐘數，支援 0.5 ~ 60 分鐘）：</label>
@@ -1219,88 +1234,192 @@ python3 learn_python.py</textarea>
     let recordSeconds = 0;
     let recordedAudioBlob = null;
 
+    function isRubiksCubeTopic(topic) {
+      if (!topic) return false;
+      const t = topic.toLowerCase();
+      const keywords = ["魔術方塊", "魔方", "扭計骰", "rubik", "rubik's", "rubiks", "3x3"];
+      return keywords.some(k => t.includes(k));
+    }
+
+    function isProgrammingTopic(topic) {
+      if (!topic) return false;
+      if (isRubiksCubeTopic(topic)) return false;
+      const t = topic.toLowerCase();
+      const negs = ["不寫程式", "不用寫程式", "不用寫代碼", "零代碼", "免代碼", "nocode", "no-code", "不寫python", "不用寫code", "不需寫代碼"];
+      for (const neg of negs) {
+        if (t.includes(neg)) return false;
+      }
+      const codeKeywords = [
+        "python", "javascript", "typescript", "golang", "rust", "c++", "c#", "java", "php",
+        "寫程式", "寫代碼", "寫code", "編程", "程式碼", "源代碼", "原始碼", "原始代碼",
+        "函數", "函式庫", "算法", "演算法", "bug", "debug", "api開發", "sdk", "sql", "資料庫",
+        "terminal", "終端機", "linux", "bash", "shell", "docker", "k8s", "pip install", "npm install",
+        "flask", "django", "fastapi", "vue", "react", "前端開發", "後端開發", "全端開發",
+        "git clone"
+      ];
+      return codeKeywords.some(k => t.includes(k));
+    }
+
     function buildScriptScenes(topic, duration) {
       const cleanTopic = topic.trim() || "2026 最新 AI 全自動實戰工作流";
       const totalSeconds = duration * 60;
       const paceSec = duration <= 5 ? 25 : (duration <= 15 ? 30 : 35);
       const numScenes = Math.max(2, Math.round(totalSeconds / paceSec));
+      const isRubik = isRubiksCubeTopic(cleanTopic);
+      const isCode = isRubik ? false : isProgrammingTopic(cleanTopic);
 
-      const prototypes = [
-        {
-          badge: "🔥 爆款開場",
-          suffix: "：告別低效手動！",
-          sub: "徹底顛覆傳統作法，用 AI 自動化省下 80% 時間",
-          bullets: ["痛點直擊：手動處理耗時又容易出錯", "零程式門檻：文字指令直接驅動全新架構", `目標達成：${duration} 分鐘完整掌握核心秘訣`],
-          code: `$ ai-pipeline --init "${cleanTopic.slice(0, 18)}"\n>>> Loading AI Engine...\n>>> Ready to Automate: 100%`,
-          narration: `哈囉大家好，歡迎來到雙AI協同頻道！你是不是也常覺得處理「${cleanTopic}」特別耗時間？今天這部影片，帶你用最新的 AI 工作流，徹底告別手動繁瑣步驟！`
-        },
-        {
-          badge: "⚡ 核心架構",
-          suffix: "：三大核心機制拆解",
-          sub: "多模型協同運作，各司其職發揮極致威力",
-          bullets: ["資料層：自動收集並清洗關鍵資訊", "推理層：大模型智能決策與邏輯推理", "執行層：一鍵自動化輸出最終成果"],
-          code: `[Workflow Engine]\nInput Data -> AI Reasoning\n-> Structured Action -> Done!`,
-          narration: `要徹底搞定「${cleanTopic}」，核心關鍵就在於架構分工與多模型協同。由系統自動負責資料收集、邏輯分析與繁瑣處理，創作者只需要專注在決策與靈感輸出，就能將生產力推升至極致！`
-        },
-        {
-          badge: "🛠️ 實戰第一步",
-          suffix: "：環境與工具一鍵就緒",
-          sub: "不需要複雜的安裝設定，開箱即用",
-          bullets: ["支援 Windows、Mac 與 Linux 跨平台", "模組化設計：免設定複雜 API 即可開跑", "直覺化操作：界面與指令雙軌支援"],
-          code: `$ setup-agent --quick-start\n[✔] Dependencies installed\n[✔] Studio ready!`,
-          narration: "第一步非常簡單，我們完全不需要配置昂貴的伺服器或安裝繁雜的環境依賴，只要透過今天展示的這套自動化工作台，點擊一鍵就能把整個系統無縫啟動，快速進入創作狀態！"
-        },
-        {
-          badge: "🚀 實戰第二步",
-          suffix: "：核心邏輯與流程串接",
-          sub: "將繁複的流程轉化為全自動閉環",
-          bullets: ["自動化管線監控：實時掌握運行狀態", "異常自動重試與修復機制", "毫秒級響應速度，告別等待焦慮"],
-          code: `$ run-task --mode continuous\n>>> Processing batch items...\n>>> Status: 200 OK (0.42s)`,
-          narration: "接下來就是最精彩的核心環節：我們把設定好的規格與工作流程交給系統自動運轉，你會發現原本需要耗費好幾天反覆調整的繁瑣步驟，現在只需要短短幾秒鐘就能全部精準跑完！"
-        },
-        {
-          badge: "🎯 成果示範",
-          suffix: "：實機震撼效果展示",
-          sub: "只需一句話指令，成果直接呈現眼前",
-          bullets: ["高精準度：輸出品質超越手動成果", "多格式支援：表格、圖文、影音一應俱全", "即時預覽與一鍵導出"],
-          code: `User: 產生完整分析報表\nAgent: Generating report...\nSaved: output_final.mp4 [Success!]`,
-          narration: "大家可以仔細看畫面上展示的實際成果！從輸入最初的一句話指令，到整部影片與圖文資料完整產出，不僅速度極快而且細節滿滿，這就是最新 AI 自動化協同帶來的震撼生產力！"
-        },
-        {
-          badge: "💡 進階秘訣",
-          suffix: "：避坑指南與關鍵細節",
-          sub: "老手才知道的隱藏設定，讓效果再提升 200%",
-          bullets: ["提示詞優化：如何引導 AI 給出最精準解答", "快取機制：節省時間與算力消耗", "靈活調參：自訂最適合你工作習慣的模式"],
-          code: `Optimization Tips:\n- Use structured markdown inputs\n- Enable local caching for 10x speed`,
-          narration: "在這裡跟大家分享一個老手才知道的關鍵技巧：在執行時善用結構化指令規範與本地快取機制，可以讓整體運算穩定度大幅提升，還能節省算力開銷，完全避免常見的格式錯誤與延遲！"
-        },
-        {
-          badge: "📊 效益對比",
-          suffix: "：傳統作法 vs AI 自動化",
-          sub: "數據說話！效率翻倍、時間成本直降 90%",
-          bullets: ["時間投入：從數小時壓縮至幾分鐘", "人力成本：單人即可搞定團隊工作量", "持續複利：建立一次，隨時反覆調用"],
-          code: `[Comparison]\nManual: 4.5 hours | High effort\nAI Studio: 3 minutes | 1-Click Done`,
-          narration: "我們來認真算一算這筆時間成本：過去手動剪輯與腳本撰寫往往需要耗費一整天，現在全面導入自動化，你把省下來的大量寶貴時間拿去構思更多優質題目，長期的複利效益絕對超過數倍！"
-        },
-        {
-          badge: "🔔 訂閱與資源",
-          suffix: "：立即動手實作！",
-          sub: "完整專案與設定檔已在說明欄開放領取",
-          bullets: ["歡迎在留言區分享你的實作成果與點子", "持續鎖定頻道，掌握最新 AI 黑科技", "記得按讚、訂閱、開啟小鈴鐺！"],
-          code: `Thanks for watching!\n>>> Next Episode:\n自訂聲音與私有化模型進階實戰`,
-          narration: `以上就是今天的「${cleanTopic}」完整教學！專案代碼與工具都已經整理在下方說明欄。如果覺得實用，別忘了按讚、訂閱並開啟小鈴鐺，我們下期再見！`
-        }
-      ];
+      const nextEpTitle = (currentNextEpisodeInfo ? currentNextEpisodeInfo.next_topic : (isRubik ? '【速解進階】魔術方塊進階指法與 30 秒盲擰技巧' : (isCode ? '打造專屬本地私有化 AI 智能體' : '打造個人持續成長系統')));
 
-      let picked = [];
-      if (numScenes <= 3) {
-        picked = [prototypes[0], prototypes[4], prototypes[7]];
-      } else if (numScenes <= 5) {
-        picked = [prototypes[0], prototypes[1], prototypes[2], prototypes[4], prototypes[7]];
-      } else if (numScenes <= 8) {
-        picked = prototypes.slice(0, numScenes);
-      } else {
-        const curriculumTopics = [
+      let prototypes = [];
+      let curriculumTopics = [];
+
+      if (isRubik) {
+        prototypes = [
+          {
+            badge: "🎉 六面全解成果搶先看",
+            suffix: "：零廢話！手把手全解震撼效果",
+            sub: "開頭直接看成果！原本打亂的魔方，一套口訣輕鬆搞定",
+            bullets: ["六面全解成果：照著步驟走，任何人都能100%全解", "摒棄冗長鋪陳：告別死記硬背，直觀口訣秒上手", "前 15 秒建立信心：只要掌握層先法，復原超有成就感"],
+            code: `【🎉 六面全解震撼成果搶先看】\n打亂狀態 ➔ 7步層先法 ➔ 六面完美全解！\n核心理念: 零廢話鋪陳，跟著口訣直接通關`,
+            narration: `大家先看畫面上這個成果！原本徹底打亂的魔術方塊，現在六面已經全部完美復原！今天這部影片完全不講冗長的前置概念，直接帶你用最直覺的七步層先法，手把手把你手中的魔方從打亂到全解，我們馬上進入第一步！`
+          },
+          {
+            badge: "⭐ 步驟一",
+            suffix: "：白色小花與底層十字",
+            sub: "復原白色中心十字，並對齊四個側面中心顏色",
+            bullets: ["小花定位：先在頂層黃色中心周圍聚集四個白稜塊", "側面顏色對齊：轉動頂層讓側面顏色與中心塊同色", "順轉 180 度翻下：四個白稜轉入底層，底十字完美成形"],
+            code: `【步驟一口訣】\n白稜聚黃心 -> 側面顏色對齊 -> 旋轉180度翻至底面`,
+            narration: "第一步是打下最穩固的基礎：底層十字。我們先在頂面黃色中心周圍做出四朵白花瓣，接著觀察每個白塊的另一個顏色，轉動頂層跟側面中心塊對齊後，直接往下轉 180 度，底面白色十字就大功告成了！"
+          },
+          {
+            badge: "🎯 步驟二",
+            suffix: "：底層角塊歸位 (解完第一層)",
+            sub: "學會萬能口訣「上左下右」，一次搞定四個底層角塊",
+            bullets: ["鎖定目標角塊：找出含有白色的角塊，轉到目標槽位正上方", "黃金口訣公式：上左下右 (R U R' U')", "重複 1 至 5 次：角塊自動翻轉並精確嵌入底層位置"],
+            code: `【黃金核心口訣】\nR U R' U' (右手：上左下右)\n目標角塊置於右上，重複直至白色朝下歸位`,
+            narration: "第二步我們要復原整個底層的第一層！這裡只需要記住魔方最核心的黃金口訣：上、左、下、右，也就是 R、U、R撇、U撇。把目標角塊放在右上角，重複這個動作一到五次，底層四個角塊就會全部歸位！"
+          },
+          {
+            badge: "🚀 步驟三",
+            suffix: "：中層稜塊歸位 (F2L 前兩層)",
+            sub: "用對稱公式將頂層無黃稜塊推入中層兩側",
+            bullets: ["尋找非黃稜塊：在頂層找到不含黃色的稜塊", "對齊中心形成倒 T 字：轉動頂層對齊前方中心顏色", "右手公式推入：U R U' R' U' F' U F (向左則鏡像操作)"],
+            code: `【中層右側公式】\nU R U' R' U' F' U F\n(向右推入中層，前兩層全解完成)`,
+            narration: "第三步我們要復原中層的四個稜塊，達到前兩層完全復原！在頂層找出一塊不含黃色顏色的稜塊，對齊顏色後，運用右側推入公式：U R U撇 R撇 U撇 F撇 U F，輕鬆將稜塊推進中層！"
+          },
+          {
+            badge: "⚡ 步驟四",
+            suffix: "：頂面黃色十字",
+            sub: "點、折線、一字、十字，一條順時針公式串聯",
+            bullets: ["觀察頂面黃色圖案：點 ➔ 直角折線 ➔ 水平一字 ➔ 黃色十字", "核心公式：壓前上左下右翻回 (F R U R' U' F')", "橫向擺放一字：確保一字水平擺放後再做公式"],
+            code: `【頂面十字公式】\nF R U R' U' F'\n(順序：點 -> 折線置左上 -> 一字水平 -> 十字)`,
+            narration: "第四步開始進攻頂層！我們的目標是讓頂面拼出黃色十字。不管現在頂面是點、小直角還是一字，只要做出 F、R、U、R撇、U撇、F撇，頂面的黃色十字就會立刻浮現！"
+          },
+          {
+            badge: "✨ 步驟五",
+            suffix: "：小魚公式翻頂面 (頂面全黃)",
+            sub: "辨識小魚頭方向，小魚公式讓頂面九格全黃",
+            bullets: ["小魚圖案辨識：十字加上一個角塊黃色朝上，形狀如同小魚", "魚頭朝向左下：魚頭對準左下角開始做公式", "小魚口訣：上左下左 上左左下 (R U R' U R U2 R')"],
+            code: `【小魚翻頂公式 (OLL)】\nR U R' U R U2 R'\n(口訣：上左下左 上左左下，魚頭朝左下)`,
+            narration: "第五步就是大家最喜歡的小魚公式！把頂面小魚的魚頭朝向左下角，念著口訣：上、左、下、左、上、左左、下，也就是 R U R撇 U R U2 R撇，整個頂面就會瞬間翻成滿滿的黃色！"
+          },
+          {
+            badge: "🎉 步驟六",
+            suffix: "：頂層角塊與稜塊全解 (六面復原！)",
+            sub: "最後換角與換稜，迎接六面完全復原的感動時刻",
+            bullets: ["尋找雙同色車燈角塊：將車燈置於後方，執行換角公式", "最後三稜逆轉：換角完成後，順時針或逆時針將稜塊歸位", "轉動頂層對齊：六面完全復原，大功告成！"],
+            code: `【頂層全解公式 (PLL)】\nR U R' F' R U R' U' R' F R2 U' R'\n(六面完全復原，恭喜通關！)`,
+            narration: "最後一步，我們來做頂層的角塊與稜塊換位！找到同一側兩個相同顏色的車燈角塊放在後面，執行最終公式，最後轉動頂層輕輕對齊，恭喜你，六面完全復原！你已經成功學會解魔術方塊了！"
+          },
+          {
+            badge: "🔔 總結與下集",
+            suffix: "：熟練心法與進階預告",
+            sub: "每天練習十分鐘，手速自然突飛猛進",
+            bullets: [`下集精彩預告：${nextEpTitle.slice(0, 22)}`, "肌肉記憶心法：不看公式卡，靠手感盲轉", "記得按讚、訂閱、開啟小鈴鐺！"],
+            code: `🎉 恭喜完全學會魔術方塊！\n>>> Next Episode (下集預告):\n${nextEpTitle}`,
+            narration: `以上就是今天的魔術方塊完整新手教學！在下一集影片中，我們將帶來【${nextEpTitle}】，帶你挑戰更驚人的速解手速。完整公式口訣都整理在下方說明欄，別忘了按讚訂閱開啟小鈴鐺，我們下期見！`
+          }
+        ];
+        curriculumTopics = [
+          { title: "指法加速秘訣與手法練習", sub: "練習食指撥動 U 層與右手大拇指固定手法", bullets: ["指法撥動 (Flick) 取代全手腕轉動", "掌握右手 R U R' U' 盲轉肌肉記憶", "轉動過程保持視線觀察下一個色塊"], code: "【手法加速要點】\n食指快速推 U 層 | 手腕小幅度放鬆\n盲轉黃金公式 R U R' U' 練到 1 秒 4 步" },
+          { title: "十字底面盲做心法（8步以內）", sub: "觀察打亂後 15 秒內規劃完整十字路徑", bullets: ["白色十字在底面直接組裝，不翻上頂面", "最多 8 步必定可以完成任何隨機打亂十字", "對位技巧：紅藍橘綠相對方位銘記在心"], code: "【底十字盲做規範】\n15秒觀察 (Inspection) -> 預判4稜走向\n嚴格控制在 8 步之內直接復原底十字" },
+          { title: "F2L 前兩層直踢化理解與配對", sub: "角塊與稜塊在頂層合體後整組推進槽位", bullets: ["同色向頂與異色向頂的快速拆分心法", "利用空槽位進行無痛旋轉躲避", "徹底告別七步法的重複轉動，速度提升3倍"], code: "【F2L 核心心法】\n頂層尋找角稜對 -> 同步調整朝向 ->\n整組插入槽位 (Slotting)" },
+          { title: "頂層 OLL 與 PLL 極速辨識技巧", sub: "一眼看清車燈、純色塊與稜塊走向", bullets: ["二步 OLL 與兩步 PLL 記憶路徑", "觀察相鄰色與對稱色，零秒切換公式", "頂層 AUF (Adjust U Face) 一轉即鎖定"], code: "【極速辨識原則】\n只需看兩面側面特徵，不必轉動整個方塊\n鎖定特徵色直接起手相應公式" },
+          { title: "魔方保養與磁力手感調校", sub: "軸距彈力、磁力強度與潤滑油搭配指南", bullets: ["魔術方塊軸心螺絲垂直對稱調校", "高黏度軸心油 vs 低黏度跑道油搭配", "防止卡角與防爆塊 (Anti-POP) 最佳平衡點"], code: "【魔方調試指南】\n彈力調校: 兼顧容錯性與穩定度\n潤滑保養: 軸心減噪，滑道順滑零阻力" }
+        ];
+      } else if (isCode) {
+        prototypes = [
+          {
+            badge: "⚡ 實機成果搶先看",
+            suffix: "：全自動工作流震撼成果！",
+            sub: "告別手動操作！一行指令自動完成所有複雜任務",
+            bullets: ["實機成果即刻呈現：全自動閉環秒級輸出", "效率極限對比：傳統 4.5 小時 ➔ 自動化 30 秒", "跳過冗長鋪陳：直接拆解可立即落地的實戰管線"],
+            code: `$ ai-pipeline --init "${cleanTopic.slice(0, 18)}"\n>>> Loading AI Engine...\n[✔] Status: 100% Completed (0.42s)\n[✔] Result: output_final.mp4 [Success!]`,
+            narration: `大家直接看畫面上這個震撼成果！原本需要手動花費好幾個小時的繁瑣流程，現在只要一行指令，短短幾秒鐘之內，全自動工作流就已經把所有成果精準輸出！今天我們跳過所有廢話鋪陳，直接帶你拆解並複製這套立即可用的全自動系統！`
+          },
+          {
+            badge: "⚡ 核心架構",
+            suffix: "：三大核心機制拆解",
+            sub: "多模型協同運作，各司其職發揮極致威力",
+            bullets: ["資料層：自動收集並清洗關鍵資訊", "推理層：大模型智能決策與邏輯推理", "執行層：一鍵自動化輸出最終成果"],
+            code: `[Workflow Engine]\nInput Data -> AI Reasoning\n-> Structured Action -> Done!`,
+            narration: `要徹底搞定「${cleanTopic}」，核心關鍵就在於架構分工與多模型協同。由系統自動負責資料收集、邏輯分析與繁瑣處理，創作者只需要專注在決策與靈感輸出，就能將生產力推升至極致！`
+          },
+          {
+            badge: "🛠️ 實戰第一步",
+            suffix: "：環境與工具一鍵就緒",
+            sub: "不需要複雜的安裝設定，開箱即用",
+            bullets: ["支援 Windows、Mac 與 Linux 跨平台", "模組化設計：免設定複雜 API 即可開跑", "直覺化操作：界面與指令雙軌支援"],
+            code: `$ setup-agent --quick-start\n[✔] Dependencies installed\n[✔] Studio ready!`,
+            narration: "第一步非常簡單，我們完全不需要配置昂貴的伺服器或安裝繁雜的環境依賴，只要透過今天展示的這套自動化工作台，點擊一鍵就能把整個系統無縫啟動，快速進入創作狀態！"
+          },
+          {
+            badge: "🚀 實戰第二步",
+            suffix: "：核心邏輯與流程串接",
+            sub: "將繁複的流程轉化為全自動閉環",
+            bullets: ["自動化管線監控：實時掌握運行狀態", "異常自動重試與修復機制", "毫秒級響應速度，告別等待焦慮"],
+            code: `$ run-task --mode continuous\n>>> Processing batch items...\n>>> Status: 200 OK (0.42s)`,
+            narration: "接下來就是最精彩的核心環節：我們把設定好的規格與工作流程交給系統自動運轉，你會發現原本需要耗費好幾天反覆調整的繁瑣步驟，現在只需要短短幾秒鐘就能全部精準跑完！"
+          },
+          {
+            badge: "🎯 成果示範",
+            suffix: "：實機震撼效果展示",
+            sub: "只需一句話指令，成果直接呈現眼前",
+            bullets: ["高精準度：輸出品質超越手動成果", "多格式支援：表格、圖文、影音一應俱全", "即時預覽與一鍵導出"],
+            code: `User: 產生完整分析報表\nAgent: Generating report...\nSaved: output_final.mp4 [Success!]`,
+            narration: "大家可以仔細看畫面上展示的實際成果！從輸入最初的一句話指令，到整部影片與圖文資料完整產出，不僅速度極快而且細節滿滿，這就是最新 AI 自動化協同帶來的震撼生產力！"
+          },
+          {
+            badge: "💡 進階秘訣",
+            suffix: "：避坑指南與關鍵細節",
+            sub: "老手才知道的隱藏設定，讓效果再提升 200%",
+            bullets: ["提示詞優化：如何引導 AI 給出最精準解答", "快取機制：節省時間與算力消耗", "靈活調參：自訂最適合你工作習慣的模式"],
+            code: `Optimization Tips:\n- Use structured markdown inputs\n- Enable local caching for 10x speed`,
+            narration: "在這裡跟大家分享一個老手才知道的關鍵技巧：在執行時善用結構化指令規範與本地快取機制，可以讓整體運算穩定度大幅提升，還能節省算力開銷，完全避免常見的格式錯誤與延遲！"
+          },
+          {
+            badge: "📊 效益對比",
+            suffix: "：傳統作法 vs AI 自動化",
+            sub: "數據說話！效率翻倍、時間成本直降 90%",
+            bullets: ["時間投入：從數小時壓縮至幾分鐘", "人力成本：單人即可搞定團隊工作量", "持續複利：建立一次，隨時反覆調用"],
+            code: `[Comparison]\nManual: 4.5 hours | High effort\nAI Studio: 3 minutes | 1-Click Done`,
+            narration: "我們來認真算一算這筆時間成本：過去手動剪輯與腳本撰寫往往需要耗費一整天，現在全面導入自動化，你把省下來的大量寶貴時間拿去構思更多優質題目，長期的複利效益絕對超過數倍！"
+          },
+          {
+            badge: "🔔 訂閱與資源",
+            suffix: "：立即動手實作！",
+            sub: "完整專案與設定檔已在說明欄開放領取",
+            bullets: [
+              `下集精彩預告：${nextEpTitle.slice(0, 22)}`,
+              "持續鎖定頻道，掌握最新 AI 黑科技",
+              "記得按讚、訂閱、開啟小鈴鐺！"
+            ],
+            code: `Thanks for watching!\n>>> Next Episode (下集預告):\n${nextEpTitle}`,
+            narration: `以上就是今天的「${cleanTopic}」完整教學！在下一集影片中，我們將帶來【${nextEpTitle}】深度實戰教學。完整代碼與工具都已經整理在下方說明欄。如果覺得實用，別忘了按讚、訂閱並開啟小鈴鐺，我們下期再見！`
+          }
+        ];
+
+        curriculumTopics = [
           { title: "資料流架構設計與強型別合約", sub: "建立端到端強型別資料檢驗標準", bullets: ["Pydantic 結構化欄位驗證", "異常格式自動修復補齊", "邊界資料雜訊即時過濾"], code: "$ schema-validate --strict\nStatus: 100% Validated" },
           { title: "超長文本自動分塊與語義摘要", sub: "保留核心邏輯並精確控制 Token", bullets: ["層級化摘要遞迴演算法", "關鍵論點加權排序保留", "動態滑動窗口 (Sliding Window)"], code: "$ summarizer --mode chunked\nTokens: 18,500 -> 920" },
           { title: "動態視訊字幕毫秒級同步對齊", sub: "波形頻譜與時間軸自動精準吻合", bullets: ["VAD 語音活動檢測精確到毫秒", "音高與音量波形動態反饋", "智慧斷句與螢幕邊緣防遮擋"], code: "$ align-subtitles --precision ms\nOffset: 0.00ms [Sync OK]" },
@@ -1312,7 +1431,101 @@ python3 learn_python.py</textarea>
           { title: "大規模批次生片排程系統", sub: "一次生成數十部影片的高速管線", bullets: ["佇列管理 (Queue System) 依序排程", "多核心 CPU 與硬體 GPU 加速編碼", "完成後自動重命名並分類歸檔"], code: "$ batch-producer --queue video_jobs/\nProcessed: 12/12 Completed (100%)" },
           { title: "高續播率與點閱率 (CTR) 實戰秘訣", sub: "抓住眼球！讓 YouTube 演算法主動推薦", bullets: ["前 3 秒黃金留存法則精準落實", "縮圖與標題的對比張力營造", "觀眾互動觸發點的策略性埋入"], code: "[Audience Retention]\nTarget: > 65% at 30s\nAlgorithm Boost Factor: High" }
         ];
+      } else {
+        // 💡 非程式主題專屬分鏡原型 (嚴禁任何代碼與終端機命令)
+        prototypes = [
+          {
+            badge: "🎯 最終成效搶先看",
+            suffix: "：立竿見影的落地成效！",
+            sub: "開頭直接看成果！告別盲目摸索，建立高效實踐閉環",
+            bullets: ["實戰成果搶先看：看見具體落地後的驚人改變", "前後對比立竿見影：節省 80% 時間，產出翻倍", "拒絕抽象空談：直接提供拿來就用的行動範本"],
+            code: "【🎯 最終成效震撼對比】\n傳統摸索: 心力交瘁、進度卡關、成效零碎\n落地成果: 建立行動閉環，產出翻倍、掌握主動權！\n核心承諾: 前15秒直擊重點，學會立即可用",
+            narration: `大家先看畫面上這個最終成果！透過這套方法落地後的具體成效，直接把過去幾個月的摸索成本徹底省下來！今天我們不講抽象的大道理，直接切入核心操作，帶你第一時間掌握這套立竿見影的實戰系統！`
+          },
+          {
+            badge: "⚡ 核心模型",
+            suffix: "：三大底層運作機制拆解",
+            sub: "從底層認知到行動閉環，建立清晰的實踐地圖",
+            bullets: ["認知層：看清底層本質，不再被表象迷惑", "策略層：設定優先順序，聚焦最高價值關鍵", "行動層：建立最小可行習慣，每天持續推進"],
+            code: "[實踐三要素]\n清晰認知 -> 聚焦槓桿點 -> 最小可行行動",
+            narration: `要徹底做好「${cleanTopic}」，關鍵不在於做更多事，而是做對最重要的核心環節。透過這套三大思維框架，釐清認知盲區、找出關鍵槓桿點，你就能用最少精力換取最大的成長！`
+          },
+          {
+            badge: "🌱 實戰第一步",
+            suffix: "：建立清晰起步基石",
+            sub: "從現狀盤點開始，設定具體可衡量的起點",
+            bullets: ["自我盤點：找出目前卡關的核心瓶頸", "降維門檻：設計 5 分鐘就能開始的微行動", "正向反饋：即時看見進步，維持長期動力"],
+            code: "💡 起步檢核清單 (Checklist):\n[✔] 明確當前最大瓶頸\n[✔] 設計最小啟動動作\n[✔] 排除環境干擾因素",
+            narration: "第一步非常關鍵，我們不需要一開始就給自己設定太龐大的目標，而是先進行現狀盤點，找出目前阻礙前進的最大瓶頸，並設計一個五分鐘內就能立即執行的微行動，輕鬆踏出第一步！"
+          },
+          {
+            badge: "🚀 實戰第二步",
+            suffix: "：建立持續運作的行動系統",
+            sub: "不靠短暫意志力，用機制驅動穩定產出",
+            bullets: ["機制化設計：把行為綁定到日常生活節奏中", "降低摩擦阻力：讓對的選擇變得最容易發生", "定期覆盤調整：每週檢視並迭代行動策略"],
+            code: "📌 系統運轉機制:\n日常觸發 -> 順暢執行 -> 即時反饋 -> 週覆盤迭代",
+            narration: "接下來是第二個核心環節：優秀的結果不是靠短暫的意志力，而是靠穩固的系統機制。我們把行動融入日常生活節奏，降低每一次執行的阻力，讓好習慣自然而然地持續發生！"
+          },
+          {
+            badge: "🎯 實例解析",
+            suffix: "：前後對比與真實成效",
+            sub: "前後差異一目了然，用對方法成效立竿見影",
+            bullets: ["前後對比：從混亂摸索到井然有序", "關鍵轉折點：做對了哪一項關鍵決定", "長期複利：時間拉長後的指數級成長"],
+            code: "【前後對比實錄】\n改善前: 精力分散、焦慮拖延、成效不彰\n改善後: 目標明確、節奏穩定、產出翻倍",
+            narration: "大家可以仔細看畫面上展示的前後對比！在還沒建立這套清晰架構前，往往容易感到疲憊且成效有限；而一旦掌握核心原則後，不僅做事更有餘裕，整體產出與成就感更迎來質的飛躍！"
+          },
+          {
+            badge: "💡 避坑指南",
+            suffix: "：新手最常踩的 3 個思維盲區",
+            sub: "避開這些隱形陷阱，讓前進速度再翻倍",
+            bullets: ["盲區一：過度追求完美而遲遲不敢開始", "盲區二：忽視微小進步導致中途放棄", "盲區三：孤軍奮戰，缺少反饋與覆盤"],
+            code: "⚠️ 避坑提醒 (Pitfalls to Avoid):\n- 完成比完美更重要 (Done is better than perfect)\n- 重視過程複利，不過度焦慮短期結果",
+            narration: "在這裡跟大家分享幾個最常見的盲區與誤區：很多人在實踐時，往往因為過度追求完美而不敢跨出第一步，或是因為短期內看不到巨大變化而過早放棄。記住，完成比完美更重要，持續微小進步才是王道！"
+          },
+          {
+            badge: "📊 成長複利",
+            suffix: "：長期堅持帶來的巨大質變",
+            sub: "每天進步 1%，一年後將成長 37 倍",
+            bullets: ["時間複利：越早建立習慣，回報越大", "認知提升：看待問題的維度徹底改變", "生活掌控感：告別焦慮，重掌生活主動權"],
+            code: "[複利成長公式]\n(1 + 0.01)^365 = 37.78 倍巨大提升！\n專注長期價值，享受時間的紅利",
+            narration: "我們來認真算一算這筆長期帳：每天只投入一點點心力落實核心原則，一年後產生的複利效應將是原本的 37 倍！當你掌握了這種底層邏輯，你不僅能搞定眼前挑戰，更獲得了重掌生活與工作主動權的底氣！"
+          },
+          {
+            badge: "🔔 精華總結",
+            suffix: "：本集複習與下集預告",
+            sub: "精華筆記與行動清單已整理在說明欄",
+            bullets: [
+              `下集精彩預告：${nextEpTitle.slice(0, 22)}`,
+              "持續鎖定頻道，掌握更多實戰乾貨",
+              "記得按讚、訂閱、開啟小鈴鐺！"
+            ],
+            code: `感謝觀看！\n>>> Next Episode (下集預告):\n【${nextEpTitle}】\n精彩亮點: 核心方法深度拆解 | 立即實踐`,
+            narration: `以上就是今天的「${cleanTopic}」完整精華分享！在下一集影片中，我們將帶來【${nextEpTitle}】的深度解析。本集的重點筆記與實踐清單都已經整理在下方說明欄。如果覺得有收穫，別忘了按讚、訂閱並開啟小鈴鐺，我們下期再見！`
+          }
+        ];
 
+        curriculumTopics = [
+          { title: "核心痛點精準定位與根源分析", sub: "跳脫表面現象，直接直擊底層關鍵", bullets: ["運用五問法 (5 Whys) 挖掘真問題", "辨識假性需求與無效焦慮", "建立清晰的優先級篩選矩陣"], code: "【根源分析矩陣】\n現象 -> 誘發因素 -> 底層核心因 -> 解決對策" },
+          { title: "能量與專注力的高效分配機制", sub: "保護大腦黃金時段，告別疲勞耗損", bullets: ["將高難度任務安排在精力巔峰期", "運用番茄鐘或時間塊杜絕干擾", "建立工作與休息的明確分界線"], code: "💡 能量管理守則:\n上午: 核心攻堅 (90分鐘高專注)\n下午: 常規溝通與碎片處理" },
+          { title: "建立即時正向反饋與激勵系統", sub: "告別三分鐘熱度，讓動力源源不絕", bullets: ["可視化進度追蹤 (視覺化打卡)", "設定微小里程碑獎勵機制", "記錄每日微成就，累積自我效能感"], code: "🎯 動力回饋機制:\n微小行動 -> 即時記錄 -> 成就反饋 -> 強化動力" },
+          { title: "環境阻力最小化與微習慣養成", sub: "塑造助推環境，讓好習慣水到渠成", bullets: ["減少目標行為的啟動阻力", "增加誘惑與干擾的摩擦成本", "兩分鐘定律：隨時隨地無負擔啟動"], code: "📌 環境設計原則:\n- 想要做的事: 放在顯眼且伸手可得處\n- 想戒除的事: 增加阻力拉開物理距離" },
+          { title: "深度覆盤與迭代優化方法論", sub: "做完不是結束，覆盤才能轉化為能力", bullets: ["PDCA 循環：計畫-執行-檢視-調整", "每週 15 分鐘精煉覆盤三問", "保留成功經驗，汰除無效動作"], code: "【精煉覆盤三問】\n1. 本週做對了什麼？\n2. 哪裡可以做得更好？\n3. 下週只改進哪一件事？" },
+          { title: "高價值輸出與認知內化飛輪", sub: "以教為學 (費曼學習法)，徹底吸收", bullets: ["用自己的話將核心概念說給別人聽", "產出結構化圖文或實踐筆記", "在實戰應用中檢視理解深度"], code: "💡 費曼學習飛輪:\n吸收概念 -> 通俗輸出 -> 發現盲點 -> 簡化內化" },
+          { title: "長線思維與抗脆弱心理建設", sub: "在不確定性中建立穩健的內心秩序", bullets: ["接受波動：成長是非線性的", "建立心理安全邊際與備援方案", "將挫折重新定義為有價值的數據反饋"], code: "🛡️ 抗脆弱心態:\n將意外與挑戰視為系統升級的養分\n保持靈活性，專注於自己能控制的事" },
+          { title: "建立個人知識庫與專屬資源庫", sub: "把靈感與素材資產化，隨時調用", bullets: ["模組化筆記：按標籤與主題分類", "快速檢索系統：30 秒內找到所需", "定期整理與連結新舊知識"], code: "📚 知識資產化:\n收集素材 -> 提煉卡片 -> 網狀連結 -> 一鍵調用" },
+          { title: "高效溝通與協同共贏心法", sub: "連結優質夥伴，放大個人成果與影響力", bullets: ["結構化表達：結論先行，論據充分", "同理心傾聽：理解他人背後的真實訴求", "建立信任資產，實現長期雙贏"], code: "🤝 共贏溝通原則:\n先聽懂對方 -> 站在對方利益思考 -> 創造增量價值" },
+          { title: "從執行者到策略者的思維躍遷", sub: "用系統思考取代單點努力，放大槓桿", bullets: ["識別系統中的正負反饋回路", "尋找阻力最小的關鍵槓桿解", "讓時間成為你的盟友而非敵人"], code: "🚀 思維躍遷模型:\n單點努力 (算術級) -> 系統槓桿 (指數級)" }
+        ];
+      }
+
+      let picked = [];
+      if (numScenes <= 3) {
+        picked = [prototypes[0], prototypes[4], prototypes[7]];
+      } else if (numScenes <= 5) {
+        picked = [prototypes[0], prototypes[1], prototypes[2], prototypes[4], prototypes[7]];
+      } else if (numScenes <= 8) {
+        picked = prototypes.slice(0, numScenes - 1).concat([prototypes[7]]);
+      } else {
         picked = prototypes.slice(0, 4);
         const extraCount = numScenes - 6;
         for (let i = 0; i < extraCount; i++) {
@@ -1320,17 +1533,20 @@ python3 learn_python.py</textarea>
           const cycle = Math.floor(i / curriculumTopics.length) + 1;
           const idx = i + 5;
           const suffix = `：${mod.title}` + (cycle > 1 ? ` (第${cycle}講)` : "");
+          const narr = isCode ?
+            `現在我們深入探討【${cleanTopic}】的第 ${idx} 個關鍵核心模組：${mod.title}。在很多團隊的實際落地中，手動處理容易遭遇效能瓶頸或格式錯誤。透過我們設計的自動化檢驗機制，能確保所有環節穩定運作。大家跟著畫面設定，就能輕鬆掌握這套高效率工作流！` :
+            `現在我們深入探討【${cleanTopic}】的第 ${idx} 個關鍵核心模組：${mod.title}。在日常實踐中，往往容易因為忽略了這個底層細節而遇到瓶頸。透過今天拆解的具體方法，能幫助你穩健落地，持續產出優質成果！`;
           picked.push({
-            badge: `🔍 實戰探討 ${String(idx).padStart(2, '0')}`,
+            badge: `🔍 深入探討 ${String(idx).padStart(2, '0')}`,
             suffix: suffix,
             sub: mod.sub,
             bullets: mod.bullets,
             code: mod.code,
-            narration: `現在我們深入探討【${cleanTopic}】的第 ${idx} 個關鍵核心模組：${mod.title}。在很多團隊的實際落地中，手動處理容易遭遇效能瓶頸或格式錯誤。透過我們設計的自動化檢驗機制，能確保所有環節穩定運作。大家跟著畫面設定，就能輕鬆掌握這套高效率工作流！`
+            narration: narr
           });
         }
         picked.push(prototypes[4]); // 成果示範
-        picked.push(prototypes[7]); // 總結與訂閱領取
+        picked.push(prototypes[7]); // 總結與訂閱領取 (含下集預告)
       }
 
       return picked.map(p => ({
@@ -1341,6 +1557,162 @@ python3 learn_python.py</textarea>
         code: p.code,
         narration: p.narration
       }));
+    }
+
+    // ==========================================
+    // 🔮 智慧連載：自動推導與「自己出下一集腳本」系統
+    // ==========================================
+    let currentNextEpisodeInfo = null;
+    let nextEpisodeCandidateIndex = 0;
+
+    function localPredictNextEpisode(topic) {
+      const cleanTopic = (topic || "").trim() || "2026 最新實戰工作流";
+      const isCode = isProgrammingTopic(cleanTopic);
+      
+      const epMatch = cleanTopic.match(/(?:EP|ep|第)\s*(\d+)\s*(?:集|講|期)?/);
+      let nextEpNum = 2;
+      if (epMatch) {
+        try {
+          const num = parseInt(epMatch[1]);
+          nextEpNum = num + 1;
+        } catch(e) {}
+      }
+
+      let candidates = [];
+      if (isCode) {
+        if (cleanTopic.includes("三大") || cleanTopic.includes("工具") || cleanTopic.includes("入門") || cleanTopic.includes("基礎") || cleanTopic.includes("新手") || cleanTopic.includes("零門檻")) {
+          candidates = [
+            "打造專屬本地私有化 AI 智能體：從零串接與全自動無人維運實戰",
+            "多智能體 (Multi-Agent Swarm) 協同作戰：一行指令自動完成複雜專案",
+            "突破 Token 限制！超長文本向量檢索與私有知識庫防幻覺優化"
+          ];
+        } else if (cleanTopic.includes("聲音") || cleanTopic.includes("配音") || cleanTopic.includes("語音") || cleanTopic.includes("TTS") || cleanTopic.includes("複製") || cleanTopic.includes("錄音")) {
+          candidates = [
+            "神經擬真 AI 數字人全自動口型對齊：打造 24 小時不休息的虛擬主播",
+            "雙人即時對談 Podcast 自動生成：情感起伏與換氣聲終極調校",
+            "本地零樣本聲音複製模型深度實戰：免聯網極速高保真擬音"
+          ];
+        } else if (cleanTopic.includes("爬蟲") || cleanTopic.includes("抓取") || cleanTopic.includes("數據") || cleanTopic.includes("網頁") || cleanTopic.includes("excel")) {
+          candidates = [
+            "AI 深度數據清洗與全自動 BI 視覺化儀表板：從零打造即時戰情報告",
+            "全自動動態網頁監控與異常告警推播：LINE/Telegram 零延遲通報",
+            "多來源數據融合與大模型預測決策：個人量化分析實戰"
+          ];
+        } else if (cleanTopic.includes("知識庫") || cleanTopic.includes("筆記") || cleanTopic.includes("notebooklm") || cleanTopic.includes("rag")) {
+          candidates = [
+            "從筆記到全自動影音輸出：深度串接知識庫與多模態渲染管線",
+            "百萬級超長文檔向量檢索優化：分層遞迴摘要與混合檢索 (Hybrid Search)",
+            "打造個人專屬離線 AI 大腦：免連網極速檢索與隱私 100% 守護"
+          ];
+        } else {
+          candidates = [
+            `【進階實戰】${cleanTopic}之全自動無人值守落地指南`,
+            `【極限優化】${cleanTopic}常見避坑指南與性能翻倍秘訣`,
+            `【商業落地】將${cleanTopic}轉化為被動自動化服務全流程`
+          ];
+        }
+      } else {
+        // 非程式主題連載推薦
+        if (cleanTopic.includes("自媒體") || cleanTopic.includes("影音") || cleanTopic.includes("剪輯") || cleanTopic.includes("流量") || cleanTopic.includes("頻道") || cleanTopic.includes("youtube") || cleanTopic.includes("tiktok") || cleanTopic.includes("短片")) {
+          candidates = [
+            "【爆款選題】建立源源不絕的靈感庫：用一套模板持續產生高觀看主題",
+            "【完播率秘訣】黃金前 3 秒留存法則：讓觀眾一秒停下來看完整部影片",
+            "【內容矩陣】從單支長片到全平台裂變：打造個人可持續內容飛輪"
+          ];
+        } else if (cleanTopic.includes("時間") || cleanTopic.includes("效率") || cleanTopic.includes("專注") || cleanTopic.includes("拖延") || cleanTopic.includes("工作法") || cleanTopic.includes("習慣")) {
+          candidates = [
+            "【精力管理】擺脫持續疲勞感：高效人士都在用的充沛活力作息法",
+            "【深度工作】消除分心誘惑：打造每天 3 小時的高產出心流狀態",
+            "【習慣複利】每天進步 1%：如何用微習慣徹底戰勝拖延症"
+          ];
+        } else if (cleanTopic.includes("理財") || cleanTopic.includes("投資") || cleanTopic.includes("金錢") || cleanTopic.includes("資產") || cleanTopic.includes("收入")) {
+          candidates = [
+            "【穩健增長】普通人也能輕鬆上手的資產配置心法：告別追高殺跌",
+            "【副業變現】將個人專業轉化為持續被動收入的實戰路徑",
+            "【財富思維】從勞力賺錢到槓桿獲利：普通人破局的底層邏輯"
+          ];
+        } else if (cleanTopic.includes("心理") || cleanTopic.includes("情緒") || cleanTopic.includes("壓力") || cleanTopic.includes("焦慮") || cleanTopic.includes("溝通") || cleanTopic.includes("人際")) {
+          candidates = [
+            "【情緒穩定】告別精神內耗：建立強大心理韌性的 3 個科學習慣",
+            "【高情商表達】如何把話說到對方心坎裡：職場與人際溝通關鍵術",
+            "【自我確立】找到個人核心熱情：在充滿不確定的世界中確立確定感"
+          ];
+        } else if (cleanTopic.includes("三大") || cleanTopic.includes("工具") || cleanTopic.includes("推薦") || cleanTopic.includes("盤點")) {
+          candidates = [
+            `【進階指南】${cleanTopic}之高階落地技巧與少走彎路指南`,
+            `【實戰複利】將方法融入日常：實現效率倍增的實踐手冊`,
+            `【成果放大】從新手到精通：關鍵細節與核心要點全拆解`
+          ];
+        } else {
+          candidates = [
+            `【進階實戰】${cleanTopic}之深度實踐與落地指南`,
+            `【避坑指南】${cleanTopic}常見盲區與少走彎路的核心原則`,
+            `【成果放大】把${cleanTopic}轉化為長期持續優勢的方法論`
+          ];
+        }
+      }
+
+      if (epMatch) {
+        candidates = candidates.map(c => `第${nextEpNum}集：${c}`);
+      }
+
+      const chosen = candidates[nextEpisodeCandidateIndex % candidates.length];
+      const teaserNarr = isCode ?
+        `在下一集影片中，我們將帶來【${chosen}】深度實戰教學，完整拆解核心進階技巧！千萬不要錯過，記得按讚、訂閱並開啟小鈴鐺！` :
+        `在下一集影片中，我們將帶來【${chosen}】深度分享，完整拆解核心關鍵！千萬不要錯過，記得按讚、訂閱並開啟小鈴鐺！`;
+      const teaserB = isCode ?
+        `>>> Next Episode (下集預告):\n【${chosen}】\n精彩亮點: 核心模組全面升級 | 自動化再進化` :
+        `>>> Next Episode (下集預告):\n【${chosen}】\n精彩亮點: 核心方法深度拆解 | 立即實踐`;
+      const highl = isCode ?
+        [
+          `接續本集核心架構，深入【${chosen}】`,
+          "解鎖進階避坑技巧，讓自動化生產力再翻倍",
+          "完整提供下一集專屬配置代碼與一鍵腳本"
+        ] :
+        [
+          `接續本集核心架構，深入【${chosen}】`,
+          "解鎖進階避坑技巧，讓實踐效益再翻倍",
+          "完整提供精華筆記與具體行動清單"
+        ];
+
+      return {
+        current_topic: cleanTopic,
+        next_topic: chosen,
+        next_episode_num: nextEpNum,
+        alternative_topics: candidates,
+        teaser_narration: teaserNarr,
+        teaser_box: teaserB,
+        highlights: highl,
+        is_programming: isCode
+      };
+    }
+
+    function updateNextEpisodeUI() {
+      currentNextEpisodeInfo = localPredictNextEpisode(currentTopic);
+      const barTitle = document.getElementById('nextEpisodeBarTitle');
+      if (barTitle) {
+        barTitle.innerText = currentNextEpisodeInfo.next_topic;
+      }
+    }
+
+    function cycleNextEpisodeTopic() {
+      nextEpisodeCandidateIndex++;
+      updateNextEpisodeUI();
+      // 重新渲染當前腳本最後一幕的下集預告
+      generateAiScriptUI(false);
+      showToast(`🎲 已切換下一集推薦主題：${currentNextEpisodeInfo.next_topic}`);
+    }
+
+    function applyNextEpisodeScript() {
+      if (!currentNextEpisodeInfo) updateNextEpisodeUI();
+      const nextTopic = currentNextEpisodeInfo.next_topic;
+      currentTopic = nextTopic;
+      const topicInp = document.getElementById('topicInput');
+      if (topicInp) topicInp.value = nextTopic;
+      nextEpisodeCandidateIndex = 0;
+      updateNextEpisodeUI();
+      generateAiScriptUI(true);
+      showToast(`🎉 成功自己出下一集腳本：【${nextTopic}】！已編排全新分鏡！`);
     }
 
     function switchTab(tabId) {
@@ -1627,7 +1999,7 @@ python3 learn_python.py</textarea>
         if (cmdLines.length > 0) {
           document.getElementById('apContentInput').value = cmdLines.map(l => l.replace(/^\$\s*/, '')).join('\n');
         } else {
-          document.getElementById('apContentInput').value = `git clone https://github.com/ethan628/ai-youtube-studio.git\npython create_video.py --topic "${cleanTitle}" --duration 3`;
+          document.getElementById('apContentInput').value = `pip install -r requirements.txt\npython create_video.py --topic "${cleanTitle}" --duration 3`;
         }
       } else if (bestMode === 'browser') {
         const promptCandidate = lines.find(l => l.length > 10 && !l.includes('http') && !l.includes('$')) || text.slice(0, 60);
@@ -1745,7 +2117,7 @@ python3 learn_python.py</textarea>
       if (mode === 'terminal') {
         titleInput.value = "AI 影片自動化管線一鍵啟動";
         label.innerText = "欲執行的指令（每行一個）：";
-        contentInput.value = "git clone https://github.com/ethan628/ai-youtube-studio.git\npython create_video.py --topic '2026最強AI實戰' --duration 3";
+        contentInput.value = "pip install -r requirements.txt\npython create_video.py --topic '2026最強AI實戰' --duration 3";
         narrInput.value = "現在我們打開終端機，執行自動化腳本，系統會瞬間備妥所需模組並開始生片！";
       } else if (mode === 'browser') {
         titleInput.value = "DeepSeek AI · 自動化工作流助理";
@@ -2197,6 +2569,7 @@ python3 learn_python.py</textarea>
 
     function generateAiScriptUI(showToastMsg = true) {
       currentTopic = document.getElementById('topicInput').value.trim() || "2026最新：三大AI工具自動化實戰教學";
+      updateNextEpisodeUI();
       generatedScenes = buildScriptScenes(currentTopic, currentDuration);
       activeSceneIdx = 0;
 
@@ -2267,10 +2640,24 @@ python3 learn_python.py</textarea>
 
       const s = generatedScenes[activeSceneIdx] || generatedScenes[0];
       if (s) {
-        document.getElementById('mBadge').innerText = s.badge;
+        const isRubik = isRubiksCubeTopic(currentTopic);
+        const isProg = isRubik ? false : isProgrammingTopic(currentTopic);
+        document.getElementById('mBadge').innerHTML = isRubik ? `${s.badge} <span style="margin-left:6px; font-size:11px; padding:2px 6px; border-radius:4px; background:rgba(245,158,11,0.25); color:#f59e0b; border:1px solid #f59e0b;">🎲 3D動態解法動畫</span>` : s.badge;
         document.getElementById('mTitle').innerText = s.title;
         document.getElementById('mSubtitle').innerText = s.subtitle;
-        document.getElementById('mCode').innerText = s.code;
+        const mCodeEl = document.getElementById('mCode');
+        if (mCodeEl) {
+          mCodeEl.innerText = s.code;
+          if (isRubik) {
+            mCodeEl.style.color = '#fcd34d';
+            mCodeEl.style.background = 'rgba(26, 16, 8, 0.95)';
+            mCodeEl.style.borderColor = '#f59e0b';
+          } else {
+            mCodeEl.style.color = isProg ? '#4ade80' : '#38bdf8';
+            mCodeEl.style.background = isProg ? '#000000' : 'rgba(15,23,42,0.9)';
+            mCodeEl.style.borderColor = isProg ? '#00f0ff' : 'rgba(56,189,248,0.4)';
+          }
+        }
         document.getElementById('mNarration').innerHTML = `<strong>🗣️ 配音與字幕文案：</strong> ${s.narration}`;
 
         const ul = document.getElementById('mBullets');
@@ -2306,6 +2693,9 @@ python3 learn_python.py</textarea>
       const container = document.getElementById('scriptCardsContainer');
       if (!container) return;
       container.innerHTML = '';
+
+      const isRubik = isRubiksCubeTopic(currentTopic);
+      const isProg = isRubik ? false : isProgrammingTopic(currentTopic);
 
       generatedScenes.forEach((s, idx) => {
         const sceneChars = s.narration ? s.narration.length : 0;
@@ -2344,8 +2734,8 @@ python3 learn_python.py</textarea>
                 <textarea id="edit_bullets_${idx}" class="edit-input" rows="3">${s.bullets.join('\n')}</textarea>
               </div>
               <div class="edit-form-row">
-                <label>終端機指令區 (Code Block)：</label>
-                <textarea id="edit_code_${idx}" class="edit-input" rows="2" style="font-family:monospace; color:#4ade80;">${s.code}</textarea>
+                <label>${isRubik ? '🎲 3D魔方解法公式口訣卡：' : (isProg ? '終端機指令區 (Code Block)' : '畫面重點筆記框 (Highlight Box)')}：</label>
+                <textarea id="edit_code_${idx}" class="edit-input" rows="2" style="font-family:${isProg ? 'monospace' : 'inherit'}; color:${isRubik ? '#fcd34d' : (isProg ? '#4ade80' : '#38bdf8')};">${s.code}</textarea>
               </div>
               <div class="edit-form-row">
                 <label style="color:var(--amber);">🗣️ 口播旁白與字幕（每分鐘約 225 字）：</label>
@@ -2362,7 +2752,7 @@ python3 learn_python.py</textarea>
             <div class="script-card-header">
               <div class="script-card-title">
                 <span class="badge badge-cyan" style="font-size:12px;">分鏡 ${idx + 1} / ${generatedScenes.length}</span>
-                <span class="mockup-badge" style="margin-bottom:0; font-size:12px;">${s.badge}</span>
+                <span class="mockup-badge" style="margin-bottom:0; font-size:12px; ${isRubik ? 'background:rgba(245,158,11,0.2); color:#f59e0b; border:1px solid #f59e0b;' : ''}">${s.badge}${isRubik ? ' 🎲3D動畫' : ''}</span>
                 <span style="font-size:16px;">${s.title}</span>
               </div>
               <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
@@ -2390,8 +2780,8 @@ python3 learn_python.py</textarea>
                   ${s.bullets.map(b => `<li style="display:flex; gap:6px; align-items:center;"><span style="color:var(--cyan);">●</span> ${b}</li>`).join('')}
                 </ul>
               </div>
-              <div style="background:#02040a; border:1px solid rgba(0,240,255,0.25); border-radius:8px; padding:12px; font-family:monospace; font-size:11px; color:#4ade80; white-space:pre-wrap; overflow-x:auto;">
-                <div style="color:#64748b; margin-bottom:4px; font-size:10px;">// 畫面終端機指令區</div>
+              <div style="background:${isRubik ? 'rgba(26,16,8,0.95)' : (isProg ? '#02040a' : 'rgba(15,23,42,0.85)')}; border:1px solid ${isRubik ? 'rgba(245,158,11,0.5)' : (isProg ? 'rgba(0,240,255,0.25)' : 'rgba(56,189,248,0.3)')}; border-radius:8px; padding:12px; font-family:${isProg ? 'monospace' : 'inherit'}; font-size:11px; color:${isRubik ? '#fcd34d' : (isProg ? '#4ade80' : '#f1f5f9')}; white-space:pre-wrap; overflow-x:auto;">
+                <div style="color:#64748b; margin-bottom:4px; font-size:10px;">// ${isRubik ? '🎲 3D魔方解法公式口訣卡' : (isProg ? '畫面終端機指令區' : '💡 畫面重點筆記框')}</div>
                 ${s.code}
               </div>
             </div>
@@ -2407,6 +2797,41 @@ python3 learn_python.py</textarea>
         }
         container.appendChild(card);
       });
+
+      // 🔮 在完整分鏡末端，附加「連載接續 / 自己出下一集腳本」卡片
+      if (!currentNextEpisodeInfo) updateNextEpisodeUI();
+      const nextCard = document.createElement('div');
+      nextCard.className = 'next-episode-banner';
+      nextCard.style.cssText = 'background:linear-gradient(135deg, rgba(6,182,212,0.08), rgba(16,185,129,0.1)); border:1.5px dashed #06b6d4; border-radius:12px; padding:20px; margin-top:24px; box-shadow:0 4px 20px rgba(0,0,0,0.3);';
+      nextCard.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px;">
+          <div style="max-width:700px;">
+            <div style="display:inline-flex; align-items:center; gap:6px; background:rgba(6,182,212,0.2); color:var(--cyan); font-size:12px; font-weight:bold; padding:4px 10px; border-radius:20px; margin-bottom:10px;">
+              <span>🔮 連載接續模式</span>
+              <span>·</span>
+              <span>AI 自動規劃下一集 (NEXT EPISODE)</span>
+            </div>
+            <h3 style="margin:0 0 8px 0; color:#f8fafc; font-size:18px;">
+              👉 下一集推薦主題：<span style="color:var(--cyan);">${currentNextEpisodeInfo.next_topic}</span>
+            </h3>
+            <div style="font-size:13px; color:#cbd5e1; margin-bottom:8px; line-height:1.5;">
+              <strong style="color:var(--amber);">🎙️ 本集片尾已自動嵌入預告：</strong>「${currentNextEpisodeInfo.teaser_narration}」
+            </div>
+            <div style="font-size:12px; color:var(--text-dim);">
+              💡 下集精彩看點：${currentNextEpisodeInfo.highlights.join(' · ')}
+            </div>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <button class="btn btn-primary" onclick="applyNextEpisodeScript()" style="background:linear-gradient(135deg, #10b981, #06b6d4); font-size:14px; padding:10px 18px; box-shadow:0 0 15px rgba(16,185,129,0.35); font-weight:bold;">
+              ⚡ 自己出下一集腳本 (一鍵切換)
+            </button>
+            <button class="btn btn-secondary" onclick="cycleNextEpisodeTopic()" style="font-size:12px; padding:6px 12px;">
+              🎲 換一個下集靈感主題
+            </button>
+          </div>
+        </div>
+      `;
+      container.appendChild(nextCard);
     }
 
     function editScene(idx) {

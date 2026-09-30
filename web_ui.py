@@ -568,6 +568,62 @@ class VideoStudioHandler(SimpleHTTPRequestHandler):
                 self.send_json_response({"success": False, "error": str(e)}, status=500)
             return
 
+        if self.path in ("/api/generate_script", "/generate_script"):
+            from src.script_generator import generate_script_by_ai
+            topic = data.get("topic", "") or "2026 最新實戰工作流"
+            duration = float(data.get("duration", 3.0))
+            style = data.get("style", "科技實戰")
+            try:
+                script = generate_script_by_ai(topic=topic, duration_minutes=duration, style=style)
+                self.send_json_response({
+                    "success": True,
+                    "script": script,
+                    "scenes": script.get("scenes", []),
+                    "is_programming": script.get("is_programming", False)
+                })
+            except Exception as e:
+                import traceback
+                traceback.print_exc()
+                self.send_json_response({"success": False, "error": str(e)}, status=500)
+            return
+
+        if self.path in ("/api/generate_next_script", "/generate_next_script"):
+            from src.script_generator import generate_next_episode_script
+            current_topic = data.get("current_topic", "") or data.get("topic", "2026 最新實戰工作流")
+            duration = float(data.get("duration", 3.0))
+            style = data.get("style", "科技實戰")
+            chosen_topic = data.get("chosen_topic", None)
+            try:
+                next_script = generate_next_episode_script(
+                    current_topic=current_topic,
+                    duration_minutes=duration,
+                    style=style,
+                    chosen_topic=chosen_topic
+                )
+                self.send_json_response({
+                    "success": True,
+                    "script": next_script,
+                    "next_topic": next_script.get("title", ""),
+                    "scenes": next_script.get("scenes", [])
+                })
+            except Exception as e:
+                import traceback
+                traceback.print_exc()
+                self.send_json_response({"success": False, "error": str(e)}, status=500)
+            return
+
+        if self.path in ("/api/predict_next_episode", "/predict_next_episode"):
+            from src.script_generator import predict_next_episode
+            current_topic = data.get("current_topic", "") or data.get("topic", "2026 最新 AI 全自動實戰工作流")
+            duration = float(data.get("duration", 3.0))
+            style = data.get("style", "科技實戰")
+            try:
+                pred = predict_next_episode(current_topic=current_topic, duration_minutes=duration, style=style)
+                self.send_json_response({"success": True, "prediction": pred})
+            except Exception as e:
+                self.send_json_response({"success": False, "error": str(e)}, status=500)
+            return
+
         if self.path in ("/api/detect_autopilot_mode", "/detect_autopilot_mode"):
             from src.autopilot_detector import detect_mode_by_gemini
             script_text = data.get("text", "") or data.get("script", "")

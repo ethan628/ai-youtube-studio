@@ -269,3 +269,37 @@ def upload_approved_video(filename: str) -> Dict:
 
     except Exception as e:
         return {"success": False, "error": f"YouTube 上傳過程中斷：{str(e)}"}
+
+def update_video_metadata(video_id: str, title: Optional[str] = None, description: Optional[str] = None, tags: Optional[list] = None, category_id: str = "28") -> Dict:
+    """
+    透過 YouTube Data API 更新線上影片的元數據 (標題、說明欄、標籤等)
+    """
+    try:
+        youtube = get_authenticated_service()
+        body = {
+            "id": video_id,
+            "snippet": {
+                "categoryId": category_id
+            }
+        }
+        if title:
+            body["snippet"]["title"] = title
+        if description:
+            body["snippet"]["description"] = description
+        if tags is not None:
+            body["snippet"]["tags"] = tags
+
+        request = youtube.videos().update(
+            part="snippet",
+            body=body
+        )
+        response = request.execute()
+        return {
+            "success": True,
+            "video_id": video_id,
+            "title": response.get("snippet", {}).get("title"),
+            "message": "線上影片資訊已成功更新！"
+        }
+    except Exception as e:
+        return {"success": False, "error": f"更新 YouTube 影片資訊失敗：{str(e)}"}
+

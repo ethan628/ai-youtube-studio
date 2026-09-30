@@ -148,25 +148,41 @@ def build_complete_audio(output_audio_path: str, duration: float, narration_text
                 except Exception: pass
 
 def draw_subtitle_banner(draw: ImageDraw.ImageDraw, w: int, h: int, text: str, is_vertical: bool = False):
-    """繪製影片底部高質感半透明浮動字幕膠囊"""
+    """繪製影片底部高質感半透明浮動字幕膠囊（支援多行自適應與螢幕安全邊界保護，絕不溢出畫面）"""
     if not text or not text.strip():
         return
-    clean_sub = text.strip()[:65]
-    full_text = f"[解說] {clean_sub}"
-    sub_font = get_font(22 if not is_vertical else 19)
-    bbox = draw.textbbox((0, 0), full_text, font=sub_font)
-    tw = bbox[2] - bbox[0]
-    th = bbox[3] - bbox[1]
+    clean_sub = text.strip()
+    from src.subtitle_utils import wrap_two_lines
 
-    card_w = min(w - 60, max(520, tw + 60))
-    card_h = 56
+    max_line_chars = 14 if is_vertical else 26
+    wrapped_sub = wrap_two_lines(clean_sub, max_line_units=max_line_chars * 2)
+    sub_lines = wrapped_sub.split("\n")
+
+    sub_font = get_font(21 if not is_vertical else 18)
+    line_bboxes = [draw.textbbox((0, 0), f"[解說] {line}" if i == 0 else line, font=sub_font) for i, line in enumerate(sub_lines)]
+    max_tw = max(bb[2] - bb[0] for bb in line_bboxes)
+    single_th = max(bb[3] - bb[1] for bb in line_bboxes)
+
+    # 確保寬度絕不超出螢幕左右邊界 (左右各留安全邊距)
+    card_w = min(w - 80, max(460, max_tw + 60))
+    card_h = 56 if len(sub_lines) == 1 else 92
     card_x = (w - card_w) // 2
-    card_y = h - 90 if not is_vertical else h - 130
+    if not is_vertical:
+        card_y = (h - 90) if len(sub_lines) == 1 else (h - 125)
+    else:
+        card_y = (h - 140) if len(sub_lines) == 1 else (h - 175)
 
     # 半透明深藍黑背景膠囊，帶青藍色邊框
     draw.rounded_rectangle([card_x, card_y, card_x + card_w, card_y + card_h], radius=14, fill=(10, 15, 29), outline=(56, 189, 248), width=2)
-    # 解說文字
-    draw.text((card_x + (card_w - tw) // 2, card_y + (card_h - th) // 2 - 2), full_text, font=sub_font, fill=(255, 255, 255))
+    
+    # 繪製各行解說文字 (居中排版)
+    for i, line in enumerate(sub_lines):
+        line_str = f"[解說] {line}" if i == 0 else line
+        lbb = line_bboxes[i]
+        ltw = lbb[2] - lbb[0]
+        ly = (card_y + 14 + (i * (single_th + 8))) if len(sub_lines) > 1 else (card_y + (card_h - single_th) // 2 - 2)
+        lx = card_x + (card_w - ltw) // 2
+        draw.text((lx, ly), line_str, font=sub_font, fill=(255, 255, 255))
 
 def draw_speed_hud_badge(draw: ImageDraw.ImageDraw, w: int, h: int, speed: float, frame_idx: int, fps: int):
     """繪製右上角 HUD 快轉倍速動態標籤"""

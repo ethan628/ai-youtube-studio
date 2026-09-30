@@ -38,8 +38,7 @@ def execute_terminal_mode(commands: list = None, title: str = "AI 終端自動�
     """
     if not commands:
         commands = [
-            "git clone https://github.com/ethan628/ai-youtube-studio.git",
-            "cd ai-youtube-studio",
+            "pip install -r requirements.txt",
             "python create_video.py --topic '2026最強AI實戰' --duration 3"
         ]
 

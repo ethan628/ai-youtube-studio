@@ -132,7 +132,8 @@ def generate_video_from_template(template_id: str = "1", is_vertical: bool = Fal
         output_video_path=output_path,
         is_vertical=is_vertical,
         voice=voice,
-        watermark="雙AI協同開發 | 2026自動化"
+        watermark="雙AI協同開發 | 2026自動化",
+        topic=tpl["name"]
     )
 
     print("=" * 60)
@@ -179,19 +180,38 @@ def generate_custom_video(topic: str, duration_minutes: float = 3.0, is_vertical
         output_video_path=output_path,
         is_vertical=is_vertical,
         voice=voice,
-        watermark="雙AI協同開發 | 2026自動化"
+        watermark="雙AI協同開發 | 2026自動化",
+        topic=topic
     )
 
     print("=" * 60)
     print(f"🎉 影片生成成功！已存入統一資料夾：\n{os.path.abspath(output_path)}")
     print("=" * 60)
+
+    # 🔮 自動規劃並預先出好下一集連載腳本
+    try:
+        from src.script_generator import generate_next_episode_script
+        next_script = generate_next_episode_script(topic, duration_minutes=duration_minutes)
+        next_topic = next_script.get("title", "")
+        print("🔮 【連載接續】AI 已為您全自動出好下一集腳本！")
+        print(f"👉 下一集推薦主題：【{next_topic}】")
+        print("🎙️ 本集片尾已自動嵌入下集精彩預告與字卡")
+        print("⚡ 一鍵產出下一集指令：")
+        print(f"   python create_video.py --topic \"{next_topic}\" --duration {duration_minutes}")
+        print("=" * 60)
+    except Exception as e:
+        pass
+
     return output_path
 
 if __name__ == "__main__":
     import argparse
-    parser = argparse.ArgumentParser(description="一鍵免費生成 YouTube 影片工具 (支援 AI 自動寫腳本 & 聲音模仿)")
+    import json
+    import glob
+    parser = argparse.ArgumentParser(description="一鍵免費生成 YouTube 影片工具 (支援 AI 自動寫腳本、聲音模仿與自動出下一集)")
     parser.add_argument("--template", type=str, default=None, help="選擇預設模板 (1 或 2)")
     parser.add_argument("--topic", type=str, default=None, help="自訂主題，讓內建 AI 為您全自動寫腳本")
+    parser.add_argument("--next-episode", action="store_true", help="自動接續上一集，直接產出下一集影片與腳本")
     parser.add_argument("--script-file", type=str, default=None, help="指定自訂腳本 JSON 檔案路徑")
     parser.add_argument("--duration", type=float, default=3.0, help="設定影片長度 (分鐘數，例如 1 代表 1 分鐘 Shorts，3 代表 3 分鐘長片)")
     parser.add_argument("--shorts", action="store_true", help="生成直式 9:16 短影音 (YouTube Shorts)")
@@ -210,7 +230,36 @@ if __name__ == "__main__":
         with open(args.script_file, "r", encoding="utf-8") as sf:
             custom_scenes = json.load(sf)
 
-    if args.topic or custom_scenes:
+    # 處理 --next-episode 自動出下一集
+    if args.next_episode:
+        next_topic = None
+        plan_file = "next_episode_plan.json"
+        if os.path.exists(plan_file):
+            try:
+                with open(plan_file, "r", encoding="utf-8") as pf:
+                    pdata = json.load(pf)
+                    next_topic = pdata.get("current_episode_topic")
+                    if not custom_scenes and "script" in pdata and "scenes" in pdata["script"]:
+                        custom_scenes = pdata["script"]["scenes"]
+            except Exception:
+                pass
+
+        if not next_topic:
+            # 從最新影片檔名推導
+            mp4_files = sorted(glob.glob(os.path.join(OUTPUT_DIR, "*.mp4")), key=os.path.getmtime, reverse=True)
+            if mp4_files:
+                from src.youtube_manager import clean_title_from_filename
+                from src.script_generator import predict_next_episode
+                prev_title = clean_title_from_filename(mp4_files[0])
+                pred = predict_next_episode(prev_title, duration_minutes=args.duration)
+                next_topic = pred["next_topic"]
+            else:
+                next_topic = "打造專屬本地私有化 AI 智能體：從零串接與全自動無人維運實戰"
+
+        print(f"🎬 觸發【自己出下一集】！即將生成：【{next_topic}】")
+        generate_custom_video(next_topic, duration_minutes=args.duration, is_vertical=args.shorts, voice=voice_choice, custom_scenes=custom_scenes)
+
+    elif args.topic or custom_scenes:
         topic_name = args.topic if args.topic else "自訂輸入腳本"
         generate_custom_video(topic_name, duration_minutes=args.duration, is_vertical=args.shorts, voice=voice_choice, custom_scenes=custom_scenes)
     else:

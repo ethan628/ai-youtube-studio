@@ -26,17 +26,22 @@ async def _synthesize_async(text: str, audio_path: str, srt_path: str = None, vo
             if chunk["type"] == "audio":
                 f.write(chunk["data"])
             elif chunk["type"] in ("WordBoundary", "SentenceBoundary"):
-                submaker.feed(chunk)
-                has_sub = True
+                try:
+                    submaker.feed(chunk)
+                    has_sub = True
+                except Exception:
+                    pass
 
     if srt_path:
         os.makedirs(os.path.dirname(os.path.abspath(srt_path)), exist_ok=True)
+        from src.subtitle_utils import optimize_srt
+        if has_sub and len(submaker.cues) > 0:
+            raw_srt = submaker.get_srt()
+        else:
+            raw_srt = f"1\n00:00:00,000 --> 00:00:05,000\n{text}\n"
+        opt_srt = optimize_srt(raw_srt)
         with open(srt_path, "w", encoding="utf-8") as f:
-            if has_sub and len(submaker.cues) > 0:
-                f.write(submaker.get_srt())
-            else:
-                # Fallback: estimate single subtitle for whole sentence if boundaries missing
-                f.write(f"1\n00:00:00,000 --> 00:00:05,000\n{text}\n")
+            f.write(opt_srt)
 
 def generate_speech(text: str, audio_path: str, srt_path: str = None, voice: str = DEFAULT_VOICE, rate: str = "+5%"):
     """
@@ -80,8 +85,11 @@ def _generate_offline_fallback(text: str, audio_path: str, srt_path: str = None)
     subprocess.run(cmd, capture_output=True)
     if srt_path:
         os.makedirs(os.path.dirname(os.path.abspath(srt_path)), exist_ok=True)
+        from src.subtitle_utils import optimize_srt
+        raw_srt = f"1\n00:00:00,000 --> 00:00:{int(dur):02d},000\n{text}\n"
+        opt_srt = optimize_srt(raw_srt)
         with open(srt_path, "w", encoding="utf-8") as f:
-            f.write(f"1\n00:00:00,000 --> 00:00:{int(dur):02d},000\n{text}\n")
+            f.write(opt_srt)
 
 if __name__ == "__main__":
     test_text = "哈囉大家好，歡迎來到雙AI協同開發！今天帶大家看最神奇的自動化！"
