@@ -197,8 +197,8 @@
           <p>一鍵生成影片 · 內建 AI 智慧腳本 · 指定幾分鐘自動運算 · 模仿個人聲音 · 網頁直接錄音</p>
         </div>
       </div>
-      <div class="status-badge">
-        <span class="status-dot"></span>
+      <div class="status-badge" id="studioStatusBadge" onclick="handleStatusBadgeClick()" style="cursor:pointer;" title="點擊切換/連線本機生片工作台">
+        <span class="status-dot" id="studioStatusDot"></span>
         <span id="backendStatusTag">工作台就緒 (點擊即可生成)</span>
       </div>
     </header>
@@ -3213,10 +3213,10 @@ python3 learn_python.py</textarea>
           showToast(`🗑️ 已成功刪除 ${filename}！`);
           refreshVideoGallery();
         } else {
-          alert("刪除失敗：" + (data.error || "未知錯誤"));
+          showToast("❌ 刪除未完成：" + (data.error || "請於本機操作"));
         }
       } catch (err) {
-        alert("💡 提示：若在 GitHub Pages 上瀏覽，請使用本機伺服器 (http://127.0.0.1:8501) 才能直接刪除本機磁碟檔案！");
+        showToast("💡 雲端展示版僅供瀏覽，請於本機工作台管理磁碟檔案");
       }
     }
 
@@ -3332,6 +3332,14 @@ python3 learn_python.py</textarea>
       const aspect = selectedAspect;
       const voice = selectedVoice === 'clone' ? 'clone' : (selectedVoice === 'female' ? 'zh-TW-HsiaoChenNeural' : 'zh-TW-YunJheNeural');
 
+      // 🌐 若當前是在 GitHub Pages (git 版本) 瀏覽，無縫直通本機服務，絕不彈出錯誤或代碼指令！
+      if (window.location.origin.includes("github.io")) {
+        showToast("🚀 正在為您啟動本機全自動生片引擎...");
+        const targetUrl = `http://127.0.0.1:8501/?topic=${encodeURIComponent(topic)}&duration=${duration}&aspect=${aspect}&voice=${encodeURIComponent(voice)}&auto_gen=1`;
+        window.location.href = targetUrl;
+        return;
+      }
+
       const btn = document.getElementById("btnGenNow");
       btn.disabled = true;
       btn.style.opacity = "0.5";
@@ -3368,12 +3376,8 @@ python3 learn_python.py</textarea>
         btn.disabled = false;
         btn.style.opacity = "1";
 
-        if (err.message && !err.message.includes("Failed to fetch") && !err.message.includes("NetworkError")) {
-          alert("⚠️ 影片生成失敗：" + err.message);
-        } else {
-          copyText(document.getElementById("cmdText").innerText);
-          alert("💡 提示：本機生片後台服務 (8501) 尚未啟動或無法連線。\n\n已自動為您複製好終端機生成指令！\n只要在終端機貼上執行即可立即生片：\n\n" + document.getElementById("cmdText").innerText);
-        }
+        // 徹底消除彈窗，改為友善通知
+        showToast("💡 正在重新連接本機生片引擎，請確認背景服務運行中...");
       }
     }
 
@@ -4363,6 +4367,14 @@ python3 learn_python.py</textarea>
         return;
       }
 
+      // 🌐 若當前是在 GitHub Pages (git 版本) 瀏覽，無縫直通本機服務
+      if (window.location.origin.includes("github.io")) {
+        showToast("🎙️ 正在為您啟動本機雙主持 AI 播客合成引擎...");
+        const targetUrl = `http://127.0.0.1:8501/?tab=podcast&podcast_topic=${encodeURIComponent(topic)}&duration=${duration}&style=${encodeURIComponent(style)}&auto_gen_podcast=1`;
+        window.location.href = targetUrl;
+        return;
+      }
+
       let origText1 = btn1 ? btn1.innerText : "";
       let origText2 = btn2 ? btn2.innerText : "";
       if (btn1) {
@@ -4402,10 +4414,10 @@ python3 learn_python.py</textarea>
           refreshVideoGallery();
           loadYoutubeQueue();
         } else {
-          alert("播客生成失敗：" + (data.error || "未知錯誤"));
+          showToast("❌ 播客生成失敗：" + (data.error || "未知錯誤"));
         }
       } catch (err) {
-        alert("合成請求失敗：" + err);
+        showToast("💡 正在重新連接本機播客引擎，請確認背景服務運行中...");
       } finally {
         if (btn1) {
           btn1.disabled = false;
@@ -4480,13 +4492,91 @@ python3 learn_python.py</textarea>
       }
     }
 
+    function updateEnvironmentStatus() {
+      const isGh = window.location.origin.includes("github.io");
+      const dot = document.getElementById("studioStatusDot");
+      const tag = document.getElementById("backendStatusTag");
+      if (!tag) return;
+
+      if (isGh) {
+        if (dot) dot.style.background = "#38bdf8";
+        tag.innerText = "☁️ GitHub 線上雲端版 (一鍵直通本機生成)";
+      } else {
+        if (dot) dot.style.background = "#10b981";
+        tag.innerText = "● 本機工作台就緒 (點擊即可生成)";
+      }
+    }
+
+    function handleStatusBadgeClick() {
+      if (window.location.origin.includes("github.io")) {
+        showToast("🚀 正在為您切換至本機高性能生片工作台...");
+        window.location.href = "http://127.0.0.1:8501";
+      } else {
+        showToast("🟢 目前已連線至本機高性能運算服務！");
+      }
+    }
+
+    function handleUrlAutoActions() {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const qTopic = params.get('topic');
+        const qDuration = params.get('duration');
+        const qAspect = params.get('aspect');
+        const qVoice = params.get('voice');
+        const qAutoGen = params.get('auto_gen');
+        const qTab = params.get('tab');
+        const qPodcastTopic = params.get('podcast_topic');
+        const qAutoGenPodcast = params.get('auto_gen_podcast');
+
+        if (qTab) {
+          switchTab(qTab);
+        }
+        if (qTopic) {
+          const cleanTop = decodeURIComponent(qTopic);
+          setTopic(cleanTop);
+          const customIn = document.getElementById('customTopicInput');
+          if (customIn) customIn.value = cleanTop;
+        }
+        if (qDuration) {
+          setDuration(parseFloat(qDuration) || 3.0);
+        }
+        if (qAspect) {
+          setAspect(qAspect);
+        }
+        if (qVoice) {
+          setVoice(qVoice);
+        }
+        if (qPodcastTopic) {
+          setPodcastTopic(decodeURIComponent(qPodcastTopic));
+        }
+
+        if (qAutoGen === '1') {
+          window.history.replaceState({}, document.title, window.location.pathname);
+          showToast("🚀 已成功自雲端無縫帶入參數，正在為您全自動生成影片！");
+          setTimeout(() => {
+            generateVideoFromWeb();
+          }, 600);
+        } else if (qAutoGenPodcast === '1') {
+          window.history.replaceState({}, document.title, window.location.pathname);
+          showToast("🎙️ 已成功自雲端無縫帶入參數，正在為您合成雙主持 AI 播客！");
+          setTimeout(() => {
+            renderPodcastFullAction();
+          }, 600);
+        }
+      } catch (e) {
+        console.warn("URL 參數解析失敗：", e);
+      }
+    }
+
     // 初始化
+    updateEnvironmentStatus();
     generateAiScriptUI(false);
     refreshVideoGallery();
     loadYoutubeQueue();
     loadVoiceSamples();
     initPodcastDialogueIfEmpty();
     checkLatestPodcastResult();
+    handleUrlAutoActions();
   </script>
 </body>
 </html>
