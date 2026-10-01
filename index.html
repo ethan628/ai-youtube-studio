@@ -1376,6 +1376,51 @@ python3 learn_python.py</textarea>
     </div>
   </div>
 
+  <!-- 🖥️ 跨裝置 / 另一台電腦生片引導 Modal -->
+  <div id="hostConnectModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); backdrop-filter:blur(8px); z-index:10000; align-items:center; justify-content:center; padding:16px;">
+    <div style="background:#0f172a; border:2px solid var(--cyan); box-shadow:0 0 35px rgba(0,240,255,0.3); border-radius:16px; max-width:540px; width:100%; padding:24px; position:relative;">
+      <button onclick="closeHostConnectModal()" style="position:absolute; top:16px; right:16px; background:none; border:none; color:#94a3b8; font-size:20px; cursor:pointer;">✕</button>
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+        <span style="font-size:26px;">🖥️</span>
+        <div>
+          <h3 style="font-size:18px; font-weight:800; color:#fff;">
+            生片運算主機連線確認
+          </h3>
+          <p style="font-size:12px; color:#94a3b8; margin-top:2px;">
+            影片渲染、神經擬真配音與 AI 運算是在您的「主電腦」上執行
+          </p>
+        </div>
+      </div>
+
+      <div style="background:#070b14; border:1px solid #1e293b; border-radius:10px; padding:16px; margin-bottom:16px; font-size:13px; color:#cbd5e1; line-height:1.7;">
+        <div style="margin-bottom:14px;">
+          <strong style="color:var(--cyan); font-size:14px;">👉 情況 A：您目前正在【主電腦】前操作？</strong><br>
+          <span style="color:#94a3b8; font-size:12px;">若這台就是安裝了生片程式的主電腦，點擊即可切換至本機工作台立即生成：</span><br>
+          <button class="btn btn-primary" style="margin-top:8px; width:100%; font-size:13px;" onclick="proceedToLocalhostGen()">
+            🚀 這台就是主電腦，立即開啟本機生片 (127.0.0.1:8501)
+          </button>
+        </div>
+
+        <div style="border-top:1px dashed #334155; padding-top:14px;">
+          <strong style="color:#f59e0b; font-size:14px;">👉 情況 B：您目前使用的是【另一台電腦】或手機？</strong><br>
+          <span style="color:#94a3b8; font-size:12px;">因為這台裝置上沒有安裝生片運算引擎，請依以下方式操作：</span><br>
+          <div style="margin-top:6px; font-size:12px; color:#e2e8f0; line-height:1.6;">
+            1. <strong>回到原本的主電腦</strong>，直接打開 <code>http://127.0.0.1:8501</code> 即可極速生片！<br>
+            2. 若在<strong>同一個 Wi-Fi 區域網路</strong>，可輸入主電腦的 IP 遠端連線：
+          </div>
+          <div style="display:flex; gap:8px; margin-top:8px;">
+            <input type="text" id="customHostInput" placeholder="例如 http://192.168.1.100:8501" style="flex:1; padding:6px 10px; font-size:12px; border-radius:6px; background:#0f172a; border:1px solid #334155; color:#fff;">
+            <button class="btn btn-secondary" style="font-size:12px; padding:6px 12px;" onclick="connectCustomHost()">連線生片</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex; justify-content:flex-end;">
+        <button class="btn btn-secondary" onclick="closeHostConnectModal()">留在目前網頁預覽分鏡</button>
+      </div>
+    </div>
+  </div>
+
   <div id="toast">已複製到剪貼簿！</div>
 
   <script>
@@ -3325,6 +3370,71 @@ python3 learn_python.py</textarea>
       showToast("📥 已成功下載 Markdown 腳本檔案！");
     }
 
+    let pendingGenAction = 'video';
+
+    function openHostConnectModal() {
+      const modal = document.getElementById('hostConnectModal');
+      if (modal) modal.style.display = 'flex';
+      const savedHost = localStorage.getItem('studio_backend_url');
+      const input = document.getElementById('customHostInput');
+      if (input && savedHost) input.value = savedHost;
+    }
+
+    function closeHostConnectModal() {
+      const modal = document.getElementById('hostConnectModal');
+      if (modal) modal.style.display = 'none';
+    }
+
+    function proceedToLocalhostGen() {
+      closeHostConnectModal();
+      showToast("🚀 正在啟動本機全自動生片引擎...");
+      if (pendingGenAction === 'video') {
+        const voice = selectedVoice === 'clone' ? 'clone' : (selectedVoice === 'female' ? 'zh-TW-HsiaoChenNeural' : 'zh-TW-YunJheNeural');
+        const targetUrl = `http://127.0.0.1:8501/?topic=${encodeURIComponent(currentTopic)}&duration=${currentDuration}&aspect=${selectedAspect}&voice=${encodeURIComponent(voice)}&auto_gen=1`;
+        window.location.href = targetUrl;
+      } else {
+        const topicInput = document.getElementById('podcastTopicInput');
+        const topic = (topicInput ? topicInput.value.trim() : '') || '2026 AI 雙人對談播客';
+        const durationSelect = document.getElementById('podcastDurationSelect');
+        const duration = durationSelect ? parseFloat(durationSelect.value) : 3.0;
+        const styleSelect = document.getElementById('podcastStyleSelect');
+        const style = styleSelect ? styleSelect.value : '科技趨勢對談';
+        const targetUrl = `http://127.0.0.1:8501/?tab=podcast&podcast_topic=${encodeURIComponent(topic)}&duration=${duration}&style=${encodeURIComponent(style)}&auto_gen_podcast=1`;
+        window.location.href = targetUrl;
+      }
+    }
+
+    function connectCustomHost() {
+      const input = document.getElementById('customHostInput');
+      let host = (input ? input.value.trim() : '') || '';
+      if (!host) {
+        showToast("⚠️ 請輸入主電腦的連線位址");
+        return;
+      }
+      if (!host.startsWith('http://') && !host.startsWith('https://')) {
+        host = 'http://' + host;
+      }
+      host = host.replace(/\/+$/, '');
+      localStorage.setItem('studio_backend_url', host);
+      closeHostConnectModal();
+      showToast(`🚀 正在連線至遠端主機：${host}...`);
+
+      if (pendingGenAction === 'video') {
+        const voice = selectedVoice === 'clone' ? 'clone' : (selectedVoice === 'female' ? 'zh-TW-HsiaoChenNeural' : 'zh-TW-YunJheNeural');
+        const targetUrl = `${host}/?topic=${encodeURIComponent(currentTopic)}&duration=${currentDuration}&aspect=${selectedAspect}&voice=${encodeURIComponent(voice)}&auto_gen=1`;
+        window.location.href = targetUrl;
+      } else {
+        const topicInput = document.getElementById('podcastTopicInput');
+        const topic = (topicInput ? topicInput.value.trim() : '') || '2026 AI 雙人對談播客';
+        const durationSelect = document.getElementById('podcastDurationSelect');
+        const duration = durationSelect ? parseFloat(durationSelect.value) : 3.0;
+        const styleSelect = document.getElementById('podcastStyleSelect');
+        const style = styleSelect ? styleSelect.value : '科技趨勢對談';
+        const targetUrl = `${host}/?tab=podcast&podcast_topic=${encodeURIComponent(topic)}&duration=${duration}&style=${encodeURIComponent(style)}&auto_gen_podcast=1`;
+        window.location.href = targetUrl;
+      }
+    }
+
     // 🚀 核心：網頁上一鍵全自動生片功能
     async function generateVideoFromWeb() {
       const topic = currentTopic;
@@ -3332,11 +3442,10 @@ python3 learn_python.py</textarea>
       const aspect = selectedAspect;
       const voice = selectedVoice === 'clone' ? 'clone' : (selectedVoice === 'female' ? 'zh-TW-HsiaoChenNeural' : 'zh-TW-YunJheNeural');
 
-      // 🌐 若當前是在 GitHub Pages (git 版本) 瀏覽，無縫直通本機服務，絕不彈出錯誤或代碼指令！
+      // 🌐 若當前是在 GitHub Pages 瀏覽，開啟主機連線確認（支援主電腦與跨裝置連線）
       if (window.location.origin.includes("github.io")) {
-        showToast("🚀 正在為您啟動本機全自動生片引擎...");
-        const targetUrl = `http://127.0.0.1:8501/?topic=${encodeURIComponent(topic)}&duration=${duration}&aspect=${aspect}&voice=${encodeURIComponent(voice)}&auto_gen=1`;
-        window.location.href = targetUrl;
+        pendingGenAction = 'video';
+        openHostConnectModal();
         return;
       }
 
@@ -4367,11 +4476,10 @@ python3 learn_python.py</textarea>
         return;
       }
 
-      // 🌐 若當前是在 GitHub Pages (git 版本) 瀏覽，無縫直通本機服務
+      // 🌐 若當前是在 GitHub Pages 瀏覽，開啟主機連線確認（支援主電腦與跨裝置連線）
       if (window.location.origin.includes("github.io")) {
-        showToast("🎙️ 正在為您啟動本機雙主持 AI 播客合成引擎...");
-        const targetUrl = `http://127.0.0.1:8501/?tab=podcast&podcast_topic=${encodeURIComponent(topic)}&duration=${duration}&style=${encodeURIComponent(style)}&auto_gen_podcast=1`;
-        window.location.href = targetUrl;
+        pendingGenAction = 'podcast';
+        openHostConnectModal();
         return;
       }
 
@@ -4509,8 +4617,7 @@ python3 learn_python.py</textarea>
 
     function handleStatusBadgeClick() {
       if (window.location.origin.includes("github.io")) {
-        showToast("🚀 正在為您切換至本機高性能生片工作台...");
-        window.location.href = "http://127.0.0.1:8501";
+        openHostConnectModal();
       } else {
         showToast("🟢 目前已連線至本機高性能運算服務！");
       }
