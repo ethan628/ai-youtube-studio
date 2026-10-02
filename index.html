@@ -213,6 +213,7 @@
       <button class="tab-btn" onclick="switchTab('gallery')">📁 影片成品播放庫 (5)</button>
       <button class="tab-btn" onclick="switchTab('youtube')">📺 YouTube 審核發布中心 <span class="badge badge-amber" id="ytPendingBadge" style="display:none; font-size:10px; margin-left:4px;">0</span></button>
       <button class="tab-btn" onclick="switchTab('podcast')">🎙️ 雙主持 AI 播客創作室</button>
+      <button class="tab-btn" onclick="switchTab('singing')">🎤 AI 克隆我聲音唱歌</button>
       <button class="tab-btn" onclick="switchTab('guide')">🛠️ 執行指南</button>
     </div>
 
@@ -879,6 +880,163 @@
           <div style="background:#000; border-radius:10px; padding:18px; border:1px solid #1e293b; text-align:center;">
             <div style="color:var(--cyan); font-size:12px; font-weight:bold; margin-bottom:8px;">● 即時跳動聲波視覺 (Waveform)</div>
             <div style="font-size:28px; letter-spacing:4px; color:#a855f7;"> ▂▃▅▆▇▆▅▃▂ </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: AI 克隆我聲音唱歌 (Singing Studio) -->
+    <div id="tab-singing" class="tab-panel">
+      <div class="grid-2">
+        <!-- 左側：樂曲、音色與風格配置 -->
+        <div class="card">
+          <div class="card-title">
+            <span class="icon">🎤</span> 1. 選擇曲庫與克隆聲音樣本
+          </div>
+          <p style="color:var(--text-dim); font-size:13px; line-height:1.6; margin-bottom:16px;">
+            採用高精度共振峰音色分析與神經旋律音高校準！你可以選取在「聲音錄製」分頁中錄好的專屬聲音樣本，或使用預設名家音色，系統將全自動合成伴奏樂軌、模擬真實換氣唱腔並渲染 1080p 超高清 KTV 音樂影片！
+          </p>
+
+          <!-- 歌曲選擇 -->
+          <div class="form-group">
+            <label style="font-weight:bold; color:#fff; display:flex; justify-content:space-between; align-items:center;">
+              <span>🎵 選擇經典曲目：</span>
+              <span id="singingSongGenreBadge" class="badge badge-cyan" style="font-size:11px;">流行慶祝 / 120 BPM</span>
+            </label>
+            <select id="singingSongSelect" class="text-input" onchange="onSingingSongChange(this.value)" style="cursor:pointer; font-size:14px; padding:10px 12px; background:rgba(15,23,42,0.9); border:1px solid var(--cyan); border-radius:8px; color:#fff; width:100%;">
+              <option value="happy_birthday">🎂 祝你生日快樂 (Happy Birthday to You) - 流行慶祝</option>
+              <option value="twinkle_star">⭐ 小星星 (Twinkle, Twinkle, Little Star) - 輕快童謠/抒情</option>
+              <option value="moon_heart">🌙 月亮代表我的心 (The Moon Represents My Heart) - 華語經典慢歌</option>
+              <option value="glorious_years">🔥 光輝歲月 (Glorious Years) - 經典搖滾傳奇</option>
+            </select>
+            <div id="singingSongDesc" style="font-size:12px; color:var(--text-dim); margin-top:6px;">
+              經典旋律，適合各種祝賀、歡慶、派對與紀念場景。
+            </div>
+          </div>
+
+          <!-- 聲音樣本選擇 (克隆我聲音的核心) -->
+          <div class="form-group">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <label style="margin:0; font-weight:bold; color:#fff;">🎙️ 唱歌聲音來源 (AI 克隆我的聲音)：</label>
+              <button type="button" class="btn btn-secondary" style="padding:2px 8px; font-size:11px;" onclick="loadSingingVoiceSamples()">🔄 刷新聲音樣本</button>
+            </div>
+            <select id="singingVoiceSelect" class="text-input" style="cursor:pointer; font-size:13px; padding:10px 12px; background:rgba(15,23,42,0.9); border:1px solid var(--card-border); border-radius:8px; color:#fff; width:100%;">
+              <option value="default">✨ 預設自然女聲 (曉臻 · 溫潤甜美)</option>
+              <option value="male">👦 預設自然男聲 (雲哲 · 沉穩磁性)</option>
+            </select>
+            <div style="font-size:12px; color:var(--text-muted); margin-top:6px; display:flex; align-items:center; gap:6px;">
+              <span>💡 想用自己真正的聲音？請先前往</span>
+              <a href="javascript:void(0)" onclick="switchTab('record')" style="color:var(--cyan); text-decoration:underline;">「🎙️ 網頁錄製聲音」</a>
+              <span>錄下 10~30 秒說話或歌聲，即可在此選取！</span>
+            </div>
+          </div>
+
+          <!-- 編曲風格與混響空間 -->
+          <div class="grid-2" style="gap:12px; margin-top:14px;">
+            <div class="form-group" style="margin-bottom:0;">
+              <label style="font-weight:bold; color:#fff;">🎹 伴奏編曲風格：</label>
+              <select id="singingStyleSelect" class="text-input" style="font-size:13px; padding:8px 10px; background:rgba(15,23,42,0.9); border:1px solid var(--card-border); border-radius:8px; color:#fff; width:100%;">
+                <option value="pop">🎸 流行輕快 (Pop Band)</option>
+                <option value="acoustic">🪕 原聲吉他 (Acoustic Folk)</option>
+                <option value="synthwave">⚡ 電子合成 (Synthwave/Retro)</option>
+                <option value="ballad">🎹 深情鋼琴 (Grand Piano Ballad)</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label style="font-weight:bold; color:#fff;">🏛️ 空間混響效果 (Reverb)：</label>
+              <select id="singingReverbSelect" class="text-input" style="font-size:13px; padding:8px 10px; background:rgba(15,23,42,0.9); border:1px solid var(--card-border); border-radius:8px; color:#fff; width:100%;">
+                <option value="ktv">🎤 KTV 歡唱模式 (豐富空間回音)</option>
+                <option value="studio">🎙️ 專業錄音室 (溫暖細膩人聲)</option>
+                <option value="stadium">🏟️ 萬人體育館 (震撼大混響)</option>
+                <option value="clean">✨ 原聲純淨 (清澈近場人聲)</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="margin-top:20px; background:rgba(0,240,255,0.04); border:1px dashed rgba(0,240,255,0.3); border-radius:10px; padding:12px; font-size:12px; color:var(--text-dim); line-height:1.6;">
+            <strong style="color:var(--cyan);">🎼 音樂工程技術保證：</strong><br>
+            • 自動多軌和弦合成（鋼琴主奏、貝斯低音、氛圍襯底、節奏打擊樂）。<br>
+            • 人聲顫音（Vibrato）與微音高校準，兼具感染力與真實歌唱韻味。<br>
+            • 母帶級立體聲 EQ、Chorus 和聲增厚與 Limiter 動態壓縮處理。
+          </div>
+        </div>
+
+        <!-- 右側：歌詞編輯、AI 智慧填詞與生成按鈕 -->
+        <div class="card" style="display:flex; flex-direction:column;">
+          <div class="card-title" style="display:flex; justify-content:space-between; align-items:center;">
+            <span><span class="icon">📝</span> 2. 歌詞自訂與樂句編輯</span>
+            <div style="display:flex; gap:6px;">
+              <button class="btn btn-secondary" style="font-size:11px; padding:3px 8px;" onclick="resetSingingLyricsToDefault()">
+                🔄 原版歌詞
+              </button>
+              <button class="btn btn-primary" style="font-size:11px; padding:3px 10px; background:linear-gradient(90deg, #ec4899, #8b5cf6);" onclick="aiSmartRewriteLyrics()">
+                ✨ AI 創意填詞
+              </button>
+            </div>
+          </div>
+          <div style="font-size:12px; color:var(--text-dim); margin-bottom:12px;">
+            每行對應一個旋律樂句。您可以自由改編歌詞內容（如換上朋友的名字或 YouTube 頻道慶賀詞）：
+          </div>
+
+          <!-- 歌詞編輯區 -->
+          <div style="flex:1; display:flex; flex-direction:column; margin-bottom:16px;">
+            <textarea id="singingLyricsInput" class="edit-textarea" style="flex:1; min-height:220px; font-family:monospace; font-size:14px; line-height:1.8; padding:12px; border:1px solid rgba(0,240,255,0.2); border-radius:8px; background:rgba(8,12,24,0.9); color:#fff; resize:vertical;" placeholder="輸入歌詞（每行一句）..." oninput="updateSingingLyricsHint()"></textarea>
+            <div id="singingLyricsCountHint" style="font-size:11px; color:var(--text-muted); margin-top:6px; text-align:right;">
+              共 4 行樂句
+            </div>
+          </div>
+
+          <!-- 一鍵生成按鈕 -->
+          <div>
+            <button id="btnGenSinging" class="btn btn-primary" style="width:100%; padding:14px; font-size:15px; font-weight:bold; background:linear-gradient(90deg, #ec4899, #06b6d4); box-shadow:0 0 15px rgba(236,72,153,0.4);" onclick="generateSingingAction()">
+              🚀 開始 AI 克隆聲音唱歌 (渲染 1080p MV + 320kbps MP3)
+            </button>
+            <div id="singingProgressNote" style="font-size:12px; color:var(--text-muted); text-align:center; margin-top:8px;">
+              ⚡ 點擊後約 10~25 秒即可完成全曲伴奏、歌聲合成與動態 KTV 影片渲染
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 歌聲成果展示卡片 -->
+      <div id="singingResultCard" class="card" style="display:none; margin-top:20px; border-color:var(--cyan); background:rgba(7,11,20,0.95);">
+        <div class="card-title" style="color:var(--cyan); display:flex; justify-content:space-between; align-items:center;">
+          <span>🎉 AI 歌聲克隆與 KTV 音樂影片合成圓滿完成！</span>
+          <button class="btn btn-secondary" style="padding:3px 8px; font-size:12px;" onclick="document.getElementById('singingResultCard').style.display='none'">✕ 關閉</button>
+        </div>
+        <div style="display:grid; grid-template-columns: 1.4fr 1fr; gap:20px; margin-top:14px;">
+          <div>
+            <video id="singingResultVideo" controls style="width:100%; border-radius:12px; background:#000; box-shadow:0 0 25px rgba(236,72,153,0.25);"></video>
+            <div style="margin-top:10px; font-size:12px; color:var(--text-dim); text-align:center;">
+              ⚡ 包含 1080p 超高清 KTV 視覺、黑膠唱片動態旋轉、即時跳動聲波與高對比發光字幕
+            </div>
+          </div>
+          <div style="display:flex; flex-direction:column; justify-content:space-between;">
+            <div>
+              <div style="font-size:18px; font-weight:bold; color:#fff; margin-bottom:8px;" id="singingResultTitle">【AI 歌聲克隆】祝你生日快樂</div>
+              <div style="font-size:13px; color:var(--text-dim); margin-bottom:16px;" id="singingResultMeta">時長與檔案資訊</div>
+              
+              <div style="background:var(--content-bg); border-radius:10px; padding:12px; margin-bottom:16px; border:1px solid var(--card-border);">
+                <div style="font-size:12px; color:#ec4899; font-weight:bold; margin-bottom:6px;">🎧 獨立 320kbps 高音質歌聲音訊 (MP3) 試聽：</div>
+                <audio id="singingResultAudio" controls style="width:100%; height:36px;"></audio>
+                <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">專業母帶級混音（伴奏 + 克隆歌聲 + KTV 混響）</div>
+              </div>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <a id="btnDownloadSingingVideo" href="#" download class="btn btn-primary" style="text-decoration:none; text-align:center; padding:10px; background:linear-gradient(90deg, #ec4899, #8b5cf6);">
+                📥 下載 1080p KTV 音樂影片 (MP4)
+              </a>
+              <a id="btnDownloadSingingAudio" href="#" download class="btn btn-secondary" style="text-decoration:none; text-align:center; padding:9px;">
+                🎧 下載高音質歌曲檔 (MP3)
+              </a>
+              <a id="btnDownloadSingingSrt" href="#" download class="btn btn-secondary" style="text-decoration:none; text-align:center; padding:7px; font-size:12px;">
+                📝 下載動態歌詞字幕 (SRT)
+              </a>
+              <button class="btn btn-secondary" onclick="switchTab('youtube'); loadYoutubeQueue();" style="border-color:var(--amber); color:var(--amber);">
+                📺 前往 YouTube 發布中心排程上傳
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -1948,6 +2106,9 @@ python3 learn_python.py</textarea>
       }
       if (tabId === 'podcast') {
         initPodcastDialogueIfEmpty();
+      }
+      if (tabId === 'singing') {
+        initSingingStudio();
       }
     }
 
@@ -3392,6 +3553,17 @@ python3 learn_python.py</textarea>
         const voice = selectedVoice === 'clone' ? 'clone' : (selectedVoice === 'female' ? 'zh-TW-HsiaoChenNeural' : 'zh-TW-YunJheNeural');
         const targetUrl = `http://127.0.0.1:8501/?topic=${encodeURIComponent(currentTopic)}&duration=${currentDuration}&aspect=${selectedAspect}&voice=${encodeURIComponent(voice)}&auto_gen=1`;
         window.location.href = targetUrl;
+      } else if (pendingGenAction === 'singing') {
+        const songSelect = document.getElementById('singingSongSelect');
+        const songId = songSelect ? songSelect.value : 'happy_birthday';
+        const styleSelect = document.getElementById('singingStyleSelect');
+        const style = styleSelect ? styleSelect.value : 'pop';
+        const reverbSelect = document.getElementById('singingReverbSelect');
+        const reverb = reverbSelect ? reverbSelect.value : 'ktv';
+        const voiceSelect = document.getElementById('singingVoiceSelect');
+        const voice = voiceSelect ? voiceSelect.value : 'default';
+        const targetUrl = `http://127.0.0.1:8501/?tab=singing&song_id=${encodeURIComponent(songId)}&style=${encodeURIComponent(style)}&reverb=${encodeURIComponent(reverb)}&voice=${encodeURIComponent(voice)}&auto_gen_singing=1`;
+        window.location.href = targetUrl;
       } else {
         const topicInput = document.getElementById('podcastTopicInput');
         const topic = (topicInput ? topicInput.value.trim() : '') || '2026 AI 雙人對談播客';
@@ -3422,6 +3594,17 @@ python3 learn_python.py</textarea>
       if (pendingGenAction === 'video') {
         const voice = selectedVoice === 'clone' ? 'clone' : (selectedVoice === 'female' ? 'zh-TW-HsiaoChenNeural' : 'zh-TW-YunJheNeural');
         const targetUrl = `${host}/?topic=${encodeURIComponent(currentTopic)}&duration=${currentDuration}&aspect=${selectedAspect}&voice=${encodeURIComponent(voice)}&auto_gen=1`;
+        window.location.href = targetUrl;
+      } else if (pendingGenAction === 'singing') {
+        const songSelect = document.getElementById('singingSongSelect');
+        const songId = songSelect ? songSelect.value : 'happy_birthday';
+        const styleSelect = document.getElementById('singingStyleSelect');
+        const style = styleSelect ? styleSelect.value : 'pop';
+        const reverbSelect = document.getElementById('singingReverbSelect');
+        const reverb = reverbSelect ? reverbSelect.value : 'ktv';
+        const voiceSelect = document.getElementById('singingVoiceSelect');
+        const voice = voiceSelect ? voiceSelect.value : 'default';
+        const targetUrl = `${host}/?tab=singing&song_id=${encodeURIComponent(songId)}&style=${encodeURIComponent(style)}&reverb=${encodeURIComponent(reverb)}&voice=${encodeURIComponent(voice)}&auto_gen_singing=1`;
         window.location.href = targetUrl;
       } else {
         const topicInput = document.getElementById('podcastTopicInput');
@@ -4623,6 +4806,308 @@ python3 learn_python.py</textarea>
       }
     }
 
+    // --- 🎤 AI 克隆我聲音唱歌 (Singing Studio) ---
+    const PRESET_SONGS_DATA = {
+      "happy_birthday": {
+        name: "祝你生日快樂 (Happy Birthday to You)",
+        genre: "流行慶祝 / 120 BPM",
+        description: "經典旋律，適合各種祝賀、歡慶、派對與紀念場景。",
+        lyrics: [
+          "祝你生日快樂",
+          "祝你生日快樂",
+          "祝你天天都快樂",
+          "祝你生日快樂"
+        ]
+      },
+      "twinkle_star": {
+        name: "小星星 (Twinkle, Twinkle, Little Star)",
+        genre: "輕快童謠/抒情 / 100 BPM",
+        description: "莫札特變奏曲經典旋律，純真明朗，極富抒情親和力。",
+        lyrics: [
+          "一閃一閃亮晶晶",
+          "滿天都是小星星",
+          "掛在天上放光明",
+          "好像許多小眼睛",
+          "一閃一閃亮晶晶",
+          "滿天都是小星星"
+        ]
+      },
+      "moon_heart": {
+        name: "月亮代表我的心 (The Moon Represents My Heart)",
+        genre: "華語經典慢歌 / 76 BPM",
+        description: "傳唱半世紀的不朽華語旋律，深情細膩，感染力極強。",
+        lyrics: [
+          "你問我愛你有多深",
+          "我愛你有幾分",
+          "我的情也真",
+          "我的愛也真",
+          "月亮代表我的心"
+        ]
+      },
+      "glorious_years": {
+        name: "光輝歲月 (Glorious Years)",
+        genre: "經典搖滾傳奇 / 90 BPM",
+        description: "搖滾黃金年代代表作，激昂豪邁，充滿生命力與共鳴。",
+        lyrics: [
+          "今天只有殘留的軀殼",
+          "迎接光輝歲月",
+          "風雨中抱緊自由",
+          "一生經過徬徨的掙扎",
+          "自信可改變未來",
+          "問誰又能做到"
+        ]
+      }
+    };
+
+    let singingVoiceSamplesCache = [];
+    let isSingingInitialized = false;
+
+    function initSingingStudio() {
+      if (!isSingingInitialized) {
+        onSingingSongChange('happy_birthday');
+        loadSingingVoiceSamples();
+        checkLatestSingingResult();
+        isSingingInitialized = true;
+      }
+    }
+
+    function onSingingSongChange(songId) {
+      const song = PRESET_SONGS_DATA[songId] || PRESET_SONGS_DATA['happy_birthday'];
+      const badge = document.getElementById('singingSongGenreBadge');
+      const desc = document.getElementById('singingSongDesc');
+      const lyricsIn = document.getElementById('singingLyricsInput');
+
+      if (badge) badge.innerText = song.genre;
+      if (desc) desc.innerText = song.description;
+      if (lyricsIn) {
+        lyricsIn.value = song.lyrics.join('\n');
+        updateSingingLyricsHint();
+      }
+    }
+
+    function updateSingingLyricsHint() {
+      const lyricsIn = document.getElementById('singingLyricsInput');
+      const hint = document.getElementById('singingLyricsCountHint');
+      if (lyricsIn && hint) {
+        const lines = lyricsIn.value.split('\n').filter(l => l.trim().length > 0);
+        hint.innerText = `共 ${lines.length} 行樂句 (自動對齊旋律節拍)`;
+      }
+    }
+
+    function resetSingingLyricsToDefault() {
+      const songSelect = document.getElementById('singingSongSelect');
+      const songId = songSelect ? songSelect.value : 'happy_birthday';
+      const song = PRESET_SONGS_DATA[songId] || PRESET_SONGS_DATA['happy_birthday'];
+      const lyricsIn = document.getElementById('singingLyricsInput');
+      if (lyricsIn) {
+        lyricsIn.value = song.lyrics.join('\n');
+        updateSingingLyricsHint();
+        showToast(`🔄 已還原【${song.name}】原版歌詞！`);
+      }
+    }
+
+    function aiSmartRewriteLyrics() {
+      const songSelect = document.getElementById('singingSongSelect');
+      const songId = songSelect ? songSelect.value : 'happy_birthday';
+      const lyricsIn = document.getElementById('singingLyricsInput');
+      if (!lyricsIn) return;
+
+      const aiVariations = {
+        "happy_birthday": [
+          ["祝你影片大爆紅", "祝你訂閱破百萬", "每天開心又發財", "祝你創作大成功"],
+          ["祝你代碼沒Bug", "祝你專案秒上線", "生活工作都順心", "祝你夢想全實現"]
+        ],
+        "twinkle_star": [
+          ["一行一行寫代碼", "滿螢幕都是亮點", "點擊運行放光明", "全自動化真省心", "一鍵出片效率高", "天天漲粉好心情"]
+        ],
+        "moon_heart": [
+          ["你問我AI有多強", "我答應你幾分", "自動生片真", "自動剪輯真", "效率代表我的心"]
+        ],
+        "glorious_years": [
+          ["今天只有專注的鍵盤", "敲出光輝歲月", "數位中實現自由", "一生經過持續的精進", "自信可改變世界", "堅持就能做到"]
+        ]
+      };
+
+      const vars = aiVariations[songId] || aiVariations["happy_birthday"];
+      const chosen = vars[Math.floor(Math.random() * vars.length)];
+      lyricsIn.value = chosen.join('\n');
+      updateSingingLyricsHint();
+      showToast("✨ AI 已為您創作全新趣味填詞！可自由微調編輯！");
+    }
+
+    async function loadSingingVoiceSamples() {
+      const select = document.getElementById('singingVoiceSelect');
+      if (!select) return;
+
+      try {
+        const res = await fetch(`${API_BASE}/api/list_voice_samples`);
+        const data = await res.json();
+        if (data.success && Array.isArray(data.samples)) {
+          singingVoiceSamplesCache = data.samples;
+          let html = '';
+          const userSamples = data.samples.filter(s => !s.name.includes("預設"));
+          const presetSamples = data.samples.filter(s => s.name.includes("預設"));
+
+          if (userSamples.length > 0) {
+            html += `<optgroup label="🎙️ 我的專屬個人聲音 (AI 聲音克隆)">`;
+            userSamples.forEach(s => {
+              html += `<option value="${escapeHtml(s.name)}" selected>🎙️ ${escapeHtml(s.name)} (我的真實聲音)</option>`;
+            });
+            html += `</optgroup>`;
+          }
+
+          html += `<optgroup label="✨ 內建名家聲音樣本">`;
+          if (presetSamples.length > 0) {
+            presetSamples.forEach(s => {
+              const isFemale = s.name.includes("女");
+              html += `<option value="${escapeHtml(s.name)}" ${userSamples.length === 0 && isFemale ? 'selected' : ''}>${isFemale ? '👧' : '👦'} ${escapeHtml(s.name)}</option>`;
+            });
+          } else {
+            html += `<option value="default" selected>👧 預設自然女聲 (曉臻 · 甜美清澈)</option>`;
+            html += `<option value="male">👦 預設自然男聲 (雲哲 · 沉穩磁性)</option>`;
+          }
+          html += `</optgroup>`;
+
+          select.innerHTML = html;
+        }
+      } catch (err) {
+        console.warn("載入聲音樣本失敗，使用本機預設選項：", err);
+      }
+    }
+
+    async function generateSingingAction() {
+      const songSelect = document.getElementById('singingSongSelect');
+      const voiceSelect = document.getElementById('singingVoiceSelect');
+      const styleSelect = document.getElementById('singingStyleSelect');
+      const reverbSelect = document.getElementById('singingReverbSelect');
+      const lyricsIn = document.getElementById('singingLyricsInput');
+      const btn = document.getElementById('btnGenSinging');
+
+      const songId = songSelect ? songSelect.value : 'happy_birthday';
+      const voice = voiceSelect ? voiceSelect.value : 'default';
+      const style = styleSelect ? styleSelect.value : 'pop';
+      const reverb = reverbSelect ? reverbSelect.value : 'ktv';
+      const lyrics = lyricsIn ? lyricsIn.value.trim() : '';
+
+      // 若在 GitHub Pages 瀏覽，開啟主機連線確認
+      if (window.location.origin.includes("github.io")) {
+        pendingGenAction = 'singing';
+        openHostConnectModal();
+        return;
+      }
+
+      let origText = btn ? btn.innerText : "";
+      if (btn) {
+        btn.disabled = true;
+        btn.innerText = "⏳ 正在克隆音色與合成 KTV 影音中 (約15~30秒)...";
+      }
+      showToast("🎤 正在提取音色共振峰、合成多軌伴奏與渲染 1080p 超高清 KTV 影片... 請稍候！");
+
+      try {
+        const res = await fetch(`${API_BASE}/api/generate_singing`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            song_id: songId,
+            lyrics: lyrics,
+            voice_sample: voice,
+            style: style,
+            reverb: reverb
+          })
+        });
+        const data = await res.json();
+        if (data.success) {
+          displaySingingResult(data);
+          showToast(`🎉 AI 歌聲克隆與 KTV 影片合成成功！可在下方即時試聽觀看！`);
+          refreshVideoGallery();
+          loadYoutubeQueue();
+        } else {
+          throw new Error(data.error || "歌聲合成失敗");
+        }
+      } catch (err) {
+        console.error("生成歌聲出錯：", err);
+        alert("歌聲生成失敗：" + (err.message || err));
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerText = origText || "🚀 開始 AI 克隆聲音唱歌 (渲染 1080p MV + 320kbps MP3)";
+        }
+      }
+    }
+
+    function displaySingingResult(data) {
+      const card = document.getElementById('singingResultCard');
+      const video = document.getElementById('singingResultVideo');
+      const audio = document.getElementById('singingResultAudio');
+      const title = document.getElementById('singingResultTitle');
+      const meta = document.getElementById('singingResultMeta');
+      const btnDlVideo = document.getElementById('btnDownloadSingingVideo');
+      const btnDlAudio = document.getElementById('btnDownloadSingingAudio');
+      const btnDlSrt = document.getElementById('btnDownloadSingingSrt');
+
+      if (!card) return;
+
+      const videoFile = data.filename || data.video_file;
+      const audioFile = data.audio_filename || data.audio_file;
+      const srtFile = data.srt_filename || data.srt_file;
+
+      if (video && videoFile) {
+        video.src = `${API_BASE}/outputs/${encodeURIComponent(videoFile)}`;
+      }
+      if (audio && audioFile) {
+        audio.src = `${API_BASE}/outputs/${encodeURIComponent(audioFile)}`;
+      }
+      if (title) {
+        title.innerText = `【AI 歌聲克隆】${data.title || 'KTV 音樂現場'}`;
+      }
+      if (meta) {
+        meta.innerText = `⏱️ 時長: ${data.duration ? data.duration.toFixed(1) + ' 秒' : '完整樂曲'} | 🎤 歌手: ${data.voice_cloned || '個人音色克隆'} | 🎧 320kbps MP3 + 1080p 60fps MP4`;
+      }
+
+      if (btnDlVideo && videoFile) {
+        btnDlVideo.href = `${API_BASE}/outputs/${encodeURIComponent(videoFile)}`;
+        btnDlVideo.download = videoFile;
+      }
+      if (btnDlAudio && audioFile) {
+        btnDlAudio.href = `${API_BASE}/outputs/${encodeURIComponent(audioFile)}`;
+        btnDlAudio.download = audioFile;
+      }
+      if (btnDlSrt && srtFile) {
+        btnDlSrt.href = `${API_BASE}/outputs/${encodeURIComponent(srtFile)}`;
+        btnDlSrt.download = srtFile;
+        btnDlSrt.style.display = 'block';
+      } else if (btnDlSrt) {
+        btnDlSrt.style.display = 'none';
+      }
+
+      card.style.display = 'block';
+      card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    async function checkLatestSingingResult() {
+      try {
+        const res = await fetch(`${API_BASE}/api/list_videos`);
+        const data = await res.json();
+        if (data.success && Array.isArray(data.videos)) {
+          const singingVideos = data.videos.filter(v => v.filename && v.filename.startsWith("AI唱歌_"));
+          if (singingVideos.length > 0) {
+            const latest = singingVideos[0];
+            const audioName = latest.filename.replace(/\.mp4$/i, ".mp3");
+            const srtName = latest.filename.replace(/\.mp4$/i, ".srt");
+            displaySingingResult({
+              filename: latest.filename,
+              audio_filename: audioName,
+              srt_filename: srtName,
+              title: latest.title || latest.filename.replace(/\.mp4$/i, ""),
+              voice_cloned: "個人音色克隆"
+            });
+          }
+        }
+      } catch (e) {
+        // 略過
+      }
+    }
+
     function handleUrlAutoActions() {
       try {
         const params = new URLSearchParams(window.location.search);
@@ -4634,6 +5119,8 @@ python3 learn_python.py</textarea>
         const qTab = params.get('tab');
         const qPodcastTopic = params.get('podcast_topic');
         const qAutoGenPodcast = params.get('auto_gen_podcast');
+        const qSongId = params.get('song_id');
+        const qAutoGenSinging = params.get('auto_gen_singing');
 
         if (qTab) {
           switchTab(qTab);
@@ -4656,6 +5143,13 @@ python3 learn_python.py</textarea>
         if (qPodcastTopic) {
           setPodcastTopic(decodeURIComponent(qPodcastTopic));
         }
+        if (qSongId) {
+          const songSelect = document.getElementById('singingSongSelect');
+          if (songSelect) {
+            songSelect.value = qSongId;
+            onSingingSongChange(qSongId);
+          }
+        }
 
         if (qAutoGen === '1') {
           window.history.replaceState({}, document.title, window.location.pathname);
@@ -4668,6 +5162,12 @@ python3 learn_python.py</textarea>
           showToast("🎙️ 已成功自雲端無縫帶入參數，正在為您合成雙主持 AI 播客！");
           setTimeout(() => {
             renderPodcastFullAction();
+          }, 600);
+        } else if (qAutoGenSinging === '1') {
+          window.history.replaceState({}, document.title, window.location.pathname);
+          showToast("🎤 已成功自雲端無縫帶入參數，正在為您全自動進行歌聲克隆與合成！");
+          setTimeout(() => {
+            generateSingingAction();
           }, 600);
         }
       } catch (e) {
@@ -4683,6 +5183,7 @@ python3 learn_python.py</textarea>
     loadVoiceSamples();
     initPodcastDialogueIfEmpty();
     checkLatestPodcastResult();
+    initSingingStudio();
     handleUrlAutoActions();
   </script>
 </body>

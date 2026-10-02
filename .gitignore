@@ -17,7 +17,8 @@ client_secrets.json
 youtube_token.json
 
 # 產出影片與暫存檔案
-output_videos/*.mp4
+output_videos/*
+!output_videos/.gitkeep
 output_recordings/
 voice_samples/
 archive_shorts/

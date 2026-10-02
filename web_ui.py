@@ -23,6 +23,7 @@ if sys.platform.startswith("win"):
 PORT = 8501
 OUTPUT_DIR = os.path.abspath("output_videos")
 INPUT_DIR = os.path.abspath("inputs_notebooklm")
+VOICE_SAMPLES_DIR = os.path.abspath("voice_samples")
 
 # 全域生成狀態鎖
 IS_GENERATING = False
@@ -326,6 +327,20 @@ class VideoStudioHandler(SimpleHTTPRequestHandler):
                         "url": f"/voice_samples/{urllib.parse.quote(bname)}"
                     })
             self.send_json_response({"success": True, "samples": samples})
+            return
+
+        if parsed.path in ("/api/list_songs", "/list_songs"):
+            from src.singing_composer import PRESET_SONGS
+            songs_list = []
+            for sid, sinfo in PRESET_SONGS.items():
+                songs_list.append({
+                    "id": sid,
+                    "name": sinfo["name"],
+                    "genre": sinfo["genre"],
+                    "description": sinfo["description"],
+                    "default_lyrics": "\n".join(l["text"] for l in sinfo["lyrics_lines"])
+                })
+            self.send_json_response({"success": True, "songs": songs_list})
             return
 
         if parsed.path.startswith("/voice_samples/"):
@@ -769,6 +784,31 @@ class VideoStudioHandler(SimpleHTTPRequestHandler):
                     style=style,
                     custom_dialogue=dialogue,
                     api_key=api_key
+                )
+                self.send_json_response(result)
+            except Exception as e:
+                self.send_json_response({"success": False, "error": str(e)}, status=500)
+            return
+
+        if self.path in ("/api/generate_singing", "/generate_singing"):
+            from src.singing_composer import generate_singing_full
+            song_id = data.get("song_id", "happy_birthday")
+            lyrics = data.get("lyrics", None)
+            voice_sample = data.get("voice_sample", None)
+            style = data.get("style", "pop")
+            reverb = data.get("reverb", "ktv")
+
+            sample_path = None
+            if voice_sample and voice_sample != "default":
+                sample_path = os.path.join(VOICE_SAMPLES_DIR, voice_sample) if not os.path.isabs(voice_sample) else voice_sample
+
+            try:
+                result = generate_singing_full(
+                    song_id=song_id,
+                    custom_lyrics=lyrics,
+                    sample_voice_path=sample_path,
+                    style=style,
+                    reverb_type=reverb
                 )
                 self.send_json_response(result)
             except Exception as e:
